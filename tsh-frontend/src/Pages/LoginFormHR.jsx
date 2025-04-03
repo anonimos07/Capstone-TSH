@@ -68,6 +68,7 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
       // Example: navigate to dashboard
       // window.location.href = "/dashboard";
       
+      window.location.href = "/HrDashboard";
       console.log("Login successful:", data);
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");

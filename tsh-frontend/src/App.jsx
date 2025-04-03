@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { LoginHR } from './Pages/LoginFormHR';
 import { LoginAdmin } from './Pages/LoginFormAdmin';  
 import EmployeeDashboard from './Pages/EmployeeDashboard';
+import HrDashboard from './Pages/HrDashboard';
 
 
 function App() {
@@ -19,6 +20,8 @@ function App() {
         <Route path="/admin" element={<LoginAdmin />} />
 
         <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
+
+        <Route path="/HrDashboard" element={<HrDashboard />} />
 
       </Routes>
     </Router>
