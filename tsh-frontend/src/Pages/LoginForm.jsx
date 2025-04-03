@@ -68,6 +68,7 @@ export function Login({ className, ...props }) { // Function declaration is now 
       // Example: navigate to dashboard
       // window.location.href = "/dashboard";
       
+      window.location.href = "/EmployeeDashboard";
       console.log("Login successful:", data);
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
