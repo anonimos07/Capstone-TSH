@@ -25,11 +25,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final AdminRepo adminRepo;
     private final HRRepo hrRepo;
     private final EmployeeRepo employeeRepo;
+    private final ThreadLocal<String> authType = new ThreadLocal<>();
 
     public UserDetailsServiceImpl(AdminRepo adminRepo, HRRepo hrRepo, EmployeeRepo employeeRepo) {
         this.adminRepo = adminRepo;
         this.hrRepo = hrRepo;
         this.employeeRepo = employeeRepo;
+    }
+
+    public void setAuthType(String type) {
+        this.authType.set(type);
     }
 
     @Override

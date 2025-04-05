@@ -51,6 +51,10 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
         throw new Error(data.message || "Login failed");
       }
 
+      // para local storage ma store token dili ang username og password
+      const token = data.token;
+      localStorage.setItem("token", token);
+
       // Handle successful login
       /* toast({
         title: "Login successful",

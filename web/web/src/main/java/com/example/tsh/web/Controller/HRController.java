@@ -3,6 +3,7 @@ package com.example.tsh.web.Controller;
 import com.example.tsh.web.Entity.Admin;
 import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.HR;
+import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Service.EmployeeService;
 import com.example.tsh.web.Service.HRService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,32 +26,46 @@ public class HRController {
     private final EmployeeService employeeService;
 
 
+//    @PostMapping("/login")
+//    public ResponseEntity<Map<String, Object>> loginHR(
+//            @RequestBody Map<String, String> credentials) {
+//
+//        try {
+//            HR hr = hrService.authenticateHR(
+//                    credentials.get("user"),
+//                    credentials.get("password")
+//            );
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("status", "success");
+//            response.put("hrId", hr.getHrId());
+//            response.put("user", hr.getUser());
+//            response.put("role", hr.getRole().name());
+//
+//            return ResponseEntity.ok(response);
+//
+//        } catch (RuntimeException e) {
+//            Map<String, Object> errorResponse = new HashMap<>();
+//            errorResponse.put("status", "error");
+//            errorResponse.put("message", e.getMessage());
+//
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(errorResponse);
+//        }
+//    }
+
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> loginHR(
-            @RequestBody Map<String, String> credentials) {
-
-        try {
-            HR hr = hrService.authenticateHR(
-                    credentials.get("user"),
-                    credentials.get("password")
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("hrId", hr.getHrId());
-            response.put("user", hr.getUser());
-            response.put("role", hr.getRole().name());
-
-            return ResponseEntity.ok(response);
-
-        } catch (RuntimeException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(errorResponse);
+    public ResponseEntity<Map<String, String>> login(@RequestBody HR hr) {
+        String result = hrService.verify(hr, Role.HR);
+        if (result.equals("failed")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", result));
         }
+
+        if (hr.getRole() != Role.HR) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an hr."));
+        }
+
+        return ResponseEntity.ok(Collections.singletonMap("token", result));
     }
 
 

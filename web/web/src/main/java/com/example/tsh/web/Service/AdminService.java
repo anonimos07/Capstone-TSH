@@ -3,11 +3,16 @@ package com.example.tsh.web.Service;
 
 import com.example.tsh.web.Entity.Admin;
 import com.example.tsh.web.Entity.Employee;
+import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Repository.AdminRepo;
 import jakarta.annotation.PostConstruct;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,6 +24,12 @@ public class AdminService {
 
     public final AdminRepo adminRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtService jwtService;
 
 //    public AdminService(AdminRepo adminRepository, PasswordEncoder passwordEncoder){
 //        this.adminRepository = adminRepository;
@@ -92,7 +103,14 @@ public class AdminService {
             System.out.println("Default admin created with encoded password");
         }
     }
+    public String verify(Admin admin){
+        Authentication authentication =
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getUser(), admin.getPassword()));
+        if(authentication.isAuthenticated())
+            return jwtService.generateToken(admin.getUser());
 
+        return "failed";
+    }
 
 
 }

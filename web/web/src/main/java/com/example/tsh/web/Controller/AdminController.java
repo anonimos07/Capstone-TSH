@@ -5,6 +5,7 @@ import com.example.tsh.web.Entity.Admin;
 import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.HR;
 
+import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Service.HRService;
 import com.example.tsh.web.Service.AdminService;
 import com.example.tsh.web.Service.EmployeeService;
@@ -14,10 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/admin")
@@ -35,35 +33,46 @@ public class AdminController {
         return adminService.getAllAdmins();
     }
 
+//    @PostMapping("/login")
+//    public ResponseEntity<Map<String, Object>> loginEmployee(
+//            @RequestBody Map<String, String> credentials) {
+//
+//        try {
+//            Admin admin = adminService.authenticateAdmin(
+//                    credentials.get("user"),
+//                    credentials.get("password")
+//            );
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("status", "success");
+//            response.put("employeeId", admin.getAdminId());
+//            response.put("user", admin.getUser());
+//            response.put("role", admin.getRole().name());
+//
+//            return ResponseEntity.ok(response);
+//
+//        } catch (RuntimeException e) {
+//            Map<String, Object> errorResponse = new HashMap<>();
+//            errorResponse.put("status", "error");
+//            errorResponse.put("message", e.getMessage());
+//
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(errorResponse);
+//        }
+//    }
+
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> loginEmployee(
-            @RequestBody Map<String, String> credentials) {
-
-        try {
-            Admin admin = adminService.authenticateAdmin(
-                    credentials.get("user"),
-                    credentials.get("password")
-            );
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("employeeId", admin.getAdminId());
-            response.put("user", admin.getUser());
-            response.put("role", admin.getRole().name());
-
-            return ResponseEntity.ok(response);
-
-        } catch (RuntimeException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("status", "error");
-            errorResponse.put("message", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(errorResponse);
+    public ResponseEntity<Map<String, String>> login(@RequestBody Admin admin) {
+        String result = adminService.verify(admin);
+        if (result.equals("failed")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", result));
         }
+
+        if (admin.getRole() != Role.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an admin."));
+        }
+        return ResponseEntity.ok(Collections.singletonMap("token", result));
     }
-
-
 
     //create admin
 //    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")

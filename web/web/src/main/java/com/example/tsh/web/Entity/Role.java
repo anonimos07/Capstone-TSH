@@ -7,5 +7,7 @@ import jakarta.persistence.Table;
 public enum Role {
     ADMIN,
     HR,
-    EMPLOYEE
+    EMPLOYEE;
+
+
 }

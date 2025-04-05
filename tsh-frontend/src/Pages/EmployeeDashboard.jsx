@@ -129,41 +129,78 @@ export default function EmployeeDashboard() {
     const fetchEmployeeData = async () => {
       try {
         setIsLoading(true);
+        setError(null); // Reset error state on new fetch
         
         try {
-          const response = await fetch('/api/employee/current');
-          
+          const token = localStorage.getItem('token'); // Get token from storage
+          const response = await fetch('/employee/dashboard', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json', // Explicitly request JSON
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Include cookies if needed
+          });
+    
+          // Enhanced error handling
           if (!response.ok) {
-            throw new Error(`Server responded with status: ${response.status}`);
+            let errorMessage = `Server error: ${response.status}`;
+            try {
+              // Attempt to parse JSON error response
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch (e) {
+              // If JSON parse fails, check for text response
+              const text = await response.text();
+              if (text) errorMessage += ` - ${text}`;
+            }
+            throw new Error(errorMessage);
           }
-          
+    
+          // Verify content type
           const contentType = response.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
+            const body = await response.text();
+            console.error('Non-JSON response:', body);
             throw new Error('Server returned non-JSON response');
           }
-          
+    
+          // Process successful response
           const data = await response.json();
-          setEmployee(data);
+          setEmployee({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            // Add fallbacks for all expected fields
+            ...data
+          });
+    
         } catch (fetchError) {
           console.error('API fetch failed:', fetchError);
-
+          
+          // Enhanced development fallback
           if (process.env.NODE_ENV === 'development') {
             console.warn('Using fallback data in development environment');
             setEmployee({
               firstName: "John",
               lastName: "Doe",
-              email: "john.doe@techstaffhub.com"
+              email: "john.doe@techstaffhub.com",
+              // Include any additional fields your app expects
+              role: "Developer",
+              id: "dev-123"
             });
           } else {
-            throw fetchError;
+            // Production error handling
+            setError(fetchError.message || 'Failed to load employee data');
+            // Consider sending error to monitoring service
           }
+        } finally {
+          setIsLoading(false);
         }
         
-        setIsLoading(false);
-        
       } catch (err) {
-        console.error('Error fetching employee data:', err);
-        setError(err.message);
+        console.error('Unexpected error:', err);
+        setError(err.message || 'An unexpected error occurred');
         setIsLoading(false);
       }
     };
