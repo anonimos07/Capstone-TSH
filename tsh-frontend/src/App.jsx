@@ -5,7 +5,7 @@ import { LoginHR } from './Pages/LoginFormHR';
 import { LoginAdmin } from './Pages/LoginFormAdmin';  
 import EmployeeDashboard from './Pages/EmployeeDashboard';
 import HrDashboard from './Pages/HrDashboard';
-
+import { LogoutHR } from './Pages/LogoutHr';
 
 function App() {
 
@@ -22,6 +22,8 @@ function App() {
         <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
 
         <Route path="/HrDashboard" element={<HrDashboard />} />
+
+        <Route path="/LogoutHr" element={<LogoutHR />} />
 
       </Routes>
     </Router>

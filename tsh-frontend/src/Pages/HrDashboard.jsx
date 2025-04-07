@@ -131,7 +131,15 @@ export default function HrDashboard() {
         setIsLoading(true);
         
         try {
-          const response = await fetch('/api/hr/current');
+          const token = localStorage.getItem('token'); // Get token from storage
+          const response = await fetch('/hr/dashboard', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json', // Explicitly request JSON
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include' // Include cookies if needed
+          });
           
           if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);

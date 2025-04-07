@@ -36,7 +36,7 @@ export function HrUser({ userName, userEmail }) {
             </Link>
           </div>
           <div className="p-1 border-t">
-            <Link to="/logout" className="flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md">
+            <Link to="/LogoutHr" className="flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md">
               <LogOut className="h-4 w-4" />
               <span>Log out</span>
             </Link>
