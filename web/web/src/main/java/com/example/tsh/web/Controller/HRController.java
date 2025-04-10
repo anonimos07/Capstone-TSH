@@ -26,34 +26,6 @@ public class HRController {
     private final EmployeeService employeeService;
 
 
-//    @PostMapping("/login")
-//    public ResponseEntity<Map<String, Object>> loginHR(
-//            @RequestBody Map<String, String> credentials) {
-//
-//        try {
-//            HR hr = hrService.authenticateHR(
-//                    credentials.get("user"),
-//                    credentials.get("password")
-//            );
-//
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("status", "success");
-//            response.put("hrId", hr.getHrId());
-//            response.put("user", hr.getUser());
-//            response.put("role", hr.getRole().name());
-//
-//            return ResponseEntity.ok(response);
-//
-//        } catch (RuntimeException e) {
-//            Map<String, Object> errorResponse = new HashMap<>();
-//            errorResponse.put("status", "error");
-//            errorResponse.put("message", e.getMessage());
-//
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(errorResponse);
-//        }
-//    }
-
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody HR hr) {
         String result = hrService.verify(hr, Role.HR);
@@ -77,7 +49,7 @@ public class HRController {
 
 
     @GetMapping("/all-hr")
-    public List<HR> getAll(){
+    public List<HR> getAllHr(){
         return hrService.getAllHr();
     }
 
@@ -87,4 +59,10 @@ public class HRController {
         employeeService.saveEmployee(employee);
         return ResponseEntity.ok("Employee created successfully by HR");
     }
+
+    @GetMapping("/all-employee")
+    public List<Employee> getAllEmployee(){
+        return employeeService.getAllEmployee();
+    }
+    
 }

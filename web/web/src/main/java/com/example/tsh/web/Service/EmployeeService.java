@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -55,14 +56,10 @@ public class EmployeeService {
         return employee;
     }
 
-//    public String verify(Employee employee){
-//        Authentication authentication =
-//                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(employee.getUser(), employee.getPassword()));
-//        if(authentication.isAuthenticated())
-//            return jwtService.generateToken(employee.getUser());
-//
-//        return "failed";
-//    }
+    // get all employees list, mapped to hr controller
+    public List<Employee> getAllEmployee(){
+        return employeeRepository.findAll();
+    }
 
     public String verify(Employee employee, Role expectedRole) {
         Authentication authentication = authenticationManager.authenticate(

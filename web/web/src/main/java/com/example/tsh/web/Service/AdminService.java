@@ -6,6 +6,7 @@ import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Repository.AdminRepo;
+import com.example.tsh.web.Repository.EmployeeRepo;
 import jakarta.annotation.PostConstruct;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class AdminService {
 
     public final AdminRepo adminRepository;
     private final PasswordEncoder passwordEncoder;
+
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -111,6 +113,8 @@ public class AdminService {
 
         return "failed";
     }
+
+
 
 
 }
