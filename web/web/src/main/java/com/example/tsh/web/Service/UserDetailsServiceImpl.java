@@ -9,6 +9,8 @@ import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Repository.AdminRepo;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +28,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final HRRepo hrRepo;
     private final EmployeeRepo employeeRepo;
     private final ThreadLocal<String> authType = new ThreadLocal<>();
+    private static final Logger logger = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
+
 
     public UserDetailsServiceImpl(AdminRepo adminRepo, HRRepo hrRepo, EmployeeRepo employeeRepo) {
         this.adminRepo = adminRepo;
@@ -39,7 +43,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
+        logger.debug("Username: {}", username);
 
         Optional<Admin> admin = adminRepo.findByUsername(username);
         if (admin.isPresent()) {

@@ -85,13 +85,13 @@ public class AdminService {
 
     @PostConstruct
     public void adminAcc() {
-        String defUser = "tsh.ADMIN";
+        String defUsername = "tsh.ADMIN";
         String defPass = "admin123";
 
         // Check if admin exists (by username only)
-        if (!adminRepository.existsByUsername(defUser)) {
+        if (!adminRepository.existsByUsername(defUsername)) {
             Admin admin = new Admin();
-            admin.setUsername(defUser);
+            admin.setUsername(defUsername);
             admin.setPassword(passwordEncoder.encode(defPass));
             admin.setRole(Role.ADMIN);
             adminRepository.save(admin);
