@@ -113,4 +113,15 @@ public class AdminController {
         return ResponseEntity.ok("Admin deleted successfully!");
     }
 
+    //get Employee via admin
+    @GetMapping("/all-employee")
+    public List<Employee> getAllEmployee(){
+        return employeeService.getAllEmployee();
+    }
+
+    @GetMapping("/all-hr")
+    public List<HR> getAllHrs(){
+        return hrService.getAllHr();
+    }
+
 }
