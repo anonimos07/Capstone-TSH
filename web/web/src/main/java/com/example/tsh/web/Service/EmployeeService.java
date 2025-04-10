@@ -35,7 +35,7 @@ public class EmployeeService {
 
 
     public Employee authenticateEmployee(String user, String password) {
-        Optional<Employee> employeeOptional = employeeRepository.findByUser(user);
+        Optional<Employee> employeeOptional = employeeRepository.findByUsername(user);
 
         if (employeeOptional.isEmpty()) {
             throw new RuntimeException("User not found");
@@ -63,14 +63,14 @@ public class EmployeeService {
 
     public String verify(Employee employee, Role expectedRole) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(employee.getUser(), employee.getPassword())
+                new UsernamePasswordAuthenticationToken(employee.getUsername(), employee.getPassword())
         );
 
         if (authentication.isAuthenticated()) {
-            Optional<Employee> foundEmployee = employeeRepository.findByUser(employee.getUser());
+            Optional<Employee> foundEmployee = employeeRepository.findByUsername(employee.getUsername());
 
             if (foundEmployee.isPresent() && foundEmployee.get().getRole() == expectedRole) {
-                return jwtService.generateToken(employee.getUser());
+                return jwtService.generateToken(employee.getUsername());
             } else {
                 return "unauthorized";
             }

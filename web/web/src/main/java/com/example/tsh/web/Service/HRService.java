@@ -46,7 +46,7 @@ public class HRService {
     }
 
     public HR authenticateHR(String user, String password) {
-        Optional<HR> hrOptional = hrRepository.findByUser(user);
+        Optional<HR> hrOptional = hrRepository.findByUsername(user);
 
         if (hrOptional.isEmpty()) {
             throw new RuntimeException("User not found");
@@ -78,14 +78,14 @@ public class HRService {
 
     public String verify(HR hr, Role expectedRole) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(hr.getUser(), hr.getPassword())
+                new UsernamePasswordAuthenticationToken(hr.getUsername(), hr.getPassword())
         );
 
         if (authentication.isAuthenticated()) {
-            Optional<HR> foundHr = hrRepository.findByUser(hr.getUser());
+            Optional<HR> foundHr = hrRepository.findByUsername(hr.getUsername());
 
             if (foundHr.isPresent() && foundHr.get().getRole() == expectedRole) {
-                return jwtService.generateToken(hr.getUser());
+                return jwtService.generateToken(hr.getUsername());
             } else {
                 return "unauthorized";
             }

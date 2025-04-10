@@ -41,28 +41,28 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
 
-        Optional<Admin> admin = adminRepo.findByUser(username);
+        Optional<Admin> admin = adminRepo.findByUsername(username);
         if (admin.isPresent()) {
             return User.builder()
-                    .username(admin.get().getUser())
+                    .username(admin.get().getUsername())
                     .password(admin.get().getPassword())
                     .authorities("ROLE_" + admin.get().getRole().name())
                     .build();
         }
 
-        Optional<HR> hr = hrRepo.findByUser(username);
+        Optional<HR> hr = hrRepo.findByUsername(username);
         if (hr.isPresent()) {
             return User.builder()
-                    .username(hr.get().getUser())
+                    .username(hr.get().getUsername())
                     .password(hr.get().getPassword())
                     .authorities("ROLE_" + hr.get().getRole().name())
                     .build();
         }
 
-        Optional<Employee> employee = employeeRepo.findByUser(username);
+        Optional<Employee> employee = employeeRepo.findByUsername(username);
         if(employee.isPresent()){
             return  User.builder()
-                    .username(employee.get().getUser())
+                    .username(employee.get().getUsername())
                     .password(employee.get().getPassword())
                     .authorities("ROLE_" + employee.get().getRole().name())
                     .build();

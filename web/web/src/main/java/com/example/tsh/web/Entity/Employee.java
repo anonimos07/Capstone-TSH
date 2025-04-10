@@ -15,7 +15,7 @@
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private long employeeId;
 
-        public String user;
+        public String username;
         public String password;
         public String email;
         public String firstName;
@@ -27,9 +27,9 @@
         @Enumerated(EnumType.STRING)
         private Role role = Role.EMPLOYEE;
 
-        public Employee(String user, String password,String email,String firstName,
+        public Employee(String username, String password,String email,String firstName,
                         String lastName, String contact, String position, float baseSalary){
-            this.user = user;
+            this.username = username;
             this.password = password;
             this.email = email;
             this.firstName = firstName;
