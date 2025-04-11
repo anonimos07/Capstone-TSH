@@ -5,6 +5,7 @@ import { LoginHR } from './Pages/LoginFormHR';
 import { LoginAdmin } from './Pages/LoginFormAdmin';  
 import EmployeeDashboard from './Pages/EmployeeDashboard';
 import HrDashboard from './Pages/HrDashboard';
+import ForgotPassword from './Pages/ForgotPassword';
 
 
 function App() {
@@ -22,6 +23,8 @@ function App() {
         <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
 
         <Route path="/HrDashboard" element={<HrDashboard />} />
+
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
 
       </Routes>
     </Router>

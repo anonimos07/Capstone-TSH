@@ -10,18 +10,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// Import useToast if you're using it
-// import { useToast } from "@/components/ui/use-toast";
 
-export function Login({ className, ...props }) { // Function declaration is now complete
-  // State hooks should be inside the component function
+
+export function Login({ className, ...props }) {
   const [formData, setFormData] = useState({
-    user: "",
+    username: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  // const { toast } = useToast?.() || { toast: () => {} }; // Uncomment if you're using toast
+
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -55,38 +53,28 @@ export function Login({ className, ...props }) { // Function declaration is now 
       const token = data.token;
       localStorage.setItem("token", token);
 
-      // Handle successful login
-      /* toast({
-        title: "Login successful",
-        description: `Welcome, ${data.user}`,
-      }); */
+
       
       // Store user data in localStorage or state management
-      localStorage.setItem("user", JSON.stringify({
+      localStorage.setItem("username", JSON.stringify({
         employeeId: data.employeeId,
-        username: data.user,
+        username: data.username,
         role: data.role
       }));
       
-      // Redirect based on role (implement your routing logic)
-      // Example: navigate to dashboard
-      // window.location.href = "/dashboard";
+     
       
       window.location.href = "/EmployeeDashboard";
       console.log("Login successful:", data);
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
-      /* toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again",
-        variant: "destructive",
-      }); */
+      
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Removed extra { that was here
+ 
   return (
     <div className={cn("flex min-h-screen flex-col items-center justify-start pt-20", className)} {...props}>
       <Card className="max-w-md w-full">
@@ -98,13 +86,13 @@ export function Login({ className, ...props }) { // Function declaration is now 
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="user">Username</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="user"
-                  type="text" // Changed from "user" to "text"
-                  placeholder="user.EMPLOYEE"
+                  id="username"
+                  type="text" 
+                  placeholder="username.EMPLOYEE"
                   required
-                  value={formData.user}
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>
@@ -123,6 +111,13 @@ export function Login({ className, ...props }) { // Function declaration is now 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mt-4">
+                <a href="/ForgotPassword" className="text-blue-500 hover:underline">
+                  forgot password?
+                </a>
+              </p>
             </div>
           </form>
         </CardContent>
