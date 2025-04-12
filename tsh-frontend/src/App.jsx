@@ -6,25 +6,43 @@ import { LoginAdmin } from './Pages/LoginFormAdmin';
 import EmployeeDashboard from './Pages/EmployeeDashboard';
 import HrDashboard from './Pages/HrDashboard';
 import ForgotPassword from './Pages/ForgotPassword';
+import Unauthorized from './components/layout/Unauthorized';
+import ProtectedRoutes from './Pages/ProtectedRoutes';
 
 
 function App() {
+
+  
 
   return (
     <>
     <Router>
       <Routes>
+      <Route path="/unauthorized" element={<Unauthorized />} />
+       
         <Route path="/" element={<Login />} />
-
         <Route path="/hr" element={<LoginHR />} />
-
         <Route path="/admin" element={<LoginAdmin />} />
-
-        <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
-
-        <Route path="/HrDashboard" element={<HrDashboard />} />
-
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+
+      
+
+        <Route element={<ProtectedRoutes allowedRoles={["Employee"]} />}>
+          <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
+        </Route>
+
+
+        <Route element={<ProtectedRoutes allowedRoles={["HR"]} />}>
+        <Route path="/HrDashboard" element={<HrDashboard />} />
+        </Route>
+
+        <Route element={<ProtectedRoutes allowedRoles={["Admin"]} />}>
+        {/* admin routes */}
+        </Route>
+
+
+        
+
 
       </Routes>
     </Router>

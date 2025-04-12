@@ -1,4 +1,4 @@
-import { useState } from "react"; // Missing import
+import { useState } from "react"; 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,18 +10,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// Import useToast if you're using it
-// import { useToast } from "@/components/ui/use-toast";
 
-export function LoginAdmin({ className, ...props }) { // Function declaration is now complete
-  // State hooks should be inside the component function
+export function LoginAdmin({ className, ...props }) { 
+ 
   const [formData, setFormData] = useState({
-    user: "",
+    username: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  // const { toast } = useToast?.() || { toast: () => {} }; // Uncomment if you're using toast
+
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -55,37 +53,25 @@ export function LoginAdmin({ className, ...props }) { // Function declaration is
       const token = data.token;
       localStorage.setItem("token", token);
 
-      // Handle successful login
-      /* toast({
-        title: "Login successful",
-        description: `Welcome, ${data.user}`,
-      }); */
-      
-      // Store user data in localStorage or state management
-      localStorage.setItem("user", JSON.stringify({
+
+      localStorage.setItem("username", JSON.stringify({
         employeeId: data.employeeId,
-        username: data.user,
+        username: data.username,
         role: data.role
       }));
       
-      // Redirect based on role (implement your routing logic)
-      // Example: navigate to dashboard
-      // window.location.href = "/dashboard";
+     
       
       console.log("Login successful:", data);
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
-      /* toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again",
-        variant: "destructive",
-      }); */
+    
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Removed extra { that was here
+ 
   return (
     <div className={cn("flex min-h-screen flex-col items-center justify-start pt-20", className)} {...props}>
       <Card className="max-w-md w-full">
@@ -97,13 +83,13 @@ export function LoginAdmin({ className, ...props }) { // Function declaration is
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="user">Username</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="user"
-                  type="text" // Changed from "user" to "text"
-                  placeholder="user.ADMIN"
+                  id="username"
+                  type="text" 
+                  placeholder="username.ADMIN"
                   required
-                  value={formData.user}
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>

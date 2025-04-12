@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 export function LoginHR({ className, ...props }) { // Function declaration is now complete
   // State hooks should be inside the component function
   const [formData, setFormData] = useState({
-    user: "",
+    username: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -62,9 +62,9 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
       }); */
       
       // Store user data in localStorage or state management
-      localStorage.setItem("user", JSON.stringify({
+      localStorage.setItem("username", JSON.stringify({
         employeeId: data.employeeId,
-        username: data.user,
+        username: data.username,
         role: data.role
       }));
       
@@ -98,13 +98,13 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="user">Username</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="user"
+                  id="username"
                   type="text" // Changed from "user" to "text"
-                  placeholder="user.HR"
+                  placeholder="username.HR"
                   required
-                  value={formData.user}
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>
