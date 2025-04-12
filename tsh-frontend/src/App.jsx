@@ -12,8 +12,6 @@ import ProtectedRoutes from './Pages/ProtectedRoutes';
 
 function App() {
 
-  
-
   return (
     <>
     <Router>
@@ -27,7 +25,7 @@ function App() {
 
       
 
-        <Route element={<ProtectedRoutes allowedRoles={["Employee"]} />}>
+        <Route element={<ProtectedRoutes allowedRoles={["EMPLOYEE"]} />}>
           <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
         </Route>
 
@@ -36,7 +34,7 @@ function App() {
         <Route path="/HrDashboard" element={<HrDashboard />} />
         </Route>
 
-        <Route element={<ProtectedRoutes allowedRoles={["Admin"]} />}>
+        <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
         {/* admin routes */}
         </Route>
 

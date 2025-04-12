@@ -36,8 +36,13 @@ public class HRController {
         if (hr.getRole() != Role.HR) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an hr."));
         }
+        //added to extract role
+        Map<String, String> response = new HashMap<>();
+        response.put("token", result);               // JWT token
+        response.put("role", hr.getRole().name());
 
-        return ResponseEntity.ok(Collections.singletonMap("token", result));
+//        return ResponseEntity.ok(Collections.singletonMap("token", result));
+        return ResponseEntity.ok(response);
     }
 
 

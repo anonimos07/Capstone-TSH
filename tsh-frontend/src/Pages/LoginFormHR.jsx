@@ -52,25 +52,16 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
       }
 
       // para local storage ma store token dili ang username og password
-      const token = data.token;
-      localStorage.setItem("token", token);
-
-      // Handle successful login
-      /* toast({
-        title: "Login successful",
-        description: `Welcome, ${data.user}`,
-      }); */
-      
-      // Store user data in localStorage or state management
-      localStorage.setItem("username", JSON.stringify({
-        employeeId: data.employeeId,
-        username: data.username,
-        role: data.role
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({ 
+        role: data.role  // Directly use data.role (not response.data.role)
       }));
+
+    
       
-      // Redirect based on role (implement your routing logic)
-      // Example: navigate to dashboard
-      // window.location.href = "/dashboard";
+     
+      
+
       
       window.location.href = "/HrDashboard";
       console.log("Login successful:", data);

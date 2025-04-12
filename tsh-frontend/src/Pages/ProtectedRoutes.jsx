@@ -1,39 +1,28 @@
-// import { Outlet, Navigate } from "react-router-dom";
-
-// const ProtectedRoutes = () => {
-//     const user = null;
-//     return user ? <Outlet /> : <Navigate to="/unauthorized" />;
-// }
-// export default ProtectedRoutes;
-
 import { Outlet, Navigate } from "react-router-dom";
-import Unauthorized from "../components/layout/Unauthorized"; // Your 401 component
+import Unauthorized from "../components/layout/Unauthorized";
 
 /**
- * Role-based access control (RBAC) for routes
- * @param {Object} props
- * @param {string[]} props.allowedRoles - Roles permitted to access this route (e.g., ["Admin", "HR"])
+ * @param {Object} props - Component props
+ * @param {string[]} props.allowedRoles - Roles permitted to access this route (e.g., ["ADMIN", "HR", "EMPLOYEE"])
  */
-
 const ProtectedRoute = ({ allowedRoles }) => {
-  // Get user data (replace with your actual auth system)
-  const user = JSON.parse(localStorage.getItem("user")) || {
-    role: null, // Default: no access
-  };
+  // Safely get user data from localStorage
+  const userData = localStorage.getItem("user"); // Changed from "username" to "user" as it likely stores user object
+  let user = { role: null };
 
-  // If user exists but has no role (edge case)
-  if (!user?.role) {
-    return <Navigate to="/unauthorized" />;
+  try {
+    user = userData ? JSON.parse(userData) : { role: null };
+  } catch (error) {
+    console.error("Error parsing user data:", error);
   }
 
-  // Check if user's role is included in allowedRoles
+  if (!user?.role) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   const hasAccess = allowedRoles.includes(user.role);
 
-  return hasAccess ? (
-    <Outlet /> // Grant access
-  ) : (
-    <Unauthorized /> // Show 401 page (or <Navigate to="/unauthorized" />)
-  );
+  return hasAccess ? <Outlet /> : <Unauthorized />;
 };
 
 export default ProtectedRoute;

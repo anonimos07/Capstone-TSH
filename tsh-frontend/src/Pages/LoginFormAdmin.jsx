@@ -50,14 +50,9 @@ export function LoginAdmin({ className, ...props }) {
       }
 
       // para local storage ma store token dili ang username og password
-      const token = data.token;
-      localStorage.setItem("token", token);
-
-
-      localStorage.setItem("username", JSON.stringify({
-        employeeId: data.employeeId,
-        username: data.username,
-        role: data.role
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({ 
+        role: data.role  // Directly use data.role (not response.data.role)
       }));
       
      

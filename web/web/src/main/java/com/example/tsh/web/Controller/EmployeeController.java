@@ -31,7 +31,13 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
     if (employee.getRole() != Role.EMPLOYEE) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an employee."));
     }
+    //added to extract role
+    Map<String, String> response = new HashMap<>();
+    response.put("token", result);               // JWT token
+    response.put("role", employee.getRole().name());
 
-    return ResponseEntity.ok(Collections.singletonMap("token", result));
+
+//    return ResponseEntity.ok(Collections.singletonMap("token", result));
+    return ResponseEntity.ok(response);
 }
     }

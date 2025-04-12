@@ -50,17 +50,25 @@ export function Login({ className, ...props }) {
       }
 
       // para local storage ma store token dili ang username og password
-      const token = data.token;
-      localStorage.setItem("token", token);
+    //   const token = data.token;
+    //   localStorage.setItem("token", token);
+    //   localStorage.setItem("user", JSON.stringify({ 
+    //     role: response.data.role  // "EMPLOYEE"
+    // }));
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify({ 
+      role: data.role  // Directly use data.role (not response.data.role)
+    }));
 
 
       
       // Store user data in localStorage or state management
-      localStorage.setItem("username", JSON.stringify({
-        employeeId: data.employeeId,
-        username: data.username,
-        role: data.role
-      }));
+      // localStorage.setItem("username", JSON.stringify({
+      //   employeeId: data.employeeId,
+      //   username: data.username,
+      //   role: data.role
+      // }));
       
      
       
