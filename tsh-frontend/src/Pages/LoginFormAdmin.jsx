@@ -104,6 +104,13 @@ export function LoginAdmin({ className, ...props }) {
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
+            <div>
+              <p className="text-sm text-gray-500 mt-4">
+                <a href="/ForgotPassword" className="text-blue-500 hover:underline">
+                  forgot password?
+                </a>
+              </p>
+            </div>
           </form>
         </CardContent>
       </Card>
