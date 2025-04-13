@@ -16,7 +16,7 @@ public class Admin {
 
     @Setter
     @Getter
-    private String user;
+    private String username;
 
     @Setter
     @Getter
@@ -26,9 +26,9 @@ public class Admin {
     @Getter @Setter
     private Role role = Role.ADMIN;
 
-    public Admin(String user, String password){
+    public Admin(String username, String password){
         super();
-        this.user = user;
+        this.username = username;
         this.password = password;
         this.role = Role.ADMIN;
     }

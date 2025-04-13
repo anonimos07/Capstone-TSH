@@ -33,33 +33,7 @@ public class AdminController {
         return adminService.getAllAdmins();
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<Map<String, Object>> loginEmployee(
-//            @RequestBody Map<String, String> credentials) {
-//
-//        try {
-//            Admin admin = adminService.authenticateAdmin(
-//                    credentials.get("user"),
-//                    credentials.get("password")
-//            );
-//
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("status", "success");
-//            response.put("employeeId", admin.getAdminId());
-//            response.put("user", admin.getUser());
-//            response.put("role", admin.getRole().name());
-//
-//            return ResponseEntity.ok(response);
-//
-//        } catch (RuntimeException e) {
-//            Map<String, Object> errorResponse = new HashMap<>();
-//            errorResponse.put("status", "error");
-//            errorResponse.put("message", e.getMessage());
-//
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(errorResponse);
-//        }
-//    }
+
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Admin admin) {
@@ -71,7 +45,12 @@ public class AdminController {
         if (admin.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an admin."));
         }
-        return ResponseEntity.ok(Collections.singletonMap("token", result));
+        //added to extract role
+        Map<String, String> response = new HashMap<>();
+        response.put("token", result);               // JWT token
+        response.put("role", admin.getRole().name());
+//        return ResponseEntity.ok(Collections.singletonMap("token", result));
+        return ResponseEntity.ok(response);
     }
 
     //create admin

@@ -31,7 +31,7 @@ public class AdminService {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    private JwtService jwtService;
+    JwtService jwtService;
 
 //    public AdminService(AdminRepo adminRepository, PasswordEncoder passwordEncoder){
 //        this.adminRepository = adminRepository;
@@ -39,7 +39,7 @@ public class AdminService {
 //    }
 
     public Admin authenticateAdmin(String user, String password) {
-        Optional<Admin> adminOptional = adminRepository.findByUser(user);
+        Optional<Admin> adminOptional = adminRepository.findByUsername(user);
 
         if (adminOptional.isEmpty()) {
             throw new RuntimeException("User not found");
@@ -83,22 +83,15 @@ public class AdminService {
         adminRepository.deleteById(id);
     }
 
-
-
-//    // Check login credentials (optional for authentication)
-//    public boolean validateAdmin(String user, String password) {
-//        return adminRepository.findByUserAndPassword(user, password).isPresent();
-//    }
-
     @PostConstruct
     public void adminAcc() {
-        String defUser = "tsh.ADMIN";
+        String defUsername = "tsh.ADMIN";
         String defPass = "admin123";
 
         // Check if admin exists (by username only)
-        if (!adminRepository.existsByUser(defUser)) {
+        if (!adminRepository.existsByUsername(defUsername)) {
             Admin admin = new Admin();
-            admin.setUser(defUser);
+            admin.setUsername(defUsername);
             admin.setPassword(passwordEncoder.encode(defPass));
             admin.setRole(Role.ADMIN);
             adminRepository.save(admin);
@@ -107,9 +100,9 @@ public class AdminService {
     }
     public String verify(Admin admin){
         Authentication authentication =
-                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getUser(), admin.getPassword()));
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getUsername(), admin.getPassword()));
         if(authentication.isAuthenticated())
-            return jwtService.generateToken(admin.getUser());
+            return jwtService.generateToken(admin.getUsername());
 
         return "failed";
     }

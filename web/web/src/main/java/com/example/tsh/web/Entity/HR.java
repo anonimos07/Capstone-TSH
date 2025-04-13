@@ -17,7 +17,7 @@ public class HR {
 
     @Getter
     @Setter
-    public String user;
+    public String username;
     @Getter @Setter
     public String password;
     @Getter @Setter
@@ -40,7 +40,7 @@ public class HR {
 
     public HR(String user, String password,String email,String firstName,
                     String lastName, String contact, String position, float baseSalary){
-        this.user = user;
+        this.username = username;
         this.password = password;
         this.email = email;
         this.firstName = firstName;

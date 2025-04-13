@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 export function LoginHR({ className, ...props }) { // Function declaration is now complete
   // State hooks should be inside the component function
   const [formData, setFormData] = useState({
-    user: "",
+    username: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -52,25 +52,16 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
       }
 
       // para local storage ma store token dili ang username og password
-      const token = data.token;
-      localStorage.setItem("token", token);
-
-      // Handle successful login
-      /* toast({
-        title: "Login successful",
-        description: `Welcome, ${data.user}`,
-      }); */
-      
-      // Store user data in localStorage or state management
-      localStorage.setItem("user", JSON.stringify({
-        employeeId: data.employeeId,
-        username: data.user,
-        role: data.role
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify({ 
+        role: data.role  // Directly use data.role (not response.data.role)
       }));
+
+    
       
-      // Redirect based on role (implement your routing logic)
-      // Example: navigate to dashboard
-      // window.location.href = "/dashboard";
+     
+      
+
       
       window.location.href = "/HrDashboard";
       console.log("Login successful:", data);
@@ -98,13 +89,13 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="user">Username</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="user"
+                  id="username"
                   type="text" // Changed from "user" to "text"
-                  placeholder="user.HR"
+                  placeholder="username.HR"
                   required
-                  value={formData.user}
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>
@@ -123,6 +114,13 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mt-4">
+                <a href="/ForgotPassword" className="text-blue-500 hover:underline">
+                  forgot password?
+                </a>
+              </p>
             </div>
           </form>
         </CardContent>

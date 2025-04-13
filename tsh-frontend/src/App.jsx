@@ -13,15 +13,31 @@ function App() {
     <>
     <Router>
       <Routes>
+      <Route path="/unauthorized" element={<Unauthorized />} />
+       
         <Route path="/" element={<Login />} />
-
         <Route path="/hr" element={<LoginHR />} />
-
         <Route path="/admin" element={<LoginAdmin />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
 
-        <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
+      
 
+        <Route element={<ProtectedRoutes allowedRoles={["EMPLOYEE"]} />}>
+          <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
+        </Route>
+
+
+        <Route element={<ProtectedRoutes allowedRoles={["HR"]} />}>
         <Route path="/HrDashboard" element={<HrDashboard />} />
+        </Route>
+
+        <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
+        {/* admin routes */}
+        </Route>
+
+
+        
+
 
         <Route path="/LogoutHr" element={<LogoutHR />} />
 

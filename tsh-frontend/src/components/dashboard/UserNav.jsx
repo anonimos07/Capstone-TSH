@@ -45,6 +45,7 @@ export function UserNav({ userName, userEmail }) {
                   onClick={() => {
                     localStorage.removeItem("token");
                     localStorage.removeItem("user");
+                    localStorage.removeItem("username");
                     }}  
                     className="flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
                     >
