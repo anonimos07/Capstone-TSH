@@ -7,7 +7,7 @@ export function HrNav({
 }) {
   const hrLinks = [
     {
-      href: "/hr/dashboard",
+      href: "/HrDashboard",
       label: "Dashboard",
     },
     {
