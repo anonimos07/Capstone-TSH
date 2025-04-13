@@ -4,6 +4,7 @@ import { HrNav } from "../components/dashboard/HrNav";
 import { HrUser } from "../components/dashboard/HrUser";
 import { HrHeader } from "../components/dashboard/HrHeader";
 import { HrOverview } from "../components/dashboard/HrOverview";
+import { Link } from "react-router-dom";
 
 function Progress({ value, className }) {
   return (
@@ -123,8 +124,179 @@ export default function HrDashboard() {
     email: ""
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [employeesError, setEmployeesError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   
+  // Add form state for Create Employee
+  const [formData, setFormData] = useState({
+    user: "",
+    password: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    position: "",
+    baseSalary: "",
+    role: "employee"
+  });
+  const [formError, setFormError] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
+
+  // Add filtered employees computation
+  const filteredEmployees = employees.filter(employee => {
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    const username = employee.user.toLowerCase();
+    const search = searchQuery.toLowerCase();
+    return fullName.includes(search) || username.includes(search);
+  });
+
+  // Form handling functions
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError("");
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch("http://localhost:8080/hr/create-employee", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create employee");
+      }
+
+      // Reset form after successful creation
+      setFormData({
+        user: "",
+        password: "",
+        email: "",
+        firstName: "",
+        lastName: "",
+        position: "",
+        baseSalary: "",
+        role: "employee"
+      });
+
+      alert("Employee created successfully!");
+      // Switch back to overview tab
+      setActiveTab('overview');
+    } catch (error) {
+      setFormError(error.message || "Failed to create employee");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // Add handlers for edit and delete
+  const handleEdit = (employee) => {
+    // Pre-fill the create form with employee data
+    setFormData({
+      employeeId: employee.employeeId,
+      user: employee.user,
+      password: "", // Don't pre-fill password for security
+      email: employee.email,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      contact: employee.contact,
+      position: employee.position,
+      baseSalary: employee.baseSalary,
+      role: employee.role
+    });
+    // Switch to create/edit tab
+    setActiveTab('createEmployee');
+  };
+
+  const handleDelete = async (employeeId) => {
+    if (!window.confirm("Are you sure you want to delete this employee?")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8080/hr/employees/${employeeId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete employee");
+      }
+
+      // Remove employee from list
+      setEmployees(employees.filter(emp => emp.employeeId !== employeeId));
+      alert("Employee deleted successfully");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  // Fetch all employees
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setEmployeesLoading(true);
+      setEmployeesError("");
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch("http://localhost:8080/hr/employees", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch employees");
+        }
+
+        const data = await response.json();
+        setEmployees(data);
+      } catch (error) {
+        setEmployeesError(error.message);
+        // For development, add some sample data
+        if (process.env.NODE_ENV === 'development') {
+          setEmployees([
+            {
+              employeeId: "",
+              user: "",
+              email: "",
+              firstName: "",
+              lastName: "",
+              contact: "",
+              position: "",
+              baseSalary: "",
+              role: ""
+            },
+          ]);
+        }
+      } finally {
+        setEmployeesLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
   useEffect(() => {
     const fetchHrData = async () => {
       try {
@@ -228,6 +400,8 @@ export default function HrDashboard() {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="payroll">Payroll</TabsTrigger>
+              <TabsTrigger value="viewEmployee">View all Employees/HR</TabsTrigger>
+              <TabsTrigger value="createEmployee">Create Employee/HR</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -538,6 +712,251 @@ export default function HrDashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="viewEmployee" className="space-y-4">
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b">
+                  <h2 className="text-2xl font-semibold">Employee List</h2>
+                  <p className="text-gray-500 mt-1">View all employees and HR staff</p>
+                  {employeesError && (
+                    <p className="text-red-500 mt-2">{employeesError}</p>
+                  )}
+                  <div className="mt-4 relative">
+                    <input
+                      type="text"
+                      placeholder="Search by name or username..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                    <svg
+                      className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {employeesLoading ? (
+                  <div className="p-8 text-center">
+                    <p className="text-gray-500">Loading employees...</p>
+                  </div>
+                ) : employees.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-gray-500">No list of Employee and HR</p>
+                  </div>
+                ) : filteredEmployees.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-gray-500">No employees found matching your search</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50 text-left">
+                          <th className="p-4 font-medium">Employee ID</th>
+                          <th className="p-4 font-medium">Username</th>
+                          <th className="p-4 font-medium">Name</th>
+                          <th className="p-4 font-medium">Email</th>
+                          <th className="p-4 font-medium">Contact</th>
+                          <th className="p-4 font-medium">Position</th>
+                          <th className="p-4 font-medium">Base Salary</th>
+                          <th className="p-4 font-medium">Role</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredEmployees.map((employee) => (
+                          <tr 
+                            key={employee.employeeId}
+                            className="border-t hover:bg-gray-50"
+                          >
+                            <td className="p-4">{employee.employeeId}</td>
+                            <td className="p-4">{employee.user}</td>
+                            <td className="p-4">
+                              {employee.firstName} {employee.lastName}
+                            </td>
+                            <td className="p-4">{employee.email}</td>
+                            <td className="p-4">{employee.contact}</td>
+                            <td className="p-4">{employee.position}</td>
+                            <td className="p-4">₱{employee.baseSalary.toLocaleString()}</td>
+                            <td className="p-4">
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                employee.role === 'hr' 
+                                  ? 'bg-purple-100 text-purple-700' 
+                                  : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {employee.role.toUpperCase()}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="createEmployee" className="space-y-4">
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-semibold">Create New Employee/HR</h2>
+                  <p className="text-gray-500 mt-1">Enter the details of the new employee/hr</p>
+                  {formError && <p className="text-red-500 mt-2">{formError}</p>}
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* First Name and Last Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Firstname"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Lastname"
+                      />
+                    </div>
+
+                    {/* Username and Password */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        name="user"
+                        value={formData.user}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Username"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Password"
+                      />
+                    </div>
+
+                    {/* Email and Position */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Email"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Position
+                      </label>
+                      <input
+                        type="text"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Position"
+                      />
+                    </div>
+
+                    {/* Base Salary and Role */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Base Salary
+                      </label>
+                      <input
+                        type="number"
+                        name="baseSalary"
+                        value={formData.baseSalary}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Role
+                      </label>
+                      <select
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md bg-white"
+                        required
+                      >
+                        <option value="employee">EMPLOYEE</option>
+                        <option value="hr">HR</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-4 pt-4">
+                    <button
+                      type="button"
+                      className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                      onClick={() => setActiveTab('overview')}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {formLoading ? "Creating..." : "Create Employee"}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
