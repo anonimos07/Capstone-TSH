@@ -1,54 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { CalendarDays, Clock, DollarSign, FileText, PieChart, UserCheck } from 'lucide-react';
-import { MainNav } from "../components/dashboard/MainNav";
-import { UserNav } from "../components/dashboard/UserNav";
-import { PageHeader } from "../components/dashboard/PageHeader";
-import { OverviewCard } from "../components/dashboard/OverviewCard";
+import React, { useState, useEffect } from "react"
+import { CalendarDays, Clock, FileText, PieChart, UserCheck } from "lucide-react"
+import { MainNav } from "../components/dashboard/MainNav"
+import { UserNav } from "../components/dashboard/UserNav"
+import { PageHeader } from "../components/dashboard/PageHeader"
 
 function Progress({ value, className }) {
   return (
     <div className={`w-full bg-gray-200 rounded-full h-2 ${className || ""}`}>
-      <div 
-        className="bg-primary h-full rounded-full transition-all"
-        style={{ width: `${value}%` }}
-      ></div>
+      <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${value}%` }}></div>
     </div>
-  );
+  )
 }
 
-
 function Tabs({ defaultValue, children, className }) {
-  const [activeTab, setActiveTab] = useState(defaultValue);
-  
-  const tabsList = children.find(child => child.type === TabsList);
-  const tabsContents = children.filter(child => child.type === TabsContent);
+  const [activeTab, setActiveTab] = useState(defaultValue)
 
-  const clonedTabsList = tabsList ? 
-    React.cloneElement(tabsList, { activeTab, setActiveTab }) : null;
-  
-  const activeContent = tabsContents.find(content => content.props.value === activeTab);
-  
+  const tabsList = children.find((child) => child.type === TabsList)
+  const tabsContents = children.filter((child) => child.type === TabsContent)
+
+  const clonedTabsList = tabsList ? React.cloneElement(tabsList, { activeTab, setActiveTab }) : null
+
+  const activeContent = tabsContents.find((content) => content.props.value === activeTab)
+
   return (
     <div className={className}>
       {clonedTabsList}
       {activeContent}
     </div>
-  );
+  )
 }
 
 function TabsList({ children, activeTab, setActiveTab }) {
-  const clonedChildren = React.Children.map(children, child => 
-    React.cloneElement(child, { 
+  const clonedChildren = React.Children.map(children, (child) =>
+    React.cloneElement(child, {
       isActive: child.props.value === activeTab,
-      onClick: () => setActiveTab(child.props.value)
-    })
-  );
-  
-  return (
-    <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
-      {clonedChildren}
-    </div>
-  );
+      onClick: () => setActiveTab(child.props.value),
+    }),
+  )
+
+  return <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">{clonedChildren}</div>
 }
 
 function TabsTrigger({ value, children, isActive, onClick }) {
@@ -61,49 +51,50 @@ function TabsTrigger({ value, children, isActive, onClick }) {
     >
       {children}
     </button>
-  );
+  )
 }
 
 function TabsContent({ value, children, className }) {
-  return <div className={className}>{children}</div>;
+  return <div className={className}>{children}</div>
 }
 
 function Card({ children, className }) {
-  return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>;
+  return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>
 }
 
 function CardHeader({ children, className }) {
-  return <div className={`p-6 pb-3 ${className || ""}`}>{children}</div>;
+  return <div className={`p-6 pb-3 ${className || ""}`}>{children}</div>
 }
 
 function CardTitle({ children, className }) {
-  return <h3 className={`text-lg font-semibold ${className || ""}`}>{children}</h3>;
+  return <h3 className={`text-lg font-semibold ${className || ""}`}>{children}</h3>
 }
 
 function CardDescription({ children }) {
-  return <p className="text-sm text-gray-500">{children}</p>;
+  return <p className="text-sm text-gray-500">{children}</p>
 }
 
 function CardContent({ children }) {
-  return <div className="p-6 pt-0">{children}</div>;
+  return <div className="p-6 pt-0">{children}</div>
 }
 
 function Button({ children, variant, size, className, ...props }) {
-  const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50";
-  
+  const baseStyles =
+    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50"
+
   const variantStyles = {
     default: "bg-primary text-white hover:bg-primary/90",
     outline: "border border-gray-300 bg-transparent hover:bg-gray-50",
     ghost: "bg-transparent hover:bg-gray-50",
-  };
-  
+  }
+
   const sizeStyles = {
     default: "h-10 px-4 py-2",
     sm: "h-8 px-3 text-xs",
-  };
-  
+  }
+
   return (
-    <button 
+    <button
       className={`
         ${baseStyles} 
         ${variantStyles[variant || "default"]} 
@@ -114,100 +105,113 @@ function Button({ children, variant, size, className, ...props }) {
     >
       {children}
     </button>
-  );
+  )
+}
+
+function OverviewCard({ title, value, description, icon: Icon, className, onClick }) {
+  return (
+    <div className={`rounded-lg border bg-white p-6 shadow-sm ${className || ""}`} onClick={onClick}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <h2 className="mt-2 text-3xl font-bold">{value}</h2>
+          <p className="mt-1 text-xs text-gray-500">{description}</p>
+        </div>
+        {Icon && <Icon className="h-8 w-8 text-gray-400" />}
+      </div>
+    </div>
+  )
 }
 
 export default function EmployeeDashboard() {
   const [employee, setEmployee] = useState({
     firstName: "",
     lastName: "",
-    email: ""
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+    email: "",
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        setIsLoading(true);
-        setError(null); // Reset error state on new fetch
-        
+        setIsLoading(true)
+        setError(null) // Reset error state on new fetch
+
         try {
-          const token = localStorage.getItem('token'); // Get token from storage
-          const response = await fetch('/employee/dashboard', {
+          const token = localStorage.getItem("token") // Get token from storage
+          const response = await fetch("/employee/dashboard", {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Accept': 'application/json', // Explicitly request JSON
-              'Content-Type': 'application/json'
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json", // Explicitly request JSON
+              "Content-Type": "application/json",
             },
-            credentials: 'include' // Include cookies if needed
-          });
-    
+            credentials: "include", // Include cookies if needed
+          })
+
           // Enhanced error handling
           if (!response.ok) {
-            let errorMessage = `Server error: ${response.status}`;
+            let errorMessage = `Server error: ${response.status}`
             try {
               // Attempt to parse JSON error response
-              const errorData = await response.json();
-              errorMessage = errorData.error || errorData.message || errorMessage;
+              const errorData = await response.json()
+              errorMessage = errorData.error || errorData.message || errorMessage
             } catch (e) {
               // If JSON parse fails, check for text response
-              const text = await response.text();
-              if (text) errorMessage += ` - ${text}`;
+              const text = await response.text()
+              if (text) errorMessage += ` - ${text}`
             }
-            throw new Error(errorMessage);
+            throw new Error(errorMessage)
           }
-    
+
           // Verify content type
-          const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            const body = await response.text();
-            console.error('Non-JSON response:', body);
-            throw new Error('Server returned non-JSON response');
+          const contentType = response.headers.get("content-type")
+          if (!contentType || !contentType.includes("application/json")) {
+            const body = await response.text()
+            console.error("Non-JSON response:", body)
+            throw new Error("Server returned non-JSON response")
           }
-    
+
           // Process successful response
-          const data = await response.json();
+          const data = await response.json()
           setEmployee({
-            firstName: data.firstName || '',
-            lastName: data.lastName || '',
-            email: data.email || '',
+            firstName: data.firstName || "",
+            lastName: data.lastName || "",
+            email: data.email || "",
             // Add fallbacks for all expected fields
-            ...data
-          });
-    
+            ...data,
+          })
         } catch (fetchError) {
-          console.error('API fetch failed:', fetchError);
-          
+          console.error("API fetch failed:", fetchError)
+
           // Enhanced development fallback
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('Using fallback data in development environment');
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Using fallback data in development environment")
             setEmployee({
               firstName: "John",
               lastName: "Doe",
               email: "john.doe@techstaffhub.com",
               // Include any additional fields your app expects
               role: "Developer",
-              id: "dev-123"
-            });
+              id: "dev-123",
+            })
           } else {
             // Production error handling
-            setError(fetchError.message || 'Failed to load employee data');
+            setError(fetchError.message || "Failed to load employee data")
             // Consider sending error to monitoring service
           }
         } finally {
-          setIsLoading(false);
+          setIsLoading(false)
         }
-        
       } catch (err) {
-        console.error('Unexpected error:', err);
-        setError(err.message || 'An unexpected error occurred');
-        setIsLoading(false);
+        console.error("Unexpected error:", err)
+        setError(err.message || "An unexpected error occurred")
+        setIsLoading(false)
       }
-    };
-  
-    fetchEmployeeData();
-  }, []);
+    }
+
+    fetchEmployeeData()
+  }, [])
 
   if (isLoading) {
     return (
@@ -216,7 +220,7 @@ export default function EmployeeDashboard() {
           <p className="text-lg">Loading employee data...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -229,10 +233,10 @@ export default function EmployeeDashboard() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
-  const fullName = `${employee.firstName} ${employee.lastName}`;
+  const fullName = `${employee.firstName} ${employee.lastName}`
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -262,16 +266,20 @@ export default function EmployeeDashboard() {
             <TabsContent value="overview" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <OverviewCard
-                  title="Available Leave"
-                  value="12 days"
-                  description="Out of 24 days annual leave"
-                  icon={CalendarDays}
+                  title="Time In/Out"
+                  value="Track Hours"
+                  description="Record your daily attendance"
+                  icon={Clock}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => (window.location.href = "/TimeTracking")}
                 />
                 <OverviewCard
-                  title="Next Payday"
-                  value="15 Apr 2025"
-                  description="Estimated amount: $3,240"
-                  icon={DollarSign}
+                  title="Logs"
+                  value="View History"
+                  description="Check your attendance records"
+                  icon={FileText}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => (window.location.href = "/TimeLogs")}
                 />
                 <OverviewCard title="Attendance" value="96%" description="Last 30 days" icon={UserCheck} />
                 <OverviewCard title="Overtime" value="8 hours" description="This month" icon={Clock} />
@@ -470,10 +478,10 @@ export default function EmployeeDashboard() {
                       </div>
                       <div className="grid grid-cols-7 gap-px bg-gray-100">
                         {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
-                          let status = "present";
-                          if (date > 20) status = "future";
-                          if (date === 5 || date === 12) status = "late";
-                          if (date === 6 || date === 13) status = "weekend";
+                          let status = "present"
+                          if (date > 20) status = "future"
+                          if (date === 5 || date === 12) status = "late"
+                          if (date === 6 || date === 13) status = "weekend"
 
                           return (
                             <div
@@ -496,7 +504,7 @@ export default function EmployeeDashboard() {
                                 {status === "future" && "-"}
                               </div>
                             </div>
-                          );
+                          )
                         })}
                       </div>
                     </div>
@@ -581,5 +589,5 @@ export default function EmployeeDashboard() {
         </div>
       </footer>
     </div>
-  );
+  )
 }

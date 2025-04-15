@@ -8,6 +8,8 @@ import HrDashboard from './Pages/HrDashboard';
 import ForgotPassword from './Pages/ForgotPassword';
 import Unauthorized from './components/layout/Unauthorized';
 import ProtectedRoutes from './Pages/ProtectedRoutes';
+import TimeLogs from './Pages/TimeLogs';
+import TimeTracking from './Pages/TimeTracking';
 
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
 
         <Route element={<ProtectedRoutes allowedRoles={["EMPLOYEE"]} />}>
           <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
+          <Route path="/TimeLogs" element={<TimeLogs  />} />
+          <Route path="/TimeTracking" element={<TimeTracking  />} />
         </Route>
 
 
