@@ -270,31 +270,56 @@ export default function HrDashboard() {
 
   // Fetch all employees
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchData = async () => {
       setEmployeesLoading(true);
       setEmployeesError("");
-      
+      setIsLoading(true);
+      setError("");
+  
+      const token = localStorage.getItem('token');
+  
+      const endpoints = {
+        EMPLOYEE: "http://localhost:8080/hr/all-employee",
+        HR: "http://localhost:8080/hr/all-hr"
+      };
+  
       try {
-        const token = localStorage.getItem('token');
-        
-        const response = await fetch("http://localhost:8080/hr/all-employee", {
+        // Fetch Employees
+        const employeeResponse = await fetch(endpoints.EMPLOYEE, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
           }
         });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch employees");
+  
+        if (!employeeResponse.ok) throw new Error("Failed to fetch employees");
+        const employeeData = await employeeResponse.json();
+        setEmployees(employeeData);
+  
+        // Fetch HR
+        const hrResponse = await fetch(endpoints.HR, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+  
+        if (!hrResponse.ok) throw new Error(`Server responded with status: ${hrResponse.status}`);
+        const contentType = hrResponse.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Server returned non-JSON response');
         }
-
-        const data = await response.json();
-        setEmployees(data);
+  
+        const hrData = await hrResponse.json();
+        setHr(hrData);
+  
       } catch (error) {
-        setEmployeesError(error.message);
-        // For development, add some sample data
+        console.error("Fetch error:", error);
+  
         if (process.env.NODE_ENV === 'development') {
+          console.warn("Using fallback dev data");
           setEmployees([
             {
               employeeId: "",
@@ -306,67 +331,26 @@ export default function HrDashboard() {
               position: "",
               baseSalary: "",
               role: ""
-            },
+            }
           ]);
-        }
-      } finally {
-        setEmployeesLoading(false);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
-
-  useEffect(() => {
-    const fetchHrData = async () => {
-      setIsLoading(true);
-  
-      const token = localStorage.getItem('token');
-  
-      try {
-        const response = await fetch("http://localhost:8080/hr/all-hr", {
-          method: "GET",
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          // Remove this unless you're using cookies/sessions
-          // credentials: 'include'
-        });
-  
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
-        }
-  
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Server returned non-JSON response');
-        }
-  
-        const data = await response.json();
-        setHr(data);
-  
-      } catch (err) {
-        console.error('API fetch failed:', err);
-  
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Using fallback HR data in development environment');
           setHr({
             firstName: "bre",
             lastName: "bre",
             email: "bre@gmail.com"
           });
         } else {
-          setError(err.message || "Failed to fetch HR data");
+          setEmployeesError(error.message);
+          setError(error.message);
         }
-  
       } finally {
+        setEmployeesLoading(false);
         setIsLoading(false);
       }
     };
   
-    fetchHrData();
+    fetchData();
   }, []);
+  
   
 
   if (isLoading) {
