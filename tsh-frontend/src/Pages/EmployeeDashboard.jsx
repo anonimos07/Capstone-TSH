@@ -135,83 +135,72 @@ export default function EmployeeDashboard() {
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        setIsLoading(true)
-        setError(null) // Reset error state on new fetch
+        setIsLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+          throw new Error("Authentication token not found. Please log in again.");
+        }
 
         try {
-          const token = localStorage.getItem("token") // Get token from storage
-          const response = await fetch("/employee/dashboard", {
+          // Use the "me" endpoint to get current user's profile
+          const response = await fetch("http://localhost:8080/employee/me", {
+            method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
-              Accept: "application/json", // Explicitly request JSON
               "Content-Type": "application/json",
             },
-            credentials: "include", // Include cookies if needed
-          })
+          });
 
-          // Enhanced error handling
           if (!response.ok) {
-            let errorMessage = `Server error: ${response.status}`
+            const responseClone = response.clone();
+            let errorMessage = `Server error: ${response.status}`;
+            
             try {
-              // Attempt to parse JSON error response
-              const errorData = await response.json()
-              errorMessage = errorData.error || errorData.message || errorMessage
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorMessage;
             } catch (e) {
-              // If JSON parse fails, check for text response
-              const text = await response.text()
-              if (text) errorMessage += ` - ${text}`
+              try {
+                const text = await responseClone.text();
+                if (text) errorMessage += ` - ${text}`;
+              } catch (textError) {
+                console.error("Failed to read response body", textError);
+              }
             }
-            throw new Error(errorMessage)
+            
+            if (response.status === 401 || response.status === 403) {
+              // Handle unauthorized/forbidden - might need to redirect to login
+              localStorage.removeItem("token"); // Clear invalid token
+              throw new Error("Session expired. Please log in again.");
+            }
+            
+            throw new Error(errorMessage);
           }
 
-          // Verify content type
-          const contentType = response.headers.get("content-type")
-          if (!contentType || !contentType.includes("application/json")) {
-            const body = await response.text()
-            console.error("Non-JSON response:", body)
-            throw new Error("Server returned non-JSON response")
-          }
-
-          // Process successful response
-          const data = await response.json()
+          const data = await response.json();
           setEmployee({
             firstName: data.firstName || "",
             lastName: data.lastName || "",
             email: data.email || "",
-            // Add fallbacks for all expected fields
             ...data,
-          })
+          });
         } catch (fetchError) {
-          console.error("API fetch failed:", fetchError)
-
-          // Enhanced development fallback
-          if (process.env.NODE_ENV === "development") {
-            console.warn("Using fallback data in development environment")
-            setEmployee({
-              firstName: "John",
-              lastName: "Doe",
-              email: "john.doe@techstaffhub.com",
-              // Include any additional fields your app expects
-              role: "Developer",
-              id: "dev-123",
-            })
-          } else {
-            // Production error handling
-            setError(fetchError.message || "Failed to load employee data")
-            // Consider sending error to monitoring service
-          }
+          console.error("API fetch failed:", fetchError);
+          setError(fetchError.message || "Failed to load employee data");
         } finally {
-          setIsLoading(false)
+          setIsLoading(false);
         }
       } catch (err) {
-        console.error("Unexpected error:", err)
-        setError(err.message || "An unexpected error occurred")
-        setIsLoading(false)
+        console.error("Unexpected error:", err);
+        setError(err.message || "An unexpected error occurred");
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchEmployeeData()
-  }, [])
+    fetchEmployeeData();
+  }, []);
 
   if (isLoading) {
     return (

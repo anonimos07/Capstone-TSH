@@ -1,10 +1,76 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Clock, ArrowRight } from "lucide-react"
 import { MainNav } from "../components/dashboard/MainNav"
 import { UserNav } from "../components/dashboard/UserNav"
 import { PageHeader } from "../components/dashboard/PageHeader"
+
+// API Service
+const API_BASE_URL = 'http://localhost:8080/api/time-logs';
+
+// Get token from localStorage
+const getToken = () => {
+  return localStorage.getItem('token');
+};
+const userData = {
+  username: localStorage.getItem("username") || ""
+};
+
+// API request helper with token
+const callApi = async (endpoint, method = 'GET', body = null) => {
+  const token = getToken();
+  
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+  
+  const options = {
+    method,
+    headers: {
+      'Authorization': `Bearer ${token}`,  // Add Bearer prefix here
+      'Content-Type': 'application/json',
+    }
+  };
+  
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+  
+  if (!response.ok) {
+    const text = await response.text(); // Get raw response for better debugging
+    console.error('API error response:', response.status, text);
+  
+    let errorMessage = 'API request failed';
+    try {
+      const errorData = JSON.parse(text);
+      errorMessage = errorData.error || errorMessage;
+    } catch (e) {
+      errorMessage = `${response.status} - ${text}`;
+    }
+  
+    throw new Error(errorMessage);
+  }
+    
+  
+  return response.json();
+};
+
+async function getCurrentStatus() {
+  return callApi('/status');
+}
+
+async function getTodayLogs() {
+  return callApi('/today');
+}
+
+async function timeIn() {
+  return callApi('/time-in', 'POST');
+}
+
+async function timeOut() {
+  return callApi('/time-out', 'POST');
+}
 
 function Card({ children, className }) {
   return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>
@@ -62,9 +128,10 @@ function Button({ children, variant, size, className, onClick, disabled }) {
 
 export default function TimeTracking() {
   const [employee, setEmployee] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@techstaffhub.com",
+    username: userData.username,
+    firstName: "",
+    lastName: "",
+    email: "",
   })
 
   const [timeStatus, setTimeStatus] = useState({
@@ -74,66 +141,103 @@ export default function TimeTracking() {
   })
 
   const [timeRecords, setTimeRecords] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Function to check if user is authenticated
+  useEffect(() => {
+    // Get the token from local storage
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      setIsAuthenticated(false);
+      setError('Not authenticated. Please log in.');
+      return;
+    }
+    
+    // Get the user object from local storage
+    const userStr = localStorage.getItem("user");
+    const userData = userStr ? JSON.parse(userStr) : null;
+    
+    if (!userData) {
+      setIsAuthenticated(false);
+      setError('User data not found. Please log in again.');
+      return;
+    }
+    
+    // Load employee info
+    // In a real app, you might fetch additional user details from an API using the token
+    setEmployee({
+      username: userData.username, // Using role as ID for this example
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      role: userData.role // Include the role from localStorage
+    });
+    
+    setIsAuthenticated(true);
+  }, []);
+
+  // Function to load time status and records
+  const loadData = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setLoading(true);
+      
+      // Get current status
+      const status = await getCurrentStatus();
+      setTimeStatus(status);
+      
+      // Get today's records
+      const logs = await getTodayLogs();
+      setTimeRecords(logs);
+      
+      setError(null);
+    } catch (err) {
+      setError('Failed to load data. Please try again.');
+      console.error('Error loading data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // In a real app, you would fetch the current time status from an API
-    // For demo purposes, we'll check localStorage
-    const savedTimeStatus = localStorage.getItem("timeStatus")
-    if (savedTimeStatus) {
-      setTimeStatus(JSON.parse(savedTimeStatus))
+    if (isAuthenticated) {
+      loadData();  // Load data once on authentication or page load
+      
+      // Optionally reduce the refresh frequency or use conditions
+      const intervalId = setInterval(() => {
+        loadData(); // Refresh after a longer interval, like every 5 minutes
+      }, 300000);  // 5 minutes (300000 ms)
+      
+      return () => clearInterval(intervalId);
     }
+  }, [isAuthenticated]);
 
-    // Load today's time records
-    const savedTimeRecords = localStorage.getItem("todayTimeRecords")
-    if (savedTimeRecords) {
-      setTimeRecords(JSON.parse(savedTimeRecords))
+  const handleTimeIn = async () => {
+    try {
+        const timeLog = await timeIn();  // Assuming timeIn() is an API call
+        setTimeRecords([timeLog, ...timeRecords]);  // Add the new time log to the state
+        setTimeStatus({ isTimedIn: true });  // Update timeStatus
+    } catch (error) {
+        setError('Failed to time in. Please try again.');
     }
-  }, [])
+}
 
-  const handleTimeIn = () => {
-    const now = new Date()
-    const newTimeStatus = {
-      isTimedIn: true,
-      timeIn: now.toISOString(),
-      timeOut: null,
+const handleTimeOut = async () => {
+    try {
+        const timeLog = await timeOut();  // Assuming timeOut() is an API call
+        // Update the active time log in the state
+        setTimeRecords(timeRecords.map(record => 
+            record.id === timeLog.id ? timeLog : record
+        ));
+        setTimeStatus({ isTimedIn: false });  // Update timeStatus
+    } catch (error) {
+        setError('Failed to time out. Please try again.');
     }
-
-    setTimeStatus(newTimeStatus)
-    localStorage.setItem("timeStatus", JSON.stringify(newTimeStatus))
-
-    // Add to records
-    const newRecord = {
-      id: Date.now(),
-      timeIn: now.toISOString(),
-      timeOut: null,
-    }
-
-    const updatedRecords = [...timeRecords, newRecord]
-    setTimeRecords(updatedRecords)
-    localStorage.setItem("todayTimeRecords", JSON.stringify(updatedRecords))
-  }
-
-  const handleTimeOut = () => {
-    const now = new Date()
-    const newTimeStatus = {
-      isTimedIn: false,
-      timeIn: timeStatus.timeIn,
-      timeOut: now.toISOString(),
-    }
-
-    setTimeStatus(newTimeStatus)
-    localStorage.setItem("timeStatus", JSON.stringify(newTimeStatus))
-
-    // Update the latest record
-    const updatedRecords = [...timeRecords]
-    const latestRecord = updatedRecords[updatedRecords.length - 1]
-
-    if (latestRecord && !latestRecord.timeOut) {
-      latestRecord.timeOut = now.toISOString()
-      setTimeRecords(updatedRecords)
-      localStorage.setItem("todayTimeRecords", JSON.stringify(updatedRecords))
-    }
-  }
+}
 
   const formatTime = (isoString) => {
     if (!isoString) return "---"
@@ -155,6 +259,18 @@ export default function TimeTracking() {
 
   const fullName = `${employee.firstName} ${employee.lastName}`
 
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <div className="rounded-lg border bg-white p-8 shadow-sm">
+          <h1 className="mb-4 text-xl font-bold">Authentication Required</h1>
+          <p className="mb-6">Please log in to access time tracking features.</p>
+          <Button onClick={() => window.location.href = "/"}>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-white">
@@ -175,6 +291,12 @@ export default function TimeTracking() {
               </Button>
             </div>
           </PageHeader>
+
+          {error && (
+            <div className="mb-6 rounded-md bg-red-50 p-4 text-red-700">
+              {error}
+            </div>
+          )}
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             <Card>
@@ -208,7 +330,7 @@ export default function TimeTracking() {
                       size="lg"
                       className="flex-1"
                       onClick={handleTimeIn}
-                      disabled={timeStatus.isTimedIn}
+                      disabled={timeStatus.isTimedIn || loading}
                     >
                       <Clock className="mr-2 h-5 w-5" />
                       Time In
@@ -218,7 +340,7 @@ export default function TimeTracking() {
                       size="lg"
                       className="flex-1"
                       onClick={handleTimeOut}
-                      disabled={!timeStatus.isTimedIn}
+                      disabled={!timeStatus.isTimedIn || loading}
                     >
                       <Clock className="mr-2 h-5 w-5" />
                       Time Out
@@ -253,14 +375,18 @@ export default function TimeTracking() {
                 <CardDescription>Your time records for today</CardDescription>
               </CardHeader>
               <CardContent>
-                {timeRecords.length === 0 ? (
+                {loading ? (
+                  <div className="flex h-40 items-center justify-center">
+                    <p className="text-gray-500">Loading records...</p>
+                  </div>
+                ) : timeRecords.length === 0 ? (
                   <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
                     <p className="text-center text-gray-500">No time records for today</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {timeRecords.map((record, index) => (
-                      <div key={record.id} className="rounded-lg border p-4">
+                      <div key={record.id || `record-${index}`} className="rounded-lg border p-4">
                         <div className="flex items-center justify-between">
                           <div className="font-medium">Session {index + 1}</div>
                         </div>

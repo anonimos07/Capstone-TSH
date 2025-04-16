@@ -47,7 +47,8 @@ private JwtFilter jwtFilter;
                         .requestMatchers("/employee/login","/hr/login","/admin/login").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/hr/**").hasRole("HR")
-                        .requestMatchers("/employee/**").hasRole("EMPLOYEE")
+                        .requestMatchers("/employee/**","/api/time-logs/**").hasRole("EMPLOYEE")
+//                        .requestMatchers("/api/time-logs/**").hasRole("EMPLOYEE")
 
                                 .anyRequest().authenticated()
                 )
