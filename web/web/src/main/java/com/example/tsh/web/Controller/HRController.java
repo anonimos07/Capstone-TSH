@@ -45,20 +45,20 @@ public class HRController {
         return ResponseEntity.ok(response);
     }
 
-
+    @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/create-hr")
     public ResponseEntity<String> createHr(@RequestBody HR hr) {
         hrService.saveHr(hr);
         return ResponseEntity.ok("HR created successfully by HR");
     }
 
-
+    @CrossOrigin(origins = "http://localhost:5173")
     @GetMapping("/all-hr")
     public List<HR> getAllHr(){
         return hrService.getAllHr();
     }
 
-
+    @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/create-employee")
     public ResponseEntity<String> createEmployee(@RequestBody Employee employee) {
         employeeService.saveEmployee(employee);

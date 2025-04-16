@@ -56,12 +56,6 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
       localStorage.setItem("user", JSON.stringify({ 
         role: data.role  // Directly use data.role (not response.data.role)
       }));
-
-    
-      
-     
-      
-
       
       window.location.href = "/HrDashboard";
       console.log("Login successful:", data);
