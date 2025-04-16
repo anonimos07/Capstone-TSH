@@ -132,14 +132,15 @@ export default function HrDashboard() {
   
   // Add form state for Create Employee
   const [formData, setFormData] = useState({
-    user: "",
+    username: "",
     password: "",
     email: "",
     firstName: "",
     lastName: "",
+    contact: "",
     position: "",
     baseSalary: "",
-    role: "employee"
+    role: "" // Default to EMPLOYEE
   });
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
@@ -147,7 +148,8 @@ export default function HrDashboard() {
   // Add filtered employees computation
   const filteredEmployees = employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-    const username = employee.user.toLowerCase();
+    // const username = employee.username.toLowerCase();
+    const username = (employee.user ?? "").toLowerCase();
     const search = searchQuery.toLowerCase();
     return fullName.includes(search) || username.includes(search);
   });
@@ -161,56 +163,67 @@ export default function HrDashboard() {
     }));
   };
 
+  const getEndpoint = () => {
+    if (formData.role === "HR") return "http://localhost:8080/hr/create-hr";
+    if (formData.role === "EMPLOYEE") return "http://localhost:8080/hr/create-employee";
+    return "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     setFormError("");
-
+  
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch("http://localhost:8080/hr/create-employee", {
+      const token = localStorage.getItem("token");
+      const response = await fetch(getEndpoint(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          baseSalary: parseFloat(formData.baseSalary || 0), // Ensure it's a number
+        }),
       });
 
-      const data = await response.json();
-
+      // const responseText = await response.text();
+    // console.log("Server Response:", responseText);
+  
       if (!response.ok) {
-        throw new Error(data.message || "Failed to create employee");
+        throw new Error(data || "Failed to create employee");
       }
-
+  
       // Reset form after successful creation
       setFormData({
-        user: "",
+        username: "",
         password: "",
         email: "",
         firstName: "",
         lastName: "",
+        contact: "",
         position: "",
         baseSalary: "",
-        role: "employee"
+        role: "", // Default to EMPLOYEE
       });
-
-      alert("Employee created successfully!");
-      // Switch back to overview tab
-      setActiveTab('overview');
+  
+      alert(data || "Employee created successfully!");
+      // setActiveTab("overview");
     } catch (error) {
       setFormError(error.message || "Failed to create employee");
     } finally {
       setFormLoading(false);
     }
   };
+  
 
   // Add handlers for edit and delete
   const handleEdit = (employee) => {
     // Pre-fill the create form with employee data
     setFormData({
       employeeId: employee.employeeId,
-      user: employee.user,
+      username: employee.username,
       password: "", // Don't pre-fill password for security
       email: employee.email,
       firstName: employee.firstName,
@@ -231,12 +244,17 @@ export default function HrDashboard() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8080/hr/employees/${employeeId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+  const response = await fetch("http://localhost:8080/hr/create-employee", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      ...formData,
+      baseSalary: parseFloat(formData.baseSalary || 0) // Make sure baseSalary is a number
+    })
+  });
 
       if (!response.ok) {
         throw new Error("Failed to delete employee");
@@ -258,7 +276,9 @@ export default function HrDashboard() {
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch("http://localhost:8080/hr/employees", {
+        
+        const response = await fetch("http://localhost:8080/hr/all-employee", {
+          method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -278,7 +298,7 @@ export default function HrDashboard() {
           setEmployees([
             {
               employeeId: "",
-              user: "",
+              username: "",
               email: "",
               firstName: "",
               lastName: "",
@@ -299,57 +319,55 @@ export default function HrDashboard() {
 
   useEffect(() => {
     const fetchHrData = async () => {
+      setIsLoading(true);
+  
+      const token = localStorage.getItem('token');
+  
       try {
-        setIsLoading(true);
-        
-        try {
-          const token = localStorage.getItem('token'); // Get token from storage
-          const response = await fetch('/hr/dashboard', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Accept': 'application/json', // Explicitly request JSON
-              'Content-Type': 'application/json'
-            },
-            credentials: 'include' // Include cookies if needed
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Server responded with status: ${response.status}`);
-          }
-          
-          const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response');
-          }
-          
-          const data = await response.json();
-          setHr(data);
-        } catch (fetchError) {
-          console.error('API fetch failed:', fetchError);
-
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('Using fallback data in development environment');
-            setHr({
-              firstName: "bre",
-              lastName: "bre",
-              email: "bre@gmail.com"
-            });
-          } else {
-            throw fetchError;
-          }
+        const response = await fetch("http://localhost:8080/hr/all-hr", {
+          method: "GET",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          // Remove this unless you're using cookies/sessions
+          // credentials: 'include'
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
-        
-        setIsLoading(false);
-        
+  
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Server returned non-JSON response');
+        }
+  
+        const data = await response.json();
+        setHr(data);
+  
       } catch (err) {
-        console.error('Error fetching hr data:', err);
-        setError(err.message);
+        console.error('API fetch failed:', err);
+  
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Using fallback HR data in development environment');
+          setHr({
+            firstName: "bre",
+            lastName: "bre",
+            email: "bre@gmail.com"
+          });
+        } else {
+          setError(err.message || "Failed to fetch HR data");
+        }
+  
+      } finally {
         setIsLoading(false);
       }
     };
   
     fetchHrData();
   }, []);
+  
 
   if (isLoading) {
     return (
@@ -714,6 +732,7 @@ export default function HrDashboard() {
               </Card>
             </TabsContent>
 
+            {/*fetch Users*/}
             <TabsContent value="viewEmployee" className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm">
                 <div className="p-6 border-b">
@@ -781,7 +800,7 @@ export default function HrDashboard() {
                             className="border-t hover:bg-gray-50"
                           >
                             <td className="p-4">{employee.employeeId}</td>
-                            <td className="p-4">{employee.user}</td>
+                            <td className="p-4">{employee.username}</td>
                             <td className="p-4">
                               {employee.firstName} {employee.lastName}
                             </td>
@@ -806,7 +825,11 @@ export default function HrDashboard() {
                 )}
               </div>
             </TabsContent>
+            {/*fetch Users*/}
 
+
+
+            {/*Create Employee Form*/}
             <TabsContent value="createEmployee" className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="mb-6">
@@ -854,8 +877,8 @@ export default function HrDashboard() {
                       </label>
                       <input
                         type="text"
-                        name="user"
-                        value={formData.user}
+                        name="username"
+                        value={formData.username}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border rounded-md"
                         required
@@ -906,6 +929,21 @@ export default function HrDashboard() {
                         placeholder="Position"
                       />
                     </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contact
+                      </label>
+                      <input
+                        type="text"
+                        name="contact"
+                        value={formData.contact}                        
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-md"
+                        required
+                        placeholder="Contact"
+                      />
+                    </div>
 
                     {/* Base Salary and Role */}
                     <div>
@@ -922,6 +960,7 @@ export default function HrDashboard() {
                         placeholder="0"
                       />
                     </div>
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Role
@@ -933,8 +972,8 @@ export default function HrDashboard() {
                         className="w-full px-3 py-2 border rounded-md bg-white"
                         required
                       >
-                        <option value="employee">EMPLOYEE</option>
-                        <option value="hr">HR</option>
+                        <option value="EMPLOYEE">EMPLOYEE</option>
+                        <option value="HR">HR</option>
                       </select>
                     </div>
                   </div>
@@ -958,6 +997,12 @@ export default function HrDashboard() {
                 </form>
               </div>
             </TabsContent>
+ {/*Create Employee Form*/}
+
+
+
+
+
           </Tabs>
         </div>
       </main>
