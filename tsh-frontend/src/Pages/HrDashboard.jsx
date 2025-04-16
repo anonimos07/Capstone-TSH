@@ -295,7 +295,6 @@ export default function HrDashboard() {
   
         if (!employeeResponse.ok) throw new Error("Failed to fetch employees");
         const employeeData = await employeeResponse.json();
-        setEmployees(employeeData);
   
         // Fetch HR
         const hrResponse = await fetch(endpoints.HR, {
@@ -313,7 +312,13 @@ export default function HrDashboard() {
         }
   
         const hrData = await hrResponse.json();
-        setHr(hrData);
+  
+        // Combine employee and HR data into one list
+        const hrList = Array.isArray(hrData) ? hrData : [hrData];
+        const combinedData = [...employeeData, ...hrList];
+  
+        setEmployees(combinedData); // Final merged list for display
+        setHr(hrData); // Keep HR separate if needed elsewhere
   
       } catch (error) {
         console.error("Fetch error:", error);
@@ -350,6 +355,7 @@ export default function HrDashboard() {
   
     fetchData();
   }, []);
+  
   
   
 
