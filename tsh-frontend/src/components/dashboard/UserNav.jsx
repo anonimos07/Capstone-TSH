@@ -47,6 +47,7 @@ export function UserNav({ userName, userEmail }) {
                     localStorage.removeItem("user");
                     localStorage.removeItem("username");
                     localStorage.removeItem("role");
+                    localStorage.clear();
                     }}  
                     className="flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md"
                     >

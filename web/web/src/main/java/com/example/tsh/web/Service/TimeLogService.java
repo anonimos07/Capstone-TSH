@@ -10,109 +10,85 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class TimeLogService {
 
-    private final TimeLogRepo timeLogRepo;
-    private final EmployeeRepo employeeRepo;
+    @Autowired
+    private TimeLogRepo timeLogRepository;
 
-//    @Autowired
-//    public TimeLogService(TimeLogRepo timeLogRepo, EmployeeRepo employeeRepository) {
-//        this.timeLogRepository = timeLogRepository;
-//        this.employeeRepository = employeeRepository;
-//    }
+    // Find all time logs
+    public List<TimeLog> findAllTimeLogs() {
+        return timeLogRepository.findAll();
+    }
 
-    /**
-     * Record time in for an employee
-     * @param employeeId the employee ID
-     * @return the created time log
-     */
-    @Transactional
-    public TimeLog timeIn(Long employeeId) {
-        Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    // Find time log by ID
+    public Optional<TimeLog> findTimeLogById(Long id) {
+        return timeLogRepository.findById(id);
+    }
 
-        // Check if employee already has an active time log
-        Optional<TimeLog> activeLog = timeLogRepo.findActiveTimeLogByEmployee(employee);
-        if (activeLog.isPresent()) {
-            throw new RuntimeException("Employee already has an active time log. Please time out first.");
+    // Find logs by employee
+    public List<TimeLog> findTimeLogsByEmployee(Employee employee) {
+        return timeLogRepository.findByEmployee(employee);
+    }
+
+    // Find today's logs for an employee
+    public List<TimeLog> findTodayLogsByEmployee(Employee employee) {
+        return timeLogRepository.findTodayLogsByEmployee(employee);
+    }
+
+    // Find logs by employee and date
+    public List<TimeLog> findLogsByEmployeeAndDate(Employee employee, LocalDateTime date) {
+        return timeLogRepository.findByEmployeeAndDate(employee, date);
+    }
+
+    // Record time in (create new time log)
+    public TimeLog timeIn(Employee employee) {
+        // First check if there's an active log
+        TimeLog activeLog = timeLogRepository.findActiveLogByEmployee(employee);
+
+        if (activeLog != null) {
+            throw new IllegalStateException("Employee already timed in");
         }
 
-        // Create and save new time log
-        TimeLog timeLog = new TimeLog(employee);
-        return timeLogRepo.save(timeLog);
+        // Create a new time log with the current timestamp
+        TimeLog timeLog = new TimeLog(employee, LocalDateTime.now(), null);
+
+        // Save the new time log and return it
+        return timeLogRepository.save(timeLog);
     }
 
-    /**
-     * Record time out for an employee
-     * @param employeeId the employee ID
-     * @return the updated time log
-     */
-    @Transactional
-    public TimeLog timeOut(Long employeeId) {
-        Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    // Record time out (update existing time log)
+    public TimeLog timeOut(Employee employee) {
+        TimeLog activeLog = timeLogRepository.findActiveLogByEmployee(employee);
 
-        // Find active time log
-        TimeLog activeLog = timeLogRepo.findActiveTimeLogByEmployee(employee)
-                .orElseThrow(() -> new RuntimeException("No active time log found. Please time in first."));
+        if (activeLog == null) {
+            throw new IllegalStateException("No active time-in found for employee");
+        }
 
-        // Complete the time log
-        activeLog.completeTimeLog();
-        return timeLogRepo.save(activeLog);
+        // Set the time-out timestamp
+        activeLog.setTimeOut(LocalDateTime.now());
+
+        // Save the updated time log and return it
+        return timeLogRepository.save(activeLog);
     }
 
-    /**
-     * Check if employee has an active time log
-     * @param employeeId the employee ID
-     * @return true if active log exists
-     */
-    public boolean hasActiveTimeLog(Long employeeId) {
-        Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        return timeLogRepo.findActiveTimeLogByEmployee(employee).isPresent();
+    // Save or update a time log
+    public TimeLog saveTimeLog(TimeLog timeLog) {
+        return timeLogRepository.save(timeLog);
     }
 
-    /**
-     * Get employee's time logs for a date range
-     * @param employeeId the employee ID
-     * @param startDate start date
-     * @param endDate end date
-     * @return list of time logs
-     */
-    public List<TimeLog> getTimeLogsByDateRange(Long employeeId, LocalDate startDate, LocalDate endDate) {
-        Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
-
-        return timeLogRepo.findByLogDateBetweenAndEmployee(startDate, endDate, employee);
+    // Delete a time log
+    public void deleteTimeLog(Long id) {
+        timeLogRepository.deleteById(id);
     }
 
-    /**
-     * Get employee's time logs for today
-     * @param employeeId the employee ID
-     * @return list of today's time logs
-     */
-    public List<TimeLog> getTodayTimeLogs(Long employeeId) {
-        Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
-
-        return timeLogRepo.findByEmployeeAndLogDateOrderByTimeInDesc(employee, LocalDate.now());
-    }
-
-    /**
-     * Get all time logs of an employee
-     * @param employeeId the employee ID
-     * @return list of all time logs
-     */
-    public List<TimeLog> getAllEmployeeTimeLogs(Long employeeId) {
-        Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
-
-        return timeLogRepo.findByEmployeeOrderByTimeInDesc(employee);
+    // Get current employee status (timed in or not)
+    public TimeLog getCurrentStatus(Employee employee) {
+        return timeLogRepository.findActiveLogByEmployee(employee);
     }
 }

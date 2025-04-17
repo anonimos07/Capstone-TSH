@@ -77,4 +77,8 @@ public class EmployeeService {
         }
         return "failed";
     }
+
+    public Optional<Employee> findById(Long employeeId) {
+        return employeeRepository.findById(employeeId);
+    }
 }

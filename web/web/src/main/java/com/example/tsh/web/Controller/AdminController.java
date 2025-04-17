@@ -49,6 +49,7 @@ public class AdminController {
         Map<String, String> response = new HashMap<>();
         response.put("token", result);               // JWT token
         response.put("role", admin.getRole().name());
+        response.put("username",admin.getUsername());
 //        return ResponseEntity.ok(Collections.singletonMap("token", result));
         return ResponseEntity.ok(response);
     }

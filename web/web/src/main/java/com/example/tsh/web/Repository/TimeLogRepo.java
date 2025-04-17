@@ -7,16 +7,22 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface TimeLogRepo extends JpaRepository<TimeLog, Long> {
-    List<TimeLog> findByEmployeeOrderByTimeInDesc(Employee employee);
+    List<TimeLog> findByEmployee(Employee employee);
 
-    List<TimeLog> findByEmployeeAndLogDateOrderByTimeInDesc(Employee employee, LocalDate logDate);
+    // Find logs for an employee on a specific date
+    @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND CAST(t.date AS date) = CAST(:date AS date)")
+    List<TimeLog> findByEmployeeAndDate(@Param("employee") Employee employee, @Param("date") LocalDateTime date);
 
-    @Query("SELECT t FROM TimeLog t WHERE t.status = :status")
-    Optional<TimeLog> findActiveTimeLogByEmployee(@Param("employee") Employee employee);
+    // Find logs for today for a specific employee
+    @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND CAST(t.date AS date) = CURRENT_DATE")
+    List<TimeLog> findTodayLogsByEmployee(@Param("employee") Employee employee);
 
-    List<TimeLog> findByLogDateBetweenAndEmployee(LocalDate startDate, LocalDate endDate, Employee employee);
+    // Find active log (without time_out) for an employee
+    @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND t.timeOut IS NULL")
+    TimeLog findActiveLogByEmployee(@Param("employee") Employee employee);
 }

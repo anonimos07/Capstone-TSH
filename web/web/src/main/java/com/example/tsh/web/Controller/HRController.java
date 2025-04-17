@@ -1,12 +1,11 @@
 package com.example.tsh.web.Controller;
 
-import com.example.tsh.web.Entity.Admin;
-import com.example.tsh.web.Entity.Employee;
-import com.example.tsh.web.Entity.HR;
-import com.example.tsh.web.Entity.Role;
+import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Service.EmployeeService;
 import com.example.tsh.web.Service.HRService;
+import com.example.tsh.web.Service.TimeLogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +24,9 @@ public class HRController {
     private final HRService hrService;
     private final EmployeeService employeeService;
 
+    @Autowired
+    private TimeLogService timeLogService;
+
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody HR hr) {
@@ -40,6 +42,7 @@ public class HRController {
         Map<String, String> response = new HashMap<>();
         response.put("token", result);               // JWT token
         response.put("role", hr.getRole().name());
+        response.put("username",hr.getUsername());
 
 //        return ResponseEntity.ok(Collections.singletonMap("token", result));
         return ResponseEntity.ok(response);
@@ -68,6 +71,18 @@ public class HRController {
     @GetMapping("/all-employee")
     public List<Employee> getAllEmployee(){
         return employeeService.getAllEmployee();
+    }
+
+    //get all timelog
+    // Get all time logs (admin only)
+    @GetMapping("/get-all")
+    public ResponseEntity<List<TimeLog>> getAllTimeLogs(@RequestHeader("Authorization") String token) {
+        try {
+            // Here you would check if the employee has admin privileges
+            return ResponseEntity.ok(timeLogService.findAllTimeLogs());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
     
 }

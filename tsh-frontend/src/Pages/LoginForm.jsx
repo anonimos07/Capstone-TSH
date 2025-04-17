@@ -57,8 +57,9 @@ export function Login({ className, ...props }) {
     // }));
 
     localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.username); 
     localStorage.setItem("user", JSON.stringify({ 
-      role: data.role  // Directly use data.role (not response.data.role)
+      role: data.role // Directly use data.role (not response.data.role)
     }));
 
 
