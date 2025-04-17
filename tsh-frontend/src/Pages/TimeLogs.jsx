@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Calendar, Clock, Download, Filter, Search } from "lucide-react"
 import { MainNav } from "../components/dashboard/MainNav"
 import { UserNav } from "../components/dashboard/UserNav"
@@ -69,92 +69,78 @@ export default function TimeLogs() {
     lastName: "Doe",
     email: "john.doe@techstaffhub.com",
   })
-
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState("")
+  const [logs, setLogs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Sample attendance logs data
-  const [logs, setLogs] = useState([
-    {
-      id: 1,
-      date: "2025-04-15",
-      timeIn: "2025-04-15T09:00:00",
-      timeOut: "2025-04-15T17:00:00",
-      totalHours: 8,
-    },
-    {
-      id: 2,
-      date: "2025-04-14",
-      timeIn: "2025-04-14T08:55:00",
-      timeOut: "2025-04-14T17:30:00",
-      totalHours: 8.5,
-    },
-    {
-      id: 3,
-      date: "2025-04-13",
-      timeIn: "2025-04-13T09:10:00",
-      timeOut: "2025-04-13T18:00:00",
-      totalHours: 8.8,
-    },
-    {
-      id: 4,
-      date: "2025-04-12",
-      timeIn: "2025-04-12T09:05:00",
-      timeOut: "2025-04-12T17:15:00",
-      totalHours: 8.2,
-    },
-    {
-      id: 5,
-      date: "2025-04-11",
-      timeIn: "2025-04-11T08:50:00",
-      timeOut: "2025-04-11T16:50:00",
-      totalHours: 8,
-    },
-    {
-      id: 6,
-      date: "2025-04-10",
-      timeIn: "2025-04-10T09:15:00",
-      timeOut: "2025-04-10T17:45:00",
-      totalHours: 8.5,
-    },
-    {
-      id: 7,
-      date: "2025-04-09",
-      timeIn: "2025-04-09T09:00:00",
-      timeOut: "2025-04-09T17:00:00",
-      totalHours: 8,
-    },
-    {
-      id: 8,
-      date: "2025-04-08",
-      timeIn: "2025-04-08T08:45:00",
-      timeOut: "2025-04-08T16:45:00",
-      totalHours: 8,
-    },
-    {
-      id: 9,
-      date: "2025-04-07",
-      timeIn: "2025-04-07T09:30:00",
-      timeOut: "2025-04-07T18:30:00",
-      totalHours: 9,
-    },
-    {
-      id: 10,
-      date: "2025-04-06",
-      timeIn: "2025-04-06T09:00:00",
-      timeOut: "2025-04-06T17:00:00",
-      totalHours: 8,
-    },
-  ])
+  // Function to get authentication token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('token');
+  }
+
+  useEffect(() => {
+    // Fetch user profile and time logs
+    const fetchUserData = async () => {
+      try {
+        const token = getAuthToken();
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
+
+        // Fetch user profile
+        const profileResponse = await fetch('http://localhost:8080/employee/me', {
+          method : 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!profileResponse.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const profileData = await profileResponse.json();
+        setEmployee({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          email: profileData.email
+        });
+
+        // Fetch all time logs
+        // Since your backend handles authorization based on the username in the token,
+        // we don't need to specify the employee ID in the URL
+        const logsResponse = await fetch('http://localhost:8080/api/time-logs', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!logsResponse.ok) {
+          throw new Error("Failed to fetch time logs");
+        }
+
+        const logsData = await logsResponse.json();
+        setLogs(logsData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // Filter logs based on search term and date filter
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
       searchTerm === "" ||
-      log.date.includes(searchTerm) ||
-      formatTime(log.timeIn).includes(searchTerm) ||
-      formatTime(log.timeOut).includes(searchTerm) ||
-      log.totalHours.toString().includes(searchTerm)
+      log.date?.includes(searchTerm) ||
+      formatTime(log.timeIn)?.includes(searchTerm) ||
+      formatTime(log.timeOut)?.includes(searchTerm) ||
+      (log.totalHours?.toString() || "").includes(searchTerm)
 
     const matchesDate = dateFilter === "" || log.date === dateFilter
 
@@ -162,25 +148,74 @@ export default function TimeLogs() {
   })
 
   const formatDate = (dateString) => {
+    if (!dateString) return "";
     const options = { weekday: "short", year: "numeric", month: "short", day: "numeric" }
     return new Date(dateString).toLocaleDateString(undefined, options)
   }
 
   const formatTime = (isoString) => {
+    if (!isoString) return "";
     const date = new Date(isoString)
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
   const calculateTotalHours = () => {
-    return filteredLogs.reduce((total, log) => total + log.totalHours, 0).toFixed(1)
+    return filteredLogs.reduce((total, log) => total + (log.totalHours || 0), 0).toFixed(1)
   }
 
   const calculateAverageHours = () => {
     if (filteredLogs.length === 0) return "0.0"
-    return (filteredLogs.reduce((total, log) => total + log.totalHours, 0) / filteredLogs.length).toFixed(1)
+    return (filteredLogs.reduce((total, log) => total + (log.totalHours || 0), 0) / filteredLogs.length).toFixed(1)
+  }
+  
+  const exportToCSV = () => {
+    // Create CSV content
+    let csvContent = "Date,Time In,Time Out,Total Hours\n";
+    
+    filteredLogs.forEach(log => {
+      csvContent += `${formatDate(log.date)},${formatTime(log.timeIn)},${formatTime(log.timeOut)},${(log.totalHours || 0).toFixed(1)}\n`;
+    });
+    
+    // Create a blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `time-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const fullName = `${employee.firstName} ${employee.lastName}`;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  const fullName = `${employee.firstName} ${employee.lastName}`
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6 bg-red-50 rounded-lg border border-red-200">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-700">{error}</p>
+          <button 
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+            onClick={() => window.location.href = "/login"}
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -287,7 +322,7 @@ export default function TimeLogs() {
                             <td className="px-4 py-3 text-sm">{formatDate(log.date)}</td>
                             <td className="px-4 py-3 text-sm">{formatTime(log.timeIn)}</td>
                             <td className="px-4 py-3 text-sm">{formatTime(log.timeOut)}</td>
-                            <td className="px-4 py-3 text-sm font-medium">{log.totalHours.toFixed(1)} hrs</td>
+                            <td className="px-4 py-3 text-sm font-medium">{(log.totalHours || 0).toFixed(1)} hrs</td>
                           </tr>
                         ))}
                         {filteredLogs.length === 0 && (
@@ -303,7 +338,7 @@ export default function TimeLogs() {
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={exportToCSV}>
                     <Download className="mr-2 h-4 w-4" />
                     Export
                   </Button>

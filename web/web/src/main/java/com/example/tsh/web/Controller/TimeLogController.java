@@ -66,6 +66,17 @@ public class TimeLogController {
         return ResponseEntity.ok(timeLog);
     }
 
+    @GetMapping // Handles GET /api/time-logs (no ID needed)
+    public ResponseEntity<List<TimeLog>> getAllTimeLogsForEmployee(Authentication authentication) {
+        String username = authentication.getName();
+        Employee employee = employeeRepo.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Employee not found"));
+
+        // Assuming you have a method like this in your service:
+        List<TimeLog> logs = timeLogService.findTimeLogsByEmployee(employee);
+        return ResponseEntity.ok(logs);
+    }
+
 
     // Get today's logs for the authenticated employee
     @GetMapping("/today")
@@ -75,6 +86,7 @@ public class TimeLogController {
                 .orElseThrow(() -> new UsernameNotFoundException("Employee not found"));
 
         List<TimeLog> logs = timeLogService.findTodayLogsByEmployee(employee);
+        System.out.println("Logs before serialization: " + logs);
         return ResponseEntity.ok(logs);
     }
 

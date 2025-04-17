@@ -1,6 +1,7 @@
     package com.example.tsh.web.Entity;
 
 
+    import com.fasterxml.jackson.annotation.JsonManagedReference;
     import jakarta.persistence.*;
     import lombok.Getter;
     import lombok.Setter;
@@ -31,6 +32,7 @@
         @Enumerated(EnumType.STRING)
         private Role role = Role.EMPLOYEE;
 
+        @JsonManagedReference
         @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<TimeLog> timeLogs;
 
