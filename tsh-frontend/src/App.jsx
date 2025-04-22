@@ -10,6 +10,9 @@ import Unauthorized from './components/layout/Unauthorized';
 import ProtectedRoutes from './Pages/ProtectedRoutes';
 import TimeLogs from './Pages/TimeLogs';
 import TimeTracking from './Pages/TimeTracking';
+import { AdminDashboard } from '@/Pages/AdminDashboard';
+import EmployeeManagementPage from './Pages/EmployeeManagementPage';
+import HRManagementPage from './Pages/HRManagementPage';
 
 
 function App() {
@@ -39,12 +42,10 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
-        {/* admin routes */}
+        <Route path="/adminDashboard" element={<AdminDashboard />} />
+        <Route path="/adminEmployees" element={<EmployeeManagementPage />} />
+        <Route path="/adminHR" element={<HRManagementPage />} />
         </Route>
-
-
-        
-
 
       </Routes>
     </Router>

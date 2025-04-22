@@ -1,4 +1,5 @@
 import { useState } from "react"; 
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function LoginAdmin({ className, ...props }) { 
- 
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -53,10 +54,10 @@ export function LoginAdmin({ className, ...props }) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username); // Store username for HR
       localStorage.setItem("user", JSON.stringify({ 
-        role: data.role  // Directly use data.role (not response.data.role)
+        role: data.role  // Directly use d  ata.role (not response.data.role)
       }));
       
-     
+     navigate("/adminDashboard");
       
       console.log("Login successful:", data);
     } catch (error) {
