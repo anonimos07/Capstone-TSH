@@ -130,7 +130,7 @@ export default function HrDashboard() {
   const [employeesError, setEmployeesError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Add form state for Create Employee
+  
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -140,21 +140,20 @@ export default function HrDashboard() {
     contact: "",
     position: "",
     baseSalary: "",
-    role: "" // Default to EMPLOYEE
+    role: "" 
   });
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
 
-  // Add filtered employees computation
-  const filteredEmployees = employees.filter(employee => {
+
+    const filteredEmployees = employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-    // const username = employee.username.toLowerCase();
     const username = (employee.user ?? "").toLowerCase();
     const search = searchQuery.toLowerCase();
     return fullName.includes(search) || username.includes(search);
   });
 
-  // Form handling functions
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -166,17 +165,23 @@ export default function HrDashboard() {
   const getEndpoint = () => {
     if (formData.role === "HR") return "http://localhost:8080/hr/create-hr";
     if (formData.role === "EMPLOYEE") return "http://localhost:8080/hr/create-employee";
-    return "";
+    return null; 
   };
+
+   
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     setFormError("");
+
+    const endpoint = getEndpoint();
+
+
   
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(getEndpoint(), {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,18 +189,23 @@ export default function HrDashboard() {
         },
         body: JSON.stringify({
           ...formData,
-          baseSalary: parseFloat(formData.baseSalary || 0), // Ensure it's a number
+          baseSalary: parseFloat(formData.baseSalary || 0), 
         }),
       });
 
-      // const responseText = await response.text();
-    // console.log("Server Response:", responseText);
+    
+
+    if (!formData.role) {
+      setFormError("Please select a role.");
+      setFormLoading(false);
+      return;
+    }
   
       if (!response.ok) {
         throw new Error(data || "Failed to create employee");
       }
   
-      // Reset form after successful creation
+   
       setFormData({
         username: "",
         password: "",
@@ -205,26 +215,27 @@ export default function HrDashboard() {
         contact: "",
         position: "",
         baseSalary: "",
-        role: "", // Default to EMPLOYEE
+        role: "", 
       });
   
       alert(data || "Employee created successfully!");
-      // setActiveTab("overview");
+   
     } catch (error) {
       setFormError(error.message || "Failed to create employee");
     } finally {
       setFormLoading(false);
     }
+    return;
   };
   
 
-  // Add handlers for edit and delete
+ 
   const handleEdit = (employee) => {
-    // Pre-fill the create form with employee data
+    
     setFormData({
       employeeId: employee.employeeId,
       username: employee.username,
-      password: "", // Don't pre-fill password for security
+      password: "", 
       email: employee.email,
       firstName: employee.firstName,
       lastName: employee.lastName,
@@ -233,7 +244,6 @@ export default function HrDashboard() {
       baseSalary: employee.baseSalary,
       role: employee.role
     });
-    // Switch to create/edit tab
     setActiveTab('createEmployee');
   };
 
@@ -252,7 +262,7 @@ export default function HrDashboard() {
     },
     body: JSON.stringify({
       ...formData,
-      baseSalary: parseFloat(formData.baseSalary || 0) // Make sure baseSalary is a number
+      baseSalary: parseFloat(formData.baseSalary || 0)
     })
   });
 
@@ -260,7 +270,7 @@ export default function HrDashboard() {
         throw new Error("Failed to delete employee");
       }
 
-      // Remove employee from list
+
       setEmployees(employees.filter(emp => emp.employeeId !== employeeId));
       alert("Employee deleted successfully");
     } catch (error) {
@@ -268,7 +278,7 @@ export default function HrDashboard() {
     }
   };
 
-  // Fetch all employees
+
   useEffect(() => {
     const fetchData = async () => {
       setEmployeesLoading(true);
@@ -284,7 +294,7 @@ export default function HrDashboard() {
       };
   
       try {
-        // Fetch Employees
+   
         const employeeResponse = await fetch(endpoints.EMPLOYEE, {
           method: "GET",
           headers: {
@@ -296,7 +306,7 @@ export default function HrDashboard() {
         if (!employeeResponse.ok) throw new Error("Failed to fetch employees");
         const employeeData = await employeeResponse.json();
   
-        // Fetch HR
+  
         const hrResponse = await fetch(endpoints.HR, {
           method: "GET",
           headers: {
@@ -313,12 +323,12 @@ export default function HrDashboard() {
   
         const hrData = await hrResponse.json();
   
-        // Combine employee and HR data into one list
+ 
         const hrList = Array.isArray(hrData) ? hrData : [hrData];
         const combinedData = [...employeeData, ...hrList];
   
-        setEmployees(combinedData); // Final merged list for display
-        setHr(hrData); // Keep HR separate if needed elsewhere
+        setEmployees(combinedData);
+        setHr(hrData); 
   
       } catch (error) {
         console.error("Fetch error:", error);
@@ -435,40 +445,7 @@ export default function HrDashboard() {
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>Your recent activities and notifications</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        {
-                          title: "Leave Request Approved",
-                          description: "Your leave request for April 14-16 has been approved",
-                          date: "2 hours ago",
-                        },
-                        {
-                          title: "Payslip Generated",
-                          description: "Your March 2025 payslip is now available for download",
-                          date: "Yesterday",
-                        },
-                        {
-                          title: "Performance Review",
-                          description: "Your quarterly performance review is scheduled for April 25",
-                          date: "3 days ago",
-                        },
-                        {
-                          title: "Training Completion",
-                          description: "You've completed the required compliance training",
-                          date: "1 week ago",
-                        },
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-start gap-4 rounded-lg border p-3">
-                          <div className="flex-1 space-y-1">
-                            <p className="font-medium">{item.title}</p>
-                            <p className="text-sm text-gray-500">{item.description}</p>
-                          </div>
-                          <div className="text-xs text-gray-500">{item.date}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
+                  
                 </Card>
 
                 <Card className="col-span-3">
@@ -476,41 +453,7 @@ export default function HrDashboard() {
                     <CardTitle>Benefits Overview</CardTitle>
                     <CardDescription>Your current benefits and utilization</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <div>Health Insurance</div>
-                          <div className="font-medium">Active</div>
-                        </div>
-                        <Progress value={100} className="h-2" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <div>Retirement Plan</div>
-                          <div className="font-medium">₱12,450 contributed</div>
-                        </div>
-                        <Progress value={65} className="h-2" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <div>Professional Development</div>
-                          <div className="font-medium">₱800 used of ₱1,500</div>
-                        </div>
-                        <Progress value={53} className="h-2" />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <div>Wellness Program</div>
-                          <div className="font-medium">25 points earned</div>
-                        </div>
-                        <Progress value={25} className="h-2" />
-                      </div>
-                    </div>
-                  </CardContent>
+                 
                 </Card>
               </div>
 
@@ -521,18 +464,7 @@ export default function HrDashboard() {
                     <CalendarDays className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { name: "Good Friday", date: "April 18, 2025" },
-                        { name: "Labor Day", date: "May 1, 2025" },
-                        { name: "Independence Day", date: "June 12, 2025" },
-                      ].map((holiday, index) => (
-                        <div key={index} className="flex justify-between">
-                          <p className="text-sm">{holiday.name}</p>
-                          <p className="text-sm text-gray-500">{holiday.date}</p>
-                        </div>
-                      ))}
-                    </div>
+                   
                   </CardContent>
                 </Card>
 
@@ -542,50 +474,11 @@ export default function HrDashboard() {
                     <FileText className="h-4 w-4 text-gray-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { period: "March 2025", amount: "₱5,264.00", status: "Paid" },
-                        { period: "February 2025", amount: "₱5,264.00", status: "Paid" },
-                        { period: "January 2025", amount: "₱5,264.00", status: "Paid" },
-                      ].map((payslip, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <p className="text-sm">{payslip.period}</p>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">{payslip.amount}</p>
-                            <Button variant="ghost" size="sm" className="h-6 px-2">
-                              View
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                   
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Tax Summary</CardTitle>
-                    <PieChart className="h-4 w-4 text-gray-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        { type: "Income Tax", amount: "₱450.20", percentage: "13.9%" },
-                        { type: "Social Security", amount: "₱250.10", percentage: "7.7%" },
-                        { type: "Medicare", amount: "₱65.30", percentage: "2.0%" },
-                        { type: "Other Deductions", amount: "₱120.40", percentage: "3.7%" },
-                      ].map((tax, index) => (
-                        <div key={index} className="flex justify-between">
-                          <p className="text-sm">{tax.type}</p>
-                          <div className="flex gap-2">
-                            <p className="text-sm text-gray-500">{tax.percentage}</p>
-                            <p className="text-sm font-medium">{tax.amount}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+               
               </div>
             </TabsContent>
 
@@ -600,15 +493,15 @@ export default function HrDashboard() {
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className="space-y-2 rounded-lg border p-4">
                         <div className="text-sm text-gray-500">Present Days</div>
-                        <div className="text-2xl font-bold">18</div>
+                       
                       </div>
                       <div className="space-y-2 rounded-lg border p-4">
                         <div className="text-sm text-gray-500">Absent Days</div>
-                        <div className="text-2xl font-bold">0</div>
+                    
                       </div>
                       <div className="space-y-2 rounded-lg border p-4">
                         <div className="text-sm text-gray-500">Late Arrivals</div>
-                        <div className="text-2xl font-bold">2</div>
+                        
                       </div>
                     </div>
 
@@ -619,37 +512,6 @@ export default function HrDashboard() {
                             {day}
                           </div>
                         ))}
-                      </div>
-                      <div className="grid grid-cols-7 gap-px bg-gray-100">
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => {
-                          let status = "present";
-                          if (date > 20) status = "future";
-                          if (date === 5 || date === 12) status = "late";
-                          if (date === 6 || date === 13) status = "weekend";
-
-                          return (
-                            <div
-                              key={date}
-                              className={`bg-white p-2 text-center ${
-                                status === "present"
-                                  ? "text-green-600"
-                                  : status === "late"
-                                    ? "text-amber-600"
-                                    : status === "weekend"
-                                      ? "text-gray-500"
-                                      : "text-gray-500"
-                              }`}
-                            >
-                              <div className="text-sm">{date}</div>
-                              <div className="text-xs">
-                                {status === "present" && "9:00 - 5:00"}
-                                {status === "late" && "9:15 - 5:00"}
-                                {status === "weekend" && "Off"}
-                                {status === "future" && "-"}
-                              </div>
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
                   </div>
@@ -664,60 +526,9 @@ export default function HrDashboard() {
                   <CardDescription>Your current salary components and deductions</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Earnings</h3>
-                      <div className="space-y-1 rounded-lg border p-4">
-                        {[
-                          { type: "Basic Salary", amount: "₱5,000.00" },
-                          { type: "Housing Allowance", amount: "₱600.00" },
-                          { type: "Transportation Allowance", amount: "₱300.00" },
-                          { type: "Overtime (8 hours)", amount: "₱250.00" },
-                        ].map((item, index) => (
-                          <div key={index} className="flex justify-between py-1">
-                            <span className="text-sm">{item.type}</span>
-                            <span className="text-sm font-medium">{item.amount}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between border-t pt-2 mt-2">
-                          <span className="font-medium">Total Earnings</span>
-                          <span className="font-medium">₱6,150.00</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Deductions</h3>
-                      <div className="space-y-1 rounded-lg border p-4">
-                        {[
-                          { type: "Income Tax", amount: "₱450.20" },
-                          { type: "Social Security", amount: "₱250.10" },
-                          { type: "Medicare", amount: "₱65.30" },
-                          { type: "Health Insurance", amount: "₱120.40" },
-                        ].map((item, index) => (
-                          <div key={index} className="flex justify-between py-1">
-                            <span className="text-sm">{item.type}</span>
-                            <span className="text-sm font-medium">{item.amount}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between border-t pt-2 mt-2">
-                          <span className="font-medium">Total Deductions</span>
-                          <span className="font-medium">₱886.00</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-lg border p-4 bg-gray-50">
-                      <div className="flex justify-between">
-                        <span className="text-lg font-bold">Net Salary</span>
-                        <span className="text-lg font-bold">₱5,264.00</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
+                  
                       <Button>Download Payslip</Button>
-                    </div>
-                  </div>
+                   
                 </CardContent>
               </Card>
             </TabsContent>
@@ -773,7 +584,7 @@ export default function HrDashboard() {
                     <table className="w-full">
                       <thead>
                         <tr className="bg-gray-50 text-left">
-                          <th className="p-4 font-medium">Employee ID</th>
+                         
                           <th className="p-4 font-medium">Username</th>
                           <th className="p-4 font-medium">Name</th>
                           <th className="p-4 font-medium">Email</th>
@@ -789,7 +600,7 @@ export default function HrDashboard() {
                             key={employee.employeeId}
                             className="border-t hover:bg-gray-50"
                           >
-                            <td className="p-4">{employee.employeeId}</td>
+                            
                             <td className="p-4">{employee.username}</td>
                             <td className="p-4">
                               {employee.firstName} {employee.lastName}
@@ -962,6 +773,7 @@ export default function HrDashboard() {
                         className="w-full px-3 py-2 border rounded-md bg-white"
                         required
                       >
+                        <option>Select Role</option>
                         <option value="EMPLOYEE">EMPLOYEE</option>
                         <option value="HR">HR</option>
                       </select>
