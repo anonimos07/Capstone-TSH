@@ -1,4 +1,4 @@
-import { useState } from "react"; // Missing import
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-
 export function Login({ className, ...props }) {
   const [formData, setFormData] = useState({
     username: "",
@@ -19,7 +18,6 @@ export function Login({ className, ...props }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -43,47 +41,38 @@ export function Login({ className, ...props }) {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      // First check if the response has content
+      const text = await response.text();
+      let data;
+      
+      try {
+        // Try to parse it as JSON if there's content
+        data = text ? JSON.parse(text) : {};
+      } catch (jsonError) {
+        console.error("Failed to parse JSON:", jsonError);
+        throw new Error("Wrong credentials");
       }
 
-      // para local storage ma store token dili ang username og password
-    //   const token = data.token;
-    //   localStorage.setItem("token", token);
-    //   localStorage.setItem("user", JSON.stringify({ 
-    //     role: response.data.role  // "EMPLOYEE"
-    // }));
+      if (!response.ok) {
+        throw new Error(data.message || "Wrong credentials");
+      }
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("username", data.username); 
-    localStorage.setItem("user", JSON.stringify({ 
-      role: data.role // Directly use data.role (not response.data.role)
-    }));
-
-
-      
-      // Store user data in localStorage or state management
-      // localStorage.setItem("username", JSON.stringify({
-      //   employeeId: data.employeeId,
-      //   username: data.username,
-      //   role: data.role
-      // }));
-      
-     
+    
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username); 
+      localStorage.setItem("user", JSON.stringify({ 
+        role: data.role 
+      }));
       
       window.location.href = "/EmployeeDashboard";
       console.log("Login successful:", data);
     } catch (error) {
-      setError(error.message || "Login failed. Please try again.");
-      
+      setError(error.message || "Wrong credentials");
     } finally {
       setIsLoading(false);
     }
   };
 
- 
   return (
     <div className={cn("flex min-h-screen flex-col items-center justify-start pt-20", className)} {...props}>
       <Card className="max-w-md w-full">

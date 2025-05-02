@@ -170,10 +170,14 @@ export default function EmployeeDashboard() {
               }
             }
             
-            if (response.status === 401 || response.status === 403) {
-              // Handle unauthorized/forbidden - might need to redirect to login
-              localStorage.removeItem("token"); // Clear invalid token
-              throw new Error("Session expired. Please log in again.");
+            if (response.status === 401) {
+              localStorage.removeItem("token");
+              navigate("/unauthorized");
+              return;
+            } 
+            else if (response.status === 403) {
+              navigate("/403");
+              return; 
             }
             
             throw new Error(errorMessage);

@@ -1,6 +1,7 @@
 package com.example.tsh.web.Controller;
 
 import com.example.tsh.web.Entity.*;
+import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Service.EmployeeService;
 import com.example.tsh.web.Service.HRService;
 import com.example.tsh.web.Service.TimeLogService;
@@ -9,12 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.*;
 
 @RestController
 @RequestMapping("/hr")
@@ -23,6 +23,7 @@ import java.util.Map;
 public class HRController {
     private final HRService hrService;
     private final EmployeeService employeeService;
+    public final HRRepo hrRepo;
 
     @Autowired
     private TimeLogService timeLogService;
@@ -82,6 +83,40 @@ public class HRController {
             return ResponseEntity.ok(timeLogService.findAllTimeLogs());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @GetMapping("/me")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public ResponseEntity<Map<String, Serializable>> getCurrentUserProfile(Authentication authentication) {
+        try {
+            // Get username from Spring Security context
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Not authenticated"));
+            }
+
+            String username = authentication.getName();
+
+            // Find employee by username
+            Optional<HR> hrOptional = hrRepo.findByUsername(username);
+
+            if (hrOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "User not found."));
+            }
+
+           HR hr = hrOptional.get();
+            return ResponseEntity.ok(Map.of(
+                    "username", hr.getUsername(),
+                    "firstName", hr.getFirstName(),
+                    "lastName", hr.getLastName(),
+                    "email", hr.getEmail(),
+                    "role", hr.getRole()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Server error: " + e.getMessage()));
         }
     }
     

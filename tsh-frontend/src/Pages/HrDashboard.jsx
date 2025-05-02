@@ -4,6 +4,7 @@ import { HrNav } from "../components/dashboard/HrNav";
 import { HrUser } from "../components/dashboard/HrUser";
 import { HrHeader } from "../components/dashboard/HrHeader";
 import { HrOverview } from "../components/dashboard/HrOverview";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
 function Progress({ value, className }) {
@@ -123,14 +124,19 @@ export default function HrDashboard() {
     lastName: "",
     email: ""
   });
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [employees, setEmployees] = useState([]);
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [employeesError, setEmployeesError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [hrList, setHrList] = useState([]);     // for all HRs
   
-  
+  // const fullName = `${hr.firstName} ${hr.lastName}`;
+  const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
+
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -287,7 +293,63 @@ export default function HrDashboard() {
       setError("");
   
       const token = localStorage.getItem('token');
-  
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.");
+      }
+
+      try {
+        // Use the "me" endpoint to get current user's profile
+        const response = await fetch("http://localhost:8080/hr/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const responseClone = response.clone();
+          let errorMessage = `Server error: ${response.status}`;
+          
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            try {
+              const text = await responseClone.text();
+              if (text) errorMessage += ` - ${text}`;
+            } catch (textError) {
+              console.error("Failed to read response body", textError);
+            }
+          }
+          
+          if (response.status === 401) {
+            localStorage.removeItem("token");
+            navigate("/unauthorized");
+            return;
+          } 
+          else if (response.status === 403) {
+            navigate("/403");
+            return; 
+          }
+          
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        setHr({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          ...data,
+        });
+      } catch (fetchError) {
+        console.error("API fetch failed:", fetchError);
+        setError(fetchError.message || "Failed to load employee data");
+      } finally {
+        setIsLoading(false);
+      }
+    
       const endpoints = {
         EMPLOYEE: "http://localhost:8080/hr/all-employee",
         HR: "http://localhost:8080/hr/all-hr"
@@ -328,7 +390,8 @@ export default function HrDashboard() {
         const combinedData = [...employeeData, ...hrList];
   
         setEmployees(combinedData);
-        setHr(hrData); 
+        setHrList(hrList);
+        // setHr(hrData); 
   
       } catch (error) {
         console.error("Fetch error:", error);
@@ -348,11 +411,7 @@ export default function HrDashboard() {
               role: ""
             }
           ]);
-          setHr({
-            firstName: "bre",
-            lastName: "bre",
-            email: "bre@gmail.com"
-          });
+          
         } else {
           setEmployeesError(error.message);
           setError(error.message);
@@ -362,6 +421,7 @@ export default function HrDashboard() {
         setIsLoading(false);
       }
     };
+    console.log("HR object changed:", hr);
   
     fetchData();
   }, []);
@@ -392,7 +452,7 @@ export default function HrDashboard() {
     );
   }
 
-  const fullName = `${hr.firstName} ${hr.lastName}`;
+   
 
   return (
     <div className="flex min-h-screen flex-col">

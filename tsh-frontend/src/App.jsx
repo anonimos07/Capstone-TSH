@@ -13,6 +13,9 @@ import TimeTracking from './Pages/TimeTracking';
 import { AdminDashboard } from '@/Pages/AdminDashboard';
 import EmployeeManagementPage from './Pages/EmployeeManagementPage';
 import HRManagementPage from './Pages/HRManagementPage';
+import NotFound from './components/layout/NotFound';
+import Forbidden from './components/layout/Forbidden';
+import ServerError from './components/layout/ServerError';
 
 
 function App() {
@@ -22,6 +25,10 @@ function App() {
     <Router>
       <Routes>
       <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/403" element={<Forbidden />} />
+      <Route path="/404" element={<NotFound />} />
+      <Route path="/500" element={<ServerError />} />
+      <Route path="*" element={<NotFound />} />
        
         <Route path="/" element={<Login />} />
         <Route path="/hr" element={<LoginHR />} />
