@@ -108,9 +108,7 @@ export default function TimeLogs() {
           email: profileData.email
         });
 
-        // Fetch all time logs
-        // Since your backend handles authorization based on the username in the token,
-        // we don't need to specify the employee ID in the URL
+      
         const logsResponse = await fetch('http://localhost:8080/api/time-logs', {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -169,23 +167,27 @@ export default function TimeLogs() {
   }
   
   const exportToCSV = () => {
-    // Create CSV content
     let csvContent = "Date,Time In,Time Out,Total Hours\n";
-    
+  
     filteredLogs.forEach(log => {
-      csvContent += `${formatDate(log.date)},${formatTime(log.timeIn)},${formatTime(log.timeOut)},${(log.totalHours || 0).toFixed(1)}\n`;
+      const date = `"${formatDate(log.date)}"`;            // e.g. "Fri, May 2, 2025"
+      const timeIn = `"${formatTime(log.timeIn)}"`;        // e.g. "11:31 PM"
+      const timeOut = `"${formatTime(log.timeOut)}"`;      // e.g. "12:23 AM"
+      const totalHours = `"${(log.totalHours || 0).toFixed(1)} hrs"`;  // e.g. "0.0 hrs"
+  
+      csvContent += `${date},${timeIn},${timeOut},${totalHours}\n`;
     });
-    
-    // Create a blob and download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `time-logs-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", "attendance_logs.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+  
 
   const fullName = `${employee.firstName} ${employee.lastName}`;
 
