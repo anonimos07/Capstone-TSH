@@ -773,7 +773,7 @@ export default function HrDashboard() {
                     <table className="w-full">
                       <thead>
                         <tr className="bg-gray-50 text-left">
-                          <th className="p-4 font-medium">Employee ID</th>
+                          {/* <th className="p-4 font-medium">Employee ID</th> */}
                           <th className="p-4 font-medium">Username</th>
                           <th className="p-4 font-medium">Name</th>
                           <th className="p-4 font-medium">Email</th>
@@ -789,7 +789,7 @@ export default function HrDashboard() {
                             key={employee.employeeId}
                             className="border-t hover:bg-gray-50"
                           >
-                            <td className="p-4">{employee.employeeId}</td>
+                            {/* <td className="p-4">{employee.employeeId}</td> */}
                             <td className="p-4">{employee.username}</td>
                             <td className="p-4">
                               {employee.firstName} {employee.lastName}
@@ -800,7 +800,7 @@ export default function HrDashboard() {
                             <td className="p-4">₱{employee.baseSalary.toLocaleString()}</td>
                             <td className="p-4">
                               <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                employee.role === 'hr' 
+                                employee.role === 'hr' || 'employee'
                                   ? 'bg-purple-100 text-purple-700' 
                                   : 'bg-blue-100 text-blue-700'
                               }`}>
