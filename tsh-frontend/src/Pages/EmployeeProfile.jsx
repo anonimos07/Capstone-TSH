@@ -15,6 +15,7 @@ const EmployeeProfile = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const EmployeeProfile = () => {
         setError(null);
 
         const token = localStorage.getItem("token");
-        console.log("Token:", token); // Debug: Check token
+        console.log("Token:", token);
         
         if (!token) {
           throw new Error("Authentication token not found. Please log in again.");
@@ -67,7 +68,7 @@ const EmployeeProfile = () => {
         }
 
         const data = await response.json();
-        console.log("API Response:", data); // Debug: Check full response
+        console.log("API Response:", data);
         setEmployee({
           username: data.username || "",
           firstName: data.firstName || "",
@@ -88,6 +89,14 @@ const EmployeeProfile = () => {
     fetchEmployeeData();
   }, [navigate]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEmployee(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   if (isLoading) return <div className="text-center py-4">Loading...</div>;
   if (error) return <div className="text-center py-4 text-red-500">{error}</div>;
 
@@ -100,7 +109,9 @@ const EmployeeProfile = () => {
               <CardTitle>Employee Profile</CardTitle>
               <div className="space-x-2">
                 <Button variant="outline">Change Password</Button>
-                <Button>Edit Profile</Button>
+                <Button onClick={() => setIsEditMode(!isEditMode)}>
+                  {isEditMode ? 'Save Profile' : 'Edit Profile'}
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -114,10 +125,55 @@ const EmployeeProfile = () => {
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <h3 className="text-lg font-medium mb-2">Personal Information</h3>
-                  <div className="space-y-2">
-                    <p><span className="text-gray-500">Username</span> {employee.username}</p>
-                    <p><span className="text-gray-500">Email</span> {employee.email}</p>
-                    <p><span className="text-gray-500">Contact</span> {employee.contact}</p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-500">Username</label>
+                      <p className="mt-1 w-full p-2 text-gray-900">{employee.username}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="text-sm font-medium text-gray-500">First Name</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={employee.firstName}
+                        onChange={handleInputChange}
+                        disabled={!isEditMode}
+                        className="mt-1 w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="text-sm font-medium text-gray-500">Last Name</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={employee.lastName}
+                        onChange={handleInputChange}
+                        disabled={!isEditMode}
+                        className="mt-1 w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="text-sm font-medium text-gray-500">Email</label>
+                      <input
+                        type="text"
+                        name="email"
+                        value={employee.email}
+                        onChange={handleInputChange}
+                        disabled={!isEditMode}
+                        className="mt-1 w-full p-2 border rounded"
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <label className="text-sm font-medium text-gray-500">Contact</label>
+                      <input
+                        type="text"
+                        name="contact"
+                        value={employee.contact}
+                        onChange={handleInputChange}
+                        disabled={!isEditMode}
+                        className="mt-1 w-full p-2 border rounded"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
