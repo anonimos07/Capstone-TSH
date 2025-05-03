@@ -74,7 +74,9 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
                     "firstName", employee.getFirstName(),
                     "lastName", employee.getLastName(),
                     "email", employee.getEmail(),
-                    "role", employee.getRole()
+                    "role", employee.getRole(),
+                    "contact", employee.getContact(),
+                    "position", employee.getPosition()
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

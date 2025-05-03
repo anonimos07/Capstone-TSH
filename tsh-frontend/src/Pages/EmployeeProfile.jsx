@@ -9,7 +9,9 @@ const EmployeeProfile = () => {
     firstName: '',
     lastName: '',
     email: '',
-    role: ''
+    role: '',
+    contact: '',
+    position: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,6 +24,7 @@ const EmployeeProfile = () => {
         setError(null);
 
         const token = localStorage.getItem("token");
+        console.log("Token:", token); // Debug: Check token
         
         if (!token) {
           throw new Error("Authentication token not found. Please log in again.");
@@ -64,12 +67,15 @@ const EmployeeProfile = () => {
         }
 
         const data = await response.json();
+        console.log("API Response:", data); // Debug: Check full response
         setEmployee({
           username: data.username || "",
           firstName: data.firstName || "",
           lastName: data.lastName || "",
           email: data.email || "",
-          role: data.role || ""
+          role: data.role || "",
+          contact: data.contact || "",
+          position: data.position || ""
         });
       } catch (err) {
         console.error("Unexpected error:", err);
@@ -102,7 +108,7 @@ const EmployeeProfile = () => {
                 <div className="w-20 h-20 bg-gray-300 rounded-full mr-4"></div>
                 <div>
                   <h2 className="text-xl font-semibold">{employee.firstName} {employee.lastName}</h2>
-                  <p className="text-gray-600">Role: {employee.role}</p>
+                  <p className="text-gray-600">{employee.position} <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded ml-2">{employee.role}</span></p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-6">
@@ -111,6 +117,7 @@ const EmployeeProfile = () => {
                   <div className="space-y-2">
                     <p><span className="text-gray-500">Username</span> {employee.username}</p>
                     <p><span className="text-gray-500">Email</span> {employee.email}</p>
+                    <p><span className="text-gray-500">Contact</span> {employee.contact}</p>
                   </div>
                 </div>
               </div>
