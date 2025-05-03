@@ -16,7 +16,7 @@ import HRManagementPage from './Pages/HRManagementPage';
 import NotFound from './components/layout/NotFound';
 import Forbidden from './components/layout/Forbidden';
 import ServerError from './components/layout/ServerError';
-
+import EmployeeProfile from './Pages/EmployeeProfile';
 
 function App() {
 
@@ -41,6 +41,7 @@ function App() {
           <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
           <Route path="/TimeLogs" element={<TimeLogs  />} />
           <Route path="/TimeTracking" element={<TimeTracking  />} />
+          <Route path="/profile" element={<EmployeeProfile />} />
         </Route>
 
 
