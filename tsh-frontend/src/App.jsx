@@ -17,6 +17,7 @@ import NotFound from './components/layout/NotFound';
 import Forbidden from './components/layout/Forbidden';
 import ServerError from './components/layout/ServerError';
 import EmployeeProfile from './Pages/EmployeeProfile';
+import HrProfile from './Pages/HrProfile';
 
 function App() {
 
@@ -47,6 +48,7 @@ function App() {
 
         <Route element={<ProtectedRoutes allowedRoles={["HR"]} />}>
         <Route path="/HrDashboard" element={<HrDashboard />} />
+        <Route path="/Hrprofile" element={<HrProfile />} />
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>

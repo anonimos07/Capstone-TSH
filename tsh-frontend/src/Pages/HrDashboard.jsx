@@ -643,7 +643,7 @@ export default function HrDashboard() {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="bg-gray-50 text-left">
+                        <tr className="bg-gray-50 text-center">
                          
                           <th className="p-4 font-medium">Username</th>
                           <th className="p-4 font-medium">Name</th>
