@@ -18,6 +18,7 @@ import Forbidden from './components/layout/Forbidden';
 import ServerError from './components/layout/ServerError';
 import EmployeeProfile from './Pages/EmployeeProfile';
 import HrProfile from './Pages/HrProfile';
+import ResetPassword from './Pages/ResetPassword';
 
 function App() {
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/hr" element={<LoginHR />} />
         <Route path="/admin" element={<LoginAdmin />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
       
 
