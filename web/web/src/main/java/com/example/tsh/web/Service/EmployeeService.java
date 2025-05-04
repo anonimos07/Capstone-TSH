@@ -3,6 +3,7 @@ package com.example.tsh.web.Service;
 import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Repository.EmployeeRepo;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -81,4 +82,19 @@ public class EmployeeService {
     public Optional<Employee> findById(Long employeeId) {
         return employeeRepository.findById(employeeId);
     }
+
+    //edit emp prof
+    public void updateOwnProfile(String username, Employee updatedData) {
+        Employee employee = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found for username: " + username));
+
+        employee.setFirstName(updatedData.getFirstName());
+        employee.setLastName(updatedData.getLastName());
+        employee.setEmail(updatedData.getEmail());
+        employee.setContact(updatedData.getContact());
+
+        employeeRepository.save(employee);
+    }
+
+
 }
