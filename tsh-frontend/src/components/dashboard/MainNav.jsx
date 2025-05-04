@@ -7,7 +7,7 @@ export function MainNav({
 }) {
   const employeeLinks = [
     {
-      href: "/employee/dashboard",
+      href: "/EmployeeDashboard",
       label: "Dashboard",
     },
     {

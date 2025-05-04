@@ -10,7 +10,14 @@ import Unauthorized from './components/layout/Unauthorized';
 import ProtectedRoutes from './Pages/ProtectedRoutes';
 import TimeLogs from './Pages/TimeLogs';
 import TimeTracking from './Pages/TimeTracking';
-
+import { AdminDashboard } from '@/Pages/AdminDashboard';
+import EmployeeManagementPage from './Pages/EmployeeManagementPage';
+import HRManagementPage from './Pages/HRManagementPage';
+import NotFound from './components/layout/NotFound';
+import Forbidden from './components/layout/Forbidden';
+import ServerError from './components/layout/ServerError';
+import EmployeeProfile from './Pages/EmployeeProfile';
+import HrProfile from './Pages/HrProfile';
 
 function App() {
 
@@ -19,6 +26,10 @@ function App() {
     <Router>
       <Routes>
       <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/403" element={<Forbidden />} />
+      <Route path="/404" element={<NotFound />} />
+      <Route path="/500" element={<ServerError />} />
+      <Route path="*" element={<NotFound />} />
        
         <Route path="/" element={<Login />} />
         <Route path="/hr" element={<LoginHR />} />
@@ -31,20 +42,20 @@ function App() {
           <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
           <Route path="/TimeLogs" element={<TimeLogs  />} />
           <Route path="/TimeTracking" element={<TimeTracking  />} />
+          <Route path="/profile" element={<EmployeeProfile />} />
         </Route>
 
 
         <Route element={<ProtectedRoutes allowedRoles={["HR"]} />}>
         <Route path="/HrDashboard" element={<HrDashboard />} />
+        <Route path="/Hrprofile" element={<HrProfile />} />
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
-        {/* admin routes */}
+        <Route path="/adminDashboard" element={<AdminDashboard />} />
+        <Route path="/adminEmployees" element={<EmployeeManagementPage />} />
+        <Route path="/adminHR" element={<HRManagementPage />} />
         </Route>
-
-
-        
-
 
       </Routes>
     </Router>

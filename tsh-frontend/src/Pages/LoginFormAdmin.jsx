@@ -1,4 +1,5 @@
 import { useState } from "react"; 
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function LoginAdmin({ className, ...props }) { 
- 
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -43,20 +44,28 @@ export function LoginAdmin({ className, ...props }) {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      const text = await response.text();
+      let data;
+      
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (jsonError) {
+        console.error("Failed to parse JSON:", jsonError);
+        throw new Error("Wrong credentials");
       }
 
-      // para local storage ma store token dili ang username og password
+      if (!response.ok) {
+        throw new Error(data.message || "Wrong credentials");
+      }
+
+      
       localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.username); // Store username for HR
+      localStorage.setItem("username", data.username);
       localStorage.setItem("user", JSON.stringify({ 
-        role: data.role  // Directly use data.role (not response.data.role)
+        role: data.role  
       }));
       
-     
+     navigate("/adminDashboard");
       
       console.log("Login successful:", data);
     } catch (error) {
@@ -67,7 +76,6 @@ export function LoginAdmin({ className, ...props }) {
     }
   };
 
- 
   return (
     <div className={cn("flex min-h-screen flex-col items-center justify-start pt-20", className)} {...props}>
       <Card className="max-w-md w-full">

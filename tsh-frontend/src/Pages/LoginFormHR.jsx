@@ -1,4 +1,4 @@
-import { useState } from "react"; // Missing import
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,18 +10,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// Import useToast if you're using it
-// import { useToast } from "@/components/ui/use-toast";
 
-export function LoginHR({ className, ...props }) { // Function declaration is now complete
-  // State hooks should be inside the component function
+
+export function LoginHR({ className, ...props }) { 
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  // const { toast } = useToast?.() || { toast: () => {} }; // Uncomment if you're using toast
+ 
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -45,34 +44,38 @@ export function LoginHR({ className, ...props }) { // Function declaration is no
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      const text = await response.text();
+      let data;
+      
+      try {
+
+        data = text ? JSON.parse(text) : {};
+      } catch (jsonError) {
+        console.error("Failed to parse JSON:", jsonError);
+        throw new Error("Wrong credentials");
       }
 
-      // para local storage ma store token dili ang username og password
+      if (!response.ok) {
+        throw new Error(data.message || "Wrong credentials");
+      }
+
       localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.username); // Store username for HR
+      localStorage.setItem("username", data.username); 
       localStorage.setItem("user", JSON.stringify({ 
-        role: data.role  // Directly use data.role (not response.data.role)
+        role: data.role  
       }));
       
       window.location.href = "/HrDashboard";
       console.log("Login successful:", data);
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
-      /* toast({
-        title: "Login failed",
-        description: error.message || "Please check your credentials and try again",
-        variant: "destructive",
-      }); */
+    
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Removed extra { that was here
   return (
     <div className={cn("flex min-h-screen flex-col items-center justify-start pt-20", className)} {...props}>
       <Card className="max-w-md w-full">

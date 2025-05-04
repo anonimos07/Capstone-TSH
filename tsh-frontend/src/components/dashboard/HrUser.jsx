@@ -26,7 +26,7 @@ export function HrUser({ userName, userEmail }) {
             <p className="text-xs text-gray-500">{userEmail}</p>
           </div>
           <div className="p-1">
-            <Link to="/profile" className="flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md">
+            <Link to="/Hrprofile" className="flex items-center gap-2 p-2 text-sm hover:bg-gray-100 rounded-md">
               <User className="h-4 w-4" />
               <span>Profile</span>
             </Link>
