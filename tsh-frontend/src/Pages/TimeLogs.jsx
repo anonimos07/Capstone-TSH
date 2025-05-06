@@ -157,6 +157,7 @@ export default function TimeLogs() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
+
   const calculateTotalHours = () => {
     return (filteredLogs.reduce((total, log) => total + (log.durationMinutes || 0), 0) / 60).toFixed(1)
   }
@@ -325,7 +326,8 @@ export default function TimeLogs() {
                             <td className="px-4 py-3 text-sm">{formatDate(log.date)}</td>
                             <td className="px-4 py-3 text-sm">{formatTime(log.timeIn)}</td>
                             <td className="px-4 py-3 text-sm">{formatTime(log.timeOut)}</td>
-                            <td className="px-4 py-3 text-sm font-medium">{(log.totalHours || 0).toFixed(1)} hrs</td>
+                            <td className="px-4 py-3 text-sm font-medium">{((log.durationMinutes || 0) / 60).toFixed(1)} hrs</td>
+
                           </tr>
                         ))}
                         {filteredLogs.length === 0 && (
