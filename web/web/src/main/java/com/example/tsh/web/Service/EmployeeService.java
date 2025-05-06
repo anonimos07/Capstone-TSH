@@ -82,6 +82,19 @@ public class EmployeeService {
         return employeeRepository.findById(employeeId);
     }
 
+    //edit emp prof
+    public void updateOwnProfile(String username, Employee updatedData) {
+        Employee employee = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found for username: " + username));
+
+        employee.setFirstName(updatedData.getFirstName());
+        employee.setLastName(updatedData.getLastName());
+        employee.setEmail(updatedData.getEmail());
+        employee.setContact(updatedData.getContact());
+
+        employeeRepository.save(employee);
+    }
+
     public Map<String, Object> getSalaryDetails(Long employeeId) {
         Optional<Employee> employee = employeeRepository.findById(employeeId);
         if (employee.isEmpty()) {

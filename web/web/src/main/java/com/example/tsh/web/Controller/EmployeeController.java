@@ -99,6 +99,15 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
         return ResponseEntity.ok(employeeService.getSalaryDetails(employee.get().getEmployeeId()));
     }
 
+    //update profile emp
+    @PutMapping("/update-profile")
+    public ResponseEntity<String> updateEmployeeProfile(@RequestBody Employee employee, Authentication authentication){
+
+        String username = authentication.getName();
+        employeeService.updateOwnProfile(username, employee);
+        return ResponseEntity.ok("Profile updated successfully");
+    }
+
     @GetMapping("/payslips")
     public ResponseEntity<?> getPayslips(Authentication authentication) {
         String username = authentication.getName();
