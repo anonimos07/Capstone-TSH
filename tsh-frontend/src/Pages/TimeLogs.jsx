@@ -158,22 +158,23 @@ export default function TimeLogs() {
   }
 
   const calculateTotalHours = () => {
-    return filteredLogs.reduce((total, log) => total + (log.totalHours || 0), 0).toFixed(1)
+    return (filteredLogs.reduce((total, log) => total + (log.durationMinutes || 0), 0) / 60).toFixed(1)
   }
 
   const calculateAverageHours = () => {
     if (filteredLogs.length === 0) return "0.0"
-    return (filteredLogs.reduce((total, log) => total + (log.totalHours || 0), 0) / filteredLogs.length).toFixed(1)
+  return (filteredLogs.reduce((total, log) => total + (log.durationMinutes || 0), 0) / filteredLogs.length / 60).toFixed(1)
   }
   
   const exportToCSV = () => {
     let csvContent = "Date,Time In,Time Out,Total Hours\n";
   
     filteredLogs.forEach(log => {
-      const date = `"${formatDate(log.date)}"`;            // e.g. "Fri, May 2, 2025"
-      const timeIn = `"${formatTime(log.timeIn)}"`;        // e.g. "11:31 PM"
-      const timeOut = `"${formatTime(log.timeOut)}"`;      // e.g. "12:23 AM"
-      const totalHours = `"${(log.totalHours || 0).toFixed(1)} hrs"`;  // e.g. "0.0 hrs"
+      const date = `"${formatDate(log.date)}"`;
+      const timeIn = `"${formatTime(log.timeIn)}"`;
+      const timeOut = `"${formatTime(log.timeOut)}"`;
+      // Convert minutes to hours (divide by 60)
+      const totalHours = `"${(log.durationMinutes / 60).toFixed(1)} hrs"`;
   
       csvContent += `${date},${timeIn},${timeOut},${totalHours}\n`;
     });
