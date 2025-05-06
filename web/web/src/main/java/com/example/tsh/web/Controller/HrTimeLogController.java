@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -59,5 +60,18 @@ public class HrTimeLogController {
         TimeLog updatedLog = timeLogService.adjustTimeLog(timeLogId, employee, timeIn, timeOut);
         return ResponseEntity.ok(updatedLog);
     }
+
+
+    @GetMapping("/all")
+    public ResponseEntity<List<TimeLog>> getAllTimeLogs(Authentication authentication) {
+        // Confirm HR access
+        String username = authentication.getName();
+        HR hr = hrRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Unauthorized: HR not found"));
+
+        List<TimeLog> logs = timeLogService.findAllTimeLogs();
+        return ResponseEntity.ok(logs);
+    }
+
 
 }
