@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface HRRepo extends JpaRepository<HR, Long> {
     Optional<HR> findByUsername(String username);
+    Optional<HR> findByEmail(String email);
 }

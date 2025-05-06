@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const ForgotPassword = () => {
-    const [username, setUsername] = useState('');
+    const [emailOrUsername, setEmailOrUsername] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
@@ -16,7 +16,7 @@ const ForgotPassword = () => {
         setIsLoading(true);
         setMessage('');
 
-        if (!username) {
+        if (!emailOrUsername) {
             setMessage('Please enter your username or email');
             setIsLoading(false);
             return;
@@ -25,7 +25,7 @@ const ForgotPassword = () => {
         try {
             // Call the backend API to initiate password reset
             const response = await axios.post('http://localhost:8080/api/password/forgot', { 
-                emailOrUsername: username 
+                emailOrUsername: emailOrUsername 
             });
             
             setIsSuccess(true);
@@ -57,19 +57,23 @@ const ForgotPassword = () => {
             ) : (
                 <form onSubmit={handleSubmit} className="w-full max-w-md bg-gray p-6 rounded-lg shadow-md">
                     <div className="form-group mb-4">
-                        <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-700 mb-2">
                             Username or Email
                         </label>
                         <input
                             type="text"
-                            id="username"
-                            name="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            id="emailOrUsername"
+                            name="emailOrUsername"
+                            value={emailOrUsername}
+                            onChange={(e) => setEmailOrUsername(e.target.value)}
                             placeholder="Enter your username or email"
                             required
                             className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         />
+                    </div>
+                    
+                    <div className="mb-4 text-sm text-gray-600">
+                        <p>Works for both Employee and HR accounts.</p>
                     </div>
                     
                     {message && (
