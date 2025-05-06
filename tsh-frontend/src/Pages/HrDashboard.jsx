@@ -452,7 +452,481 @@ export default function HrDashboard() {
     );
   }
 
-   
+  function PayrollOverviewCard() {
+    const [payrollData, setPayrollData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+  
+    useEffect(() => {
+      const fetchPayrollData = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch("http://localhost:8080/hr/payroll-overview", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+  
+          if (!response.ok) {
+            throw new Error("Failed to fetch payroll data");
+          }
+  
+          const data = await response.json();
+          setPayrollData(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchPayrollData();
+    }, []);
+  
+    if (loading) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payroll Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4">Loading payroll data...</div>
+          </CardContent>
+        </Card>
+      );
+    }
+  
+    if (error) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payroll Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-red-500 py-4">{error}</div>
+          </CardContent>
+        </Card>
+      );
+    }
+  
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Payroll Overview</CardTitle>
+          <CardDescription>Company-wide payroll summary</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between">
+              <span>Total Employees:</span>
+              <span className="font-medium">{payrollData?.totalEmployees}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Payroll:</span>
+              <span className="font-medium">₱{payrollData?.totalPayroll?.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Tax Deductions:</span>
+              <span className="font-medium">₱{payrollData?.totalTaxDeductions?.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between border-t pt-2">
+              <span className="font-medium">Net Payroll:</span>
+              <span className="font-medium">
+                ₱{(payrollData?.totalPayroll - payrollData?.totalTaxDeductions)?.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  function PayrollActionsCard() {
+    const handleExportPayroll = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:8080/hr/export-payroll-report", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to export payroll report");
+        }
+  
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'payroll_report.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        alert("Payroll report downloaded successfully");
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  
+    const handleDetectErrors = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:8080/hr/detect-payroll-errors", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to detect payroll errors");
+        }
+  
+        const data = await response.json();
+        if (data.status === "No errors detected") {
+          alert("No payroll errors detected");
+        } else {
+          alert(`${data.message}\nEmployee IDs: ${data.employeeIds}`);
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Payroll Actions</CardTitle>
+          <CardDescription>Manage payroll operations</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            className="w-full" 
+            onClick={handleExportPayroll}
+          >
+            Export Payroll Report
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={handleDetectErrors}
+          >
+            Detect Payroll Errors
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  function EmployeePayrollTable() {
+    const [employees, setEmployees] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [editSalary, setEditSalary] = useState({ employeeId: null, newSalary: "" });
+  
+    useEffect(() => {
+      const fetchEmployees = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch("http://localhost:8080/hr/all-employee", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+  
+          if (!response.ok) {
+            throw new Error("Failed to fetch employees");
+          }
+  
+          const data = await response.json();
+          setEmployees(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchEmployees();
+    }, []);
+  
+    const handleSalaryChange = (employeeId, currentSalary) => {
+      setEditSalary({ employeeId, newSalary: currentSalary });
+    };
+  
+    const handleSalaryUpdate = async () => {
+      if (!editSalary.employeeId || !editSalary.newSalary) return;
+  
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `http://localhost:8080/hr/adjust-salary/${editSalary.employeeId}?newSalary=${editSalary.newSalary}`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+  
+        if (!response.ok) {
+          throw new Error("Failed to update salary");
+        }
+  
+        const updatedEmployee = await response.json();
+        setEmployees(employees.map(emp => 
+          emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp
+        ));
+        setEditSalary({ employeeId: null, newSalary: "" });
+        alert("Salary updated successfully");
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  
+    const filteredEmployees = employees.filter(employee => {
+      const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+      return fullName.includes(searchQuery.toLowerCase());
+    });
+  
+    if (loading) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Employee Payroll</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4">Loading employee data...</div>
+          </CardContent>
+        </Card>
+      );
+    }
+  
+    if (error) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Employee Payroll</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-red-500 py-4">{error}</div>
+          </CardContent>
+        </Card>
+      );
+    }
+  
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Employee Payroll</CardTitle>
+          <CardDescription>Individual employee salary information</CardDescription>
+          <div className="relative mt-2">
+            <input
+              type="text"
+              placeholder="Search employees..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            <svg
+              className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left">
+                  <th className="p-4 font-medium">Employee</th>
+                  <th className="p-4 font-medium">Position</th>
+                  <th className="p-4 font-medium">Base Salary</th>
+                  <th className="p-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEmployees.map((employee) => (
+                  <tr key={employee.employeeId} className="border-t hover:bg-gray-50">
+                    <td className="p-4">
+                      {employee.firstName} {employee.lastName}
+                    </td>
+                    <td className="p-4">{employee.position}</td>
+                    <td className="p-4">
+                      {editSalary.employeeId === employee.employeeId ? (
+                        <input
+                          type="number"
+                          value={editSalary.newSalary}
+                          onChange={(e) => setEditSalary({
+                            ...editSalary,
+                            newSalary: e.target.value
+                          })}
+                          className="px-2 py-1 border rounded-md w-32"
+                        />
+                      ) : (
+                        `₱${employee.baseSalary.toLocaleString()}`
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {editSalary.employeeId === employee.employeeId ? (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={handleSalaryUpdate}
+                            className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditSalary({ employeeId: null, newSalary: "" })}
+                            className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSalaryChange(employee.employeeId, employee.baseSalary)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  function AttendanceOverview() {
+    const [attendanceData, setAttendanceData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+  
+    useEffect(() => {
+      const fetchAttendanceData = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch("http://localhost:8080/hr/attendance-overview", {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+            }
+          });
+  
+          if (!response.ok) {
+            throw new Error("Failed to fetch attendance data");
+          }
+  
+          const data = await response.json();
+          setAttendanceData(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchAttendanceData();
+    }, []);
+  
+    if (loading) {
+      return (
+        <div className="flex justify-center py-8">
+          <p>Loading attendance data...</p>
+        </div>
+      );
+    }
+  
+    if (error) {
+      return (
+        <div className="text-center text-red-500 py-8">
+          Error: {error}
+        </div>
+      );
+    }
+  
+    if (!attendanceData) {
+      return (
+        <div className="text-center py-8">
+          No attendance data available
+        </div>
+      );
+    }
+  
+    // Calculate attendance percentage - PROPERLY FIXED VERSION
+    const attendancePercentage = attendanceData.totalEmployees > 0 
+    ? Math.round((attendanceData.totalPresentDays / (attendanceData.totalEmployees * 30)) * 100)
+    : 0;
+  
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2 rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Total Employees</div>
+            <div className="text-2xl font-semibold">
+              {attendanceData.totalEmployees}
+            </div>
+          </div>
+          <div className="space-y-2 rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Present Days (30 days)</div>
+            <div className="text-2xl font-semibold">
+              {attendanceData.totalPresentDays}
+            </div>
+          </div>
+          <div className="space-y-2 rounded-lg border p-4">
+            <div className="text-sm text-gray-500">Average Hours/Day</div>
+            <div className="text-2xl font-semibold">
+              {attendanceData.averageHoursPerDay} hrs
+            </div>
+          </div>
+        </div>
+  
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium">Attendance Rate</h3>
+            <span className="text-sm font-medium">
+              {attendancePercentage}%
+            </span>
+          </div>
+          <Progress value={attendancePercentage} />
+        </div>
+  
+        <div className="space-y-4">
+          <h3 className="font-medium">Total Worked Hours</h3>
+          <div className="text-2xl font-semibold">
+            {Math.round(attendanceData.totalWorkedMinutes / 60)} hours
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -469,7 +943,7 @@ export default function HrDashboard() {
         <div className="container mx-auto px-4 py-6">
           <HrHeader heading="Hr Dashboard" subheading={`Welcome back, ${fullName}`}>
             <div className="flex items-center gap-2">
-              <Button>Request Leave</Button>
+            <Button onClick={() => navigate("/HrLeaveRequests")}>See Leave Requests</Button>
             </div>
           </HrHeader>
 
@@ -512,11 +986,9 @@ export default function HrDashboard() {
                   <CardHeader>
                     <CardTitle>Benefits Overview</CardTitle>
                     <CardDescription>Your current benefits and utilization</CardDescription>
-                  </CardHeader>
-                 
+                  </CardHeader>            
                 </Card>
               </div>
-
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -546,53 +1018,22 @@ export default function HrDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Attendance Overview</CardTitle>
-                  <CardDescription>Your attendance records for the current month</CardDescription>
+                  <CardDescription>Company-wide attendance statistics</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="space-y-2 rounded-lg border p-4">
-                        <div className="text-sm text-gray-500">Present Days</div>
-                       
-                      </div>
-                      <div className="space-y-2 rounded-lg border p-4">
-                        <div className="text-sm text-gray-500">Absent Days</div>
-                    
-                      </div>
-                      <div className="space-y-2 rounded-lg border p-4">
-                        <div className="text-sm text-gray-500">Late Arrivals</div>
-                        
-                      </div>
-                    </div>
-
-                    <div className="rounded-lg border">
-                      <div className="grid grid-cols-7 gap-px bg-gray-100">
-                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-                          <div key={day} className="bg-white p-2 text-center text-sm font-medium">
-                            {day}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <AttendanceOverview />
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="payroll" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Salary Breakdown</CardTitle>
-                  <CardDescription>Your current salary components and deductions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  
-                      <Button>Download Payslip</Button>
-                   
-                </CardContent>
-              </Card>
+              <div className="grid gap-4 md:grid-cols-2">
+                <PayrollOverviewCard />
+                <PayrollActionsCard />
+              </div>
+              <EmployeePayrollTable />
             </TabsContent>
-
+            
             {/*fetch Users*/}
             <TabsContent value="viewEmployee" className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm">
@@ -859,12 +1300,6 @@ export default function HrDashboard() {
                 </form>
               </div>
             </TabsContent>
- {/*Create Employee Form*/}
-
-
-
-
-
           </Tabs>
         </div>
       </main>

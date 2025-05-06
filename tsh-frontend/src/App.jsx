@@ -19,6 +19,9 @@ import ServerError from './components/layout/ServerError';
 import EmployeeProfile from './Pages/EmployeeProfile';
 import HrProfile from './Pages/HrProfile';
 import ResetPassword from './Pages/ResetPassword';
+import LeaveRequestForm from "./pages/LeaveRequestForm";
+import HrLeaveRequests from './Pages/HrLeaveRequests';
+import EmployeePayslip from './Pages/EmployeePayslip';
 
 function App() {
 
@@ -44,13 +47,16 @@ function App() {
           <Route path="/EmployeeDashboard" element={<EmployeeDashboard />} />
           <Route path="/TimeLogs" element={<TimeLogs  />} />
           <Route path="/TimeTracking" element={<TimeTracking  />} />
-          <Route path="/profile" element={<EmployeeProfile />} />
+          <Route path="/profile" element={<EmployeeProfile />} />      
+          <Route path="/LeaveRequest" element={<LeaveRequestForm />} />
+          <Route path="/EmployeePayslip" element={<EmployeePayslip />} />
         </Route>
 
 
         <Route element={<ProtectedRoutes allowedRoles={["HR"]} />}>
         <Route path="/HrDashboard" element={<HrDashboard />} />
         <Route path="/Hrprofile" element={<HrProfile />} />
+        <Route path="/HrLeaveRequests" element={<HrLeaveRequests />} />
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
