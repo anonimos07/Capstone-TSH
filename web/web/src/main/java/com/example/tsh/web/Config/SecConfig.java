@@ -44,9 +44,9 @@ private JwtFilter jwtFilter;
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/employee/login","/hr/login","/admin/login").permitAll()
+                        .requestMatchers("/employee/login","/hr/login","/admin/login","/api/password/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/hr/**").hasRole("HR")
+                        .requestMatchers("/hr/**","/api/hr/time-logs/**").hasRole("HR")
                         .requestMatchers("/employee/**","/api/time-logs/**").hasRole("EMPLOYEE")
 //                        .requestMatchers("/api/time-logs/**").hasRole("EMPLOYEE")
 

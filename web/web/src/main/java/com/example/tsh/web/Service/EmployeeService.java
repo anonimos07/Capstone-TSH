@@ -3,6 +3,7 @@ package com.example.tsh.web.Service;
 import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.Role;
 import com.example.tsh.web.Repository.EmployeeRepo;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;

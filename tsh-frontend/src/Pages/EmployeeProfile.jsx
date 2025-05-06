@@ -17,6 +17,8 @@ const EmployeeProfile = () => {
   const [error, setError] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
+  const [isSaving, setIsSaving] = useState(false);
+
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -89,6 +91,36 @@ const EmployeeProfile = () => {
     fetchEmployeeData();
   }, [navigate]);
 
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem("token");
+  
+      const response = await fetch("http://localhost:8080/employee/update-profile", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(employee),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile.");
+      }
+  
+      setIsEditMode(false);
+    } catch (err) {
+      console.error("Profile update error:", err);
+      alert(err.message || "An unexpected error occurred.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEmployee(prev => ({
@@ -109,9 +141,13 @@ const EmployeeProfile = () => {
               <CardTitle>Employee Profile</CardTitle>
               <div className="space-x-2">
                 <Button variant="outline">Change Password</Button>
-                <Button onClick={() => setIsEditMode(!isEditMode)}>
-                  {isEditMode ? 'Save Profile' : 'Edit Profile'}
-                </Button>
+                <Button
+  onClick={isEditMode ? handleSaveProfile : () => setIsEditMode(true)}
+  disabled={isSaving}
+>
+  {isEditMode ? (isSaving ? "Saving..." : "Save Profile") : "Edit Profile"}
+</Button>
+
               </div>
             </CardHeader>
             <CardContent>
