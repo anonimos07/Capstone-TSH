@@ -91,4 +91,25 @@ public class TimeLogService {
     public TimeLog getCurrentStatus(Employee employee) {
         return timeLogRepository.findActiveLogByEmployee(employee);
     }
+
+
+    public TimeLog adjustTimeLog(Long timeLogId, Employee employee, LocalDateTime timeIn, LocalDateTime timeOut) {
+        TimeLog log = timeLogRepository.findById(timeLogId)
+                .orElseThrow(() -> new IllegalArgumentException("TimeLog not found"));
+
+        if (log.getEmployee().getEmployeeId() != employee.getEmployeeId()) {
+            throw new IllegalArgumentException("TimeLog does not belong to the specified employee");
+        }
+
+
+        if (timeIn != null) {
+            log.setTimeIn(timeIn);
+        }
+        if (timeOut != null) {
+            log.setTimeOut(timeOut);
+        }
+
+        return timeLogRepository.save(log);
+    }
+
 }
