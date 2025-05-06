@@ -1,9 +1,6 @@
 package com.example.tsh.web.Service;
 
-import com.example.tsh.web.Entity.Admin;
-import com.example.tsh.web.Entity.Employee;
-import com.example.tsh.web.Entity.HR;
-import com.example.tsh.web.Entity.Role;
+import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +23,7 @@ public class HRService {
     private final HRRepo hrRepository;
     private final EmployeeRepo employeeRepo;
     private final PasswordEncoder passwordEncoder;
+    private final TimeLogService timeLogService;
 
     @Autowired
     private JwtService jwtService;
@@ -91,5 +92,103 @@ public class HRService {
             }
         }
         return "failed";
+    }
+
+    public Map<String, Object> getPayrollOverview() {
+        List<Employee> employees = employeeRepo.findAll();
+
+        Map<String, Object> overview = new HashMap<>();
+        overview.put("totalEmployees", employees.size());
+
+        // Calculate total payroll expenses
+        float totalPayroll = employees.stream()
+                .map(Employee::getBaseSalary)
+                .reduce(0f, Float::sum);
+        overview.put("totalPayroll", totalPayroll);
+
+        // Calculate total tax deductions (simplified)
+        float totalTax = employees.stream()
+                .map(e -> e.getBaseSalary() * 0.2f) // Assuming 20% tax
+                .reduce(0f, Float::sum);
+        overview.put("totalTaxDeductions", totalTax);
+
+        return overview;
+    }
+
+    public byte[] generatePayrollReport() {
+        // This would typically generate an Excel or PDF report
+        // Simplified example returning CSV format
+        List<Employee> employees = employeeRepo.findAll();
+        StringBuilder csv = new StringBuilder("ID,Name,Position,Base Salary,Tax\n");
+
+        for (Employee e : employees) {
+            csv.append(e.getEmployeeId()).append(",")
+                    .append(e.getFirstName()).append(" ").append(e.getLastName()).append(",")
+                    .append(e.getPosition()).append(",")
+                    .append(e.getBaseSalary()).append(",")
+                    .append(e.getBaseSalary() * 0.2f).append("\n");
+        }
+
+        return csv.toString().getBytes();
+    }
+
+    public Employee adjustEmployeeSalary(Long employeeId, float newSalary) {
+        Employee employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        employee.setBaseSalary(newSalary);
+        return employeeRepo.save(employee);
+    }
+
+    public Map<String, String> detectPayrollErrors() {
+        // Simple error detection - find employees with zero/negative salary
+        List<Employee> problematicEmployees = employeeRepo.findAll().stream()
+                .filter(e -> e.getBaseSalary() <= 0)
+                .toList();
+
+        Map<String, String> result = new HashMap<>();
+        if (problematicEmployees.isEmpty()) {
+            result.put("status", "No errors detected");
+        } else {
+            result.put("status", "Errors detected");
+            result.put("message", problematicEmployees.size() + " employees have invalid salaries");
+            result.put("employeeIds", problematicEmployees.stream()
+                    .map(e -> String.valueOf(e.getEmployeeId()))
+                    .collect(Collectors.joining(",")));
+        }
+        return result;
+    }
+
+    public Map<String, Object> getAttendanceOverview() {
+        Map<String, Object> attendance = new HashMap<>();
+
+        // Get all time logs
+        List<TimeLog> allTimeLogs = timeLogService.findAllTimeLogs();
+
+        // Calculate present days (count distinct days with at least one time log)
+        long totalPresent = allTimeLogs.stream()
+                .filter(log -> log.getTimeIn() != null)
+                .map(log -> log.getDate().toLocalDate())
+                .distinct()
+                .count();
+
+        // Calculate total working minutes (only for completed sessions)
+        long totalMinutes = allTimeLogs.stream()
+                .filter(log -> log.getTimeIn() != null && log.getTimeOut() != null)
+                .mapToLong(log -> log.getDurationMinutes() != null ? log.getDurationMinutes() : 0)
+                .sum();
+
+        // Calculate average working hours per present day
+        double averageHours = totalPresent > 0 ? totalMinutes / 60.0 / totalPresent : 0;
+
+        // Get total number of employees
+        long totalEmployees = employeeRepo.count();
+
+        attendance.put("totalPresentDays", totalPresent);
+        attendance.put("totalEmployees", totalEmployees);
+        attendance.put("averageHoursPerDay", Math.round(averageHours * 100.0) / 100.0); // Rounded to 2 decimal places
+        attendance.put("totalWorkedMinutes", totalMinutes);
+
+        return attendance;
     }
 }

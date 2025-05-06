@@ -4,6 +4,7 @@ import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Service.EmployeeService;
 import com.example.tsh.web.Service.HRService;
+import com.example.tsh.web.Service.LeaveService;
 import com.example.tsh.web.Service.TimeLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ public class HRController {
     private final HRService hrService;
     private final EmployeeService employeeService;
     public final HRRepo hrRepo;
+    private final LeaveService leaveService;
 
     @Autowired
     private TimeLogService timeLogService;
@@ -119,5 +121,52 @@ public class HRController {
                     .body(Map.of("message", "Server error: " + e.getMessage()));
         }
     }
-    
+
+    @GetMapping("/pending-leave-requests")
+    public ResponseEntity<List<LeaveRequest>> getPendingLeaveRequests() {
+        return ResponseEntity.ok(leaveService.getPendingLeaveRequests());
+    }
+
+    @PostMapping("/approve-leave/{requestId}")
+    public ResponseEntity<?> approveLeaveRequest(@PathVariable Long requestId) {
+        return ResponseEntity.ok(leaveService.approveLeaveRequest(requestId));
+    }
+
+    @PostMapping("/reject-leave/{requestId}")
+    public ResponseEntity<?> rejectLeaveRequest(@PathVariable Long requestId,
+                                                @RequestBody String rejectionReason) {
+        return ResponseEntity.ok(leaveService.rejectLeaveRequest(requestId, rejectionReason));
+    }
+
+    @GetMapping("/payroll-overview")
+    public ResponseEntity<Map<String, Object>> getPayrollOverview() {
+        return ResponseEntity.ok(hrService.getPayrollOverview());
+    }
+
+    @GetMapping("/export-payroll-report")
+    public ResponseEntity<byte[]> exportPayrollReport() {
+        byte[] report = hrService.generatePayrollReport();
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/csv")
+                .header("Content-Disposition", "attachment; filename=payroll_report.csv")
+                .body(report);
+    }
+
+    @PostMapping("/adjust-salary/{employeeId}")
+    public ResponseEntity<Employee> adjustSalary(
+            @PathVariable Long employeeId,
+            @RequestParam float newSalary) {
+        return ResponseEntity.ok(hrService.adjustEmployeeSalary(employeeId, newSalary));
+    }
+
+    @GetMapping("/detect-payroll-errors")
+    public ResponseEntity<Map<String, String>> detectPayrollErrors() {
+        return ResponseEntity.ok(hrService.detectPayrollErrors());
+    }
+
+    @GetMapping("/attendance-overview")
+    public ResponseEntity<Map<String, Object>> getAttendanceOverview() {
+        return ResponseEntity.ok(hrService.getAttendanceOverview());
+    }
 }

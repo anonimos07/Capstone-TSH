@@ -11,8 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -80,5 +79,58 @@ public class EmployeeService {
 
     public Optional<Employee> findById(Long employeeId) {
         return employeeRepository.findById(employeeId);
+    }
+
+    public Map<String, Object> getSalaryDetails(Long employeeId) {
+        Optional<Employee> employee = employeeRepository.findById(employeeId);
+        if (employee.isEmpty()) {
+            throw new RuntimeException("Employee not found");
+        }
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("baseSalary", employee.get().getBaseSalary());
+        // Add calculations for deductions, net pay, etc.
+        return details;
+    }
+
+    public List<Map<String, Object>> getPayslips(Long employeeId) {
+        // Implement payslip history retrieval
+        return Collections.emptyList();
+    }
+
+    public Map<String, Object> getTaxDetails(Long employeeId) {
+        // Implement tax calculation logic
+        return Collections.emptyMap();
+    }
+
+    public Map<String, Object> calculateTax(Long employeeId) {
+        Optional<Employee> employee = employeeRepository.findById(employeeId);
+        if (employee.isEmpty()) {
+            throw new RuntimeException("Employee not found");
+        }
+
+        // Simplified tax calculation - replace with actual logic
+        float grossSalary = employee.get().getBaseSalary() * 12; // annual
+        float tax = 0;
+
+        if (grossSalary > 50000) tax = grossSalary * 0.2f;
+        else if (grossSalary > 30000) tax = grossSalary * 0.15f;
+        else tax = grossSalary * 0.1f;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("grossSalary", grossSalary);
+        result.put("tax", tax);
+        result.put("netSalary", grossSalary - tax);
+
+        return result;
+    }
+
+    public Map<String, Object> getBenefits(Long employeeId) {
+        // Implement benefits tracking logic
+        Map<String, Object> benefits = new HashMap<>();
+        benefits.put("healthInsurance", true);
+        benefits.put("retirementPlan", true);
+        // Add more benefits as needed
+        return benefits;
     }
 }
