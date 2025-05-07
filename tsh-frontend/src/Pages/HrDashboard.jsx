@@ -969,6 +969,14 @@ export default function HrDashboard() {
                   description="Estimated amount: ₱5,264"
                   icon={PhilippinePeso}
                 />
+                <HrOverview
+                  title="Logs"
+                  value="View all employee's Logs"
+                  description="Check the employee's attendance record"
+                  icon={FileText}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => (window.location.href = "/EmployeeTimeLogs")}
+                />
                 <HrOverview title="Attendance" value="94%" description="Last 30 days" icon={UserCheck} />
                 <HrOverview title="Overtime" value="8 hours" description="This month" icon={Clock} />
               </div>

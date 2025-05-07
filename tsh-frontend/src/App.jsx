@@ -22,6 +22,7 @@ import ResetPassword from './Pages/ResetPassword';
 import LeaveRequestForm from "./pages/LeaveRequestForm";
 import HrLeaveRequests from './Pages/HrLeaveRequests';
 import EmployeePayslip from './Pages/EmployeePayslip';
+import { EmployeeTimeLogs } from './Pages/EmployeeTimeLogs';
 
 function App() {
 
@@ -57,6 +58,7 @@ function App() {
         <Route path="/HrDashboard" element={<HrDashboard />} />
         <Route path="/Hrprofile" element={<HrProfile />} />
         <Route path="/HrLeaveRequests" element={<HrLeaveRequests />} />
+        <Route path="/EmployeeTimeLogs" element={<EmployeeTimeLogs />} />
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
