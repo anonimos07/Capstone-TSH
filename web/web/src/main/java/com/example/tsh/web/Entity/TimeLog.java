@@ -1,6 +1,7 @@
 package com.example.tsh.web.Entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,9 +19,8 @@ public class TimeLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long timeLogId;
 
-    @JsonBackReference
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "employee_id")
     private Employee employee;
 
     @Column(name = "time_in")
