@@ -4,15 +4,9 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.HashSet;
+;
 import java.util.List;
-import java.util.Set;
-    import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-    import com.fasterxml.jackson.annotation.JsonManagedReference;
-    import jakarta.persistence.*;
-    import lombok.Getter;
-    import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Setter
 @Getter
@@ -53,10 +47,6 @@ public class Employee {
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.EMPLOYEE;
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TimeLog> timeLogs;
 
     public Employee(String username, String password, String email, String firstName,
                     String lastName, String contact, String position, float baseSalary) {
