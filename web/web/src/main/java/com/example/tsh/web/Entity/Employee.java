@@ -8,6 +8,11 @@ import lombok.Setter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+    import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+    import com.fasterxml.jackson.annotation.JsonManagedReference;
+    import jakarta.persistence.*;
+    import lombok.Getter;
+    import lombok.Setter;
 
 @Setter
 @Getter
@@ -36,6 +41,9 @@ public class Employee {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int absenceDays;
+        @JsonIgnoreProperties("employee")
+        @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<TimeLog> timeLogs;
 
     @Transient  // This won't be persisted in DB, will be calculated when needed
     private float grossIncome;

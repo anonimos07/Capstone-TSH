@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +61,7 @@ public class HrTimeLogController {
         TimeLog updatedLog = timeLogService.adjustTimeLog(timeLogId, employee, timeIn, timeOut);
         return ResponseEntity.ok(updatedLog);
     }
+
 
 
     @GetMapping("/all")
