@@ -258,4 +258,10 @@ public class HRController {
     public ResponseEntity<List<HR>> getAvailableHRForLeave() {
         return ResponseEntity.ok(hrService.getAllHr());
     }
+
+    // In HRController.java
+    @GetMapping("/available-hr-for-timelog")
+    public ResponseEntity<List<HR>> getAvailableHRForTimeLog() {
+        return ResponseEntity.ok(hrService.getAllHr());
+    }
 }

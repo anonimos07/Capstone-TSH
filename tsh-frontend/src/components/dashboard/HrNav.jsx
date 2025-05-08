@@ -10,18 +10,6 @@ export function HrNav({
       href: "/HrDashboard",
       label: "Dashboard",
     },
-    {
-      href: "/hr/attendance",
-      label: "Attendance",
-    },
-    {
-      href: "/hr/leave",
-      label: "Leave",
-    },
-    {
-      href: "/hr/payslips",
-      label: "Payslips",
-    },
   ];
 
   const links = userType === "hr" ? hrLinks : employeeLinks;

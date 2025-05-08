@@ -35,6 +35,11 @@ public class TimeLog {
     @Column(name = "date")
     private LocalDateTime date;
 
+    // In TimeLog.java
+    @ManyToOne
+    @JoinColumn(name = "assigned_hr_id")
+    private HR assignedHr;
+
     public TimeLog(){
 
     }
@@ -53,6 +58,15 @@ public class TimeLog {
     // Calculate duration in minutes
     private Integer calculateDurationInMinutes(LocalDateTime start, LocalDateTime end) {
         return (int) java.time.Duration.between(start, end).toMinutes();
+    }
+
+    // Add getter and setter
+    public HR getAssignedHr() {
+        return assignedHr;
+    }
+
+    public void setAssignedHr(HR assignedHr) {
+        this.assignedHr = assignedHr;
     }
 
     // Getters and Setters

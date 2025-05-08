@@ -5,6 +5,7 @@ import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.TimeLog;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
+import com.example.tsh.web.Repository.TimeLogRepo;
 import com.example.tsh.web.Service.TimeLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -30,6 +32,9 @@ public class HrTimeLogController {
 
     @Autowired
     private HRRepo hrRepository;
+
+    @Autowired
+    private TimeLogRepo timeLogRepo;
 
     @PutMapping("/adjust")
     public ResponseEntity<?> adjustTimeLog(
@@ -75,5 +80,14 @@ public class HrTimeLogController {
         return ResponseEntity.ok(logs);
     }
 
+    // In HrTimeLogController.java
+    @GetMapping("/assigned-logs")
+    public ResponseEntity<List<TimeLog>> getAssignedTimeLogs(Authentication authentication) {
+        String username = authentication.getName();
+        HR hr = hrRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Unauthorized: HR not found"));
 
+        List<TimeLog> logs = timeLogRepo.findByAssignedHr(hr);
+        return ResponseEntity.ok(logs);
+    }
 }

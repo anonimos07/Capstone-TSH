@@ -37,7 +37,7 @@ export function EmployeeTimeLogs() {
       const token = localStorage.getItem("token");
       console.log("Fetching logs with token:", token ? `${token.substring(0, 15)}...` : "No token found");
       
-      const response = await fetch("http://localhost:8080/api/hr/time-logs/all", {
+      const response = await fetch("http://localhost:8080/api/hr/time-logs/assigned-logs", {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Accept": "application/json"
