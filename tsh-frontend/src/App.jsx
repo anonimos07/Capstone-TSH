@@ -23,6 +23,7 @@ import LeaveRequestForm from "./pages/LeaveRequestForm";
 import HrLeaveRequests from './Pages/HrLeaveRequests';
 import EmployeePayslip from './Pages/EmployeePayslip';
 import { EmployeeTimeLogs } from './Pages/EmployeeTimeLogs';
+import EmployeeAttendance from './Pages/EmployeeAttendance';
 
 function App() {
 
@@ -51,6 +52,7 @@ function App() {
           <Route path="/profile" element={<EmployeeProfile />} />      
           <Route path="/LeaveRequest" element={<LeaveRequestForm />} />
           <Route path="/EmployeePayslip" element={<EmployeePayslip />} />
+          <Route path="/EmployeeAttendance" element={<EmployeeAttendance />} />
         </Route>
 
 

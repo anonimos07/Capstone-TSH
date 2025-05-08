@@ -29,4 +29,13 @@ public interface TimeLogRepo extends JpaRepository<TimeLog, Long> {
 
     // In TimeLogRepo.java
     List<TimeLog> findByAssignedHr(HR hr);
+
+    @Query("SELECT t FROM TimeLog t WHERE YEAR(t.date) = :year AND MONTH(t.date) = :month")
+    List<TimeLog> findByMonthAndYear(@Param("month") int month, @Param("year") int year);
+
+    @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND YEAR(t.date) = :year AND MONTH(t.date) = :month")
+    List<TimeLog> findByEmployeeAndMonthAndYear(
+            @Param("employee") Employee employee,
+            @Param("month") int month,
+            @Param("year") int year);
 }

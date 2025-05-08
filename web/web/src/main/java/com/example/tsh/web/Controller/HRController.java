@@ -1,5 +1,6 @@
 package com.example.tsh.web.Controller;
 
+import com.example.tsh.web.DTO.AttendanceRecord;
 import com.example.tsh.web.DTO.PayrollCreationRequest;
 import com.example.tsh.web.DTO.PayrollDetails;
 import com.example.tsh.web.Entity.*;
@@ -263,5 +264,17 @@ public class HRController {
     @GetMapping("/available-hr-for-timelog")
     public ResponseEntity<List<HR>> getAvailableHRForTimeLog() {
         return ResponseEntity.ok(hrService.getAllHr());
+    }
+
+    @GetMapping("/attendance-calendar")
+    public ResponseEntity<List<AttendanceRecord>> getAttendanceCalendar(
+            @RequestParam(required = false) Long employeeId,
+            @RequestParam int month,
+            @RequestParam int year,
+            @RequestParam(required = false) String status) {
+
+        // Implement logic to fetch attendance records based on filters
+        List<AttendanceRecord> records = hrService.getAttendanceRecords(employeeId, month, year, status);
+        return ResponseEntity.ok(records);
     }
 }

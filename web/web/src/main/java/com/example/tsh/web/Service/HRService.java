@@ -1,11 +1,13 @@
 package com.example.tsh.web.Service;
 
+import com.example.tsh.web.DTO.AttendanceRecord;
 import com.example.tsh.web.DTO.PayrollCreationRequest;
 import com.example.tsh.web.DTO.PayrollDetails;
 import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Repository.PayrollRepo;
+import com.example.tsh.web.Repository.TimeLogRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,7 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +30,7 @@ public class HRService {
     private final PasswordEncoder passwordEncoder;
     private final TimeLogService timeLogService;
     private final PayrollRepo payrollRepo;
+    private final TimeLogRepo timeLogRepo;
 
     @Autowired
     private JwtService jwtService;
@@ -305,5 +310,74 @@ public class HRService {
         if (grossPay > 50000) return grossPay * 0.8f;
         else if (grossPay > 30000) return grossPay * 0.85f;
         else return grossPay * 0.9f;
+    }
+
+    public List<AttendanceRecord> getAttendanceRecords(Long employeeId, int month, int year, String statusFilter) {
+        // Get all time logs for the specified period
+        List<TimeLog> timeLogs = timeLogRepo.findByMonthAndYear(month, year);
+
+        // If employee filter is specified, filter by employee
+        if (employeeId != null) {
+            timeLogs = timeLogs.stream()
+                    .filter(log -> log.getEmployee() != null &&
+                            employeeId.equals(log.getEmployee().getEmployeeId()))
+                    .collect(Collectors.toList());
+        }
+
+        // Convert time logs to attendance records
+        List<AttendanceRecord> records = new ArrayList<>();
+
+        // First, process all time logs to mark present days
+        for (TimeLog log : timeLogs) {
+            if (log.getTimeIn() != null && log.getEmployee() != null) {
+                String date = log.getDate().toLocalDate().toString();
+
+                // If status filter is specified, check if it matches
+                if (statusFilter == null || "PRESENT".equalsIgnoreCase(statusFilter)) {
+                    records.add(new AttendanceRecord(
+                            log.getEmployee().getEmployeeId(),
+                            log.getEmployee(),
+                            date,
+                            "PRESENT"
+                    ));
+                }
+            }
+        }
+
+        // If no employee filter, we need to mark absent days for all employees
+        if (employeeId == null) {
+            // Get all employees
+            List<Employee> allEmployees = employeeRepo.findAll();
+
+            // For each day in the month, check if each employee has a record
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+            for (Employee employee : allEmployees) {
+                LocalDate currentDate = startDate;
+                while (!currentDate.isAfter(endDate)) {
+                    String dateStr = currentDate.toString();
+
+                    // Check if this employee has a record for this date
+                    boolean hasRecord = records.stream()
+                            .anyMatch(r -> r.getEmployeeId().equals(employee.getEmployeeId())
+                                    && r.getDate().equals(dateStr));
+
+                    // If no record and we're not filtering by status or status is ABSENT
+                    if (!hasRecord && (statusFilter == null || "ABSENT".equalsIgnoreCase(statusFilter))) {
+                        records.add(new AttendanceRecord(
+                                employee.getEmployeeId(),
+                                employee,
+                                dateStr,
+                                "ABSENT"
+                        ));
+                    }
+
+                    currentDate = currentDate.plusDays(1);
+                }
+            }
+        }
+
+        return records;
     }
 }

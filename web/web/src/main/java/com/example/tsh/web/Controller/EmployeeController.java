@@ -1,13 +1,11 @@
 package com.example.tsh.web.Controller;
 
-import com.example.tsh.web.Entity.Employee;
-import com.example.tsh.web.Entity.HR;
-import com.example.tsh.web.Entity.LeaveRequest;
-import com.example.tsh.web.Entity.Role;
+import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Service.EmployeeService;
 import com.example.tsh.web.Service.HRService;
 import com.example.tsh.web.Service.LeaveService;
+import com.example.tsh.web.Service.TimeLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -28,6 +27,7 @@ public class EmployeeController {
     private final EmployeeRepo employeeRepo;
     private final LeaveService leaveService;
     private final HRService hrService;
+    private final TimeLogService timeLogService;
 
 @PostMapping("/login")
 public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee) {
@@ -230,5 +230,52 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
     @GetMapping("/available-hr")
     public ResponseEntity<List<HR>> getAvailableHR() {
         return ResponseEntity.ok(hrService.getAllHr());
+    }
+
+    @GetMapping("/attendance")
+    public ResponseEntity<?> getEmployeeAttendance(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            Authentication authentication) {
+        String username = authentication.getName();
+        Optional<Employee> employee = employeeRepo.findByUsername(username);
+
+        if (employee.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Default to current year/month if not specified
+        int queryYear = year != null ? year : LocalDate.now().getYear();
+        int queryMonth = month != null ? month : LocalDate.now().getMonthValue();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("year", queryYear);
+        response.put("month", queryMonth);
+
+        // Get time logs for the requested month/year
+        List<TimeLog> logs = timeLogService.getAttendanceForMonth(
+                employee.get().getEmployeeId(),
+                queryYear,
+                queryMonth
+        );
+
+        // Create a map of date to attendance status
+        Map<LocalDate, String> attendanceMap = new HashMap<>();
+        for (TimeLog log : logs) {
+            LocalDate logDate = log.getDate().toLocalDate();
+            attendanceMap.put(logDate, "P"); // Present
+        }
+
+        // For demo purposes, let's mark weekends as absent
+        LocalDate startDate = LocalDate.of(queryYear, queryMonth, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            if (!attendanceMap.containsKey(date) && date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                attendanceMap.put(date, "A"); // Absent for weekdays without time logs
+            }
+        }
+
+        response.put("attendance", attendanceMap);
+        return ResponseEntity.ok(response);
     }
 }

@@ -26,6 +26,9 @@ public class TimeLogService {
     @Autowired
     private HRRepo hrRepository;
 
+    @Autowired
+    private EmployeeRepo employeeRepo;
+
     @Transactional
     public TimeLog assignHrToTimeLog(Long timeLogId, Long hrId) {
         TimeLog timeLog = timeLogRepository.findById(timeLogId)
@@ -128,6 +131,13 @@ public class TimeLogService {
         }
 
         return timeLogRepository.save(log);
+    }
+
+    public List<TimeLog> getAttendanceForMonth(Long employeeId, int year, int month) {
+        Employee employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+        return timeLogRepository.findByEmployeeAndMonthAndYear(employee, month, year);
     }
 
 }

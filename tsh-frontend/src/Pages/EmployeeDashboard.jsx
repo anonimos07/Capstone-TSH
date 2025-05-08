@@ -362,7 +362,6 @@ export default function EmployeeDashboard() {
           <Tabs defaultValue="overview" className="mt-6">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="payroll">Payroll</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
@@ -378,12 +377,19 @@ export default function EmployeeDashboard() {
                 <OverviewCard
                   title="Logs"
                   value="View History"
-                  description="Check your attendance records"
+                  description="Check your logs"
                   icon={FileText}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/TimeLogs")}
                 />
-                <OverviewCard title="Attendance" icon={UserCheck} />
+                <OverviewCard
+                  title="Attendance"
+                  value="View Attendance"
+                  description="Check your attendance records"
+                  icon={UserCheck}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => (window.location.href = "/EmployeeAttendance")}
+                />
                 <OverviewCard
                   title="Overtime"
                   value="Payslips & Tax"

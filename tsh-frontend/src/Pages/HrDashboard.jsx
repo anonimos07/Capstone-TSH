@@ -426,9 +426,6 @@ export default function HrDashboard() {
     fetchData();
   }, []);
   
-  
-  
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -1054,13 +1051,225 @@ export default function HrDashboard() {
           <Progress value={attendancePercentage} />
         </div>
   
+         
         <div className="space-y-4">
           <h3 className="font-medium">Total Worked Hours</h3>
           <div className="text-2xl font-semibold">
             {Math.round(attendanceData.totalWorkedMinutes / 60)} hours
           </div>
         </div>
+        <AttendanceCalendar />
       </div>
+    );
+  }
+
+  function AttendanceCalendar() {
+    const [attendanceData, setAttendanceData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [filters, setFilters] = useState({
+      employee: "",
+      month: new Date().getMonth() + 1,
+      year: 2025, // Default to 2025 as requested
+      status: ""
+    });
+    const [employees, setEmployees] = useState([]);
+  
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem("token");
+          
+          // Fetch employees for filter dropdown
+          const empResponse = await fetch("http://localhost:8080/hr/all-employee", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const empData = await empResponse.json();
+          setEmployees(empData);
+  
+          // Fetch attendance data with filters
+          const params = new URLSearchParams();
+          if (filters.employee) params.append('employeeId', filters.employee);
+          if (filters.month) params.append('month', filters.month);
+          if (filters.year) params.append('year', filters.year);
+          if (filters.status) params.append('status', filters.status);
+  
+          const response = await fetch(`http://localhost:8080/hr/attendance-calendar?${params.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+  
+          if (!response.ok) throw new Error("Failed to fetch attendance data");
+          const data = await response.json();
+          setAttendanceData(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, [filters]);
+  
+    const handleFilterChange = (e) => {
+      const { name, value } = e.target;
+      setFilters(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+  
+    const getStatusColor = (status) => {
+      return status === 'PRESENT' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+    };
+  
+    if (loading) {
+      return <div className="text-center py-4">Loading attendance calendar...</div>;
+    }
+  
+    if (error) {
+      return <div className="text-center text-red-500 py-4">{error}</div>;
+    }
+  
+    // Group data by employee
+    const groupedData = attendanceData.reduce((acc, record) => {
+      if (!acc[record.employeeId]) {
+        acc[record.employeeId] = {
+          employee: record.employee,
+          records: {}
+        };
+      }
+      acc[record.employeeId].records[record.date] = record.status;
+      return acc;
+    }, {});
+  
+    // Generate days for the selected month
+    const daysInMonth = new Date(filters.year, filters.month, 0).getDate();
+    const daysArray = Array.from({length: daysInMonth}, (_, i) => i + 1);
+  
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Attendance Calendar</CardTitle>
+          <CardDescription>View employee attendance by day</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Employee</label>
+                <select
+                  name="employee"
+                  value={filters.employee}
+                  onChange={handleFilterChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                >
+                  <option value="">All Employees</option>
+                  {employees.map(emp => (
+                    <option key={emp.employeeId} value={emp.employeeId}>
+                      {emp.firstName} {emp.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Month</label>
+                <select
+                  name="month"
+                  value={filters.month}
+                  onChange={handleFilterChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                >
+                  {Array.from({length: 12}, (_, i) => i + 1).map(month => (
+                    <option key={month} value={month}>
+                      {new Date(2000, month - 1, 1).toLocaleString('default', {month: 'long'})}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Year</label>
+                <input
+                  type="number"
+                  name="year"
+                  value={filters.year}
+                  onChange={handleFilterChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                  min="2025"
+                  max="2030"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  name="status"
+                  value={filters.status}
+                  onChange={handleFilterChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="PRESENT">Present</option>
+                  <option value="ABSENT">Absent</option>
+                </select>
+              </div>
+            </div>
+  
+            {/* Calendar Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="p-3 text-left border">Employee</th>
+                    {daysArray.map(day => (
+                      <th key={day} className="p-2 text-center border w-8">
+                        {day}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(groupedData).map(([employeeId, {employee, records}]) => (
+                    <tr key={employeeId} className="border-t hover:bg-gray-50">
+                      <td className="p-3 border">
+                        {employee.firstName} {employee.lastName}
+                      </td>
+                      {daysArray.map(day => {
+                        const dateStr = `${filters.year}-${String(filters.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const status = records[dateStr] || 'ABSENT';
+                        return (
+                          <td key={day} className="p-1 text-center border">
+                            <span className={`inline-block w-6 h-6 rounded-full text-xs flex items-center justify-center ${getStatusColor(status)}`}>
+                              {status.charAt(0)}
+                            </span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+  
+            {/* Legend */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              <div className="flex items-center">
+                <span className="w-4 h-4 rounded-full bg-green-100 text-green-700 text-xs flex items-center justify-center mr-2">P</span>
+                <span>Present</span>
+              </div>
+              <div className="flex items-center">
+                <span className="w-4 h-4 rounded-full bg-red-100 text-red-700 text-xs flex items-center justify-center mr-2">A</span>
+                <span>Absent</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
