@@ -48,6 +48,7 @@ private JwtFilter jwtFilter;
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/hr/**","/api/hr/time-logs/**").hasRole("HR")
                         .requestMatchers("/employee/**","/api/time-logs/**").hasRole("EMPLOYEE")
+                                .requestMatchers("/hr/available-hr-for-leave").hasAnyRole("EMPLOYEE", "HR")
 //                        .requestMatchers("/api/time-logs/**").hasRole("EMPLOYEE")
 
                                 .anyRequest().authenticated()

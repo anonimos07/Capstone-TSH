@@ -544,61 +544,73 @@ export default function HrDashboard() {
   }
   
   function PayrollActionsCard() {
-    const handleExportPayroll = async () => {
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [selectedEmployees, setSelectedEmployees] = useState([]);
+    const [period, setPeriod] = useState("");
+    const [employees, setEmployees] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+  
+    useEffect(() => {
+      const fetchEmployees = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch("http://localhost:8080/hr/all-employee", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+          setEmployees(data);
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+      fetchEmployees();
+    }, []);
+  
+    const handleCreatePayroll = async () => {
+      if (!period || selectedEmployees.length === 0) {
+        alert("Please select a period and at least one employee");
+        return;
+      }
+  
       try {
+        setLoading(true);
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:8080/hr/export-payroll-report", {
-          method: "GET",
+        const response = await fetch("http://localhost:8080/hr/create-payroll", {
+          method: "POST",
           headers: {
-            "Authorization": `Bearer ${token}`
-          }
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            period,
+            employeeIds: selectedEmployees,
+          }),
         });
   
-        if (!response.ok) {
-          throw new Error("Failed to export payroll report");
-        }
-  
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'payroll_report.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        if (!response.ok) throw new Error("Failed to create payroll");
         
-        alert("Payroll report downloaded successfully");
+        alert("Payroll created successfully");
+        setShowCreateModal(false);
       } catch (err) {
-        alert(err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
-  
-    const handleDetectErrors = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:8080/hr/detect-payroll-errors", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to detect payroll errors");
-        }
-  
-        const data = await response.json();
-        if (data.status === "No errors detected") {
-          alert("No payroll errors detected");
-        } else {
-          alert(`${data.message}\nEmployee IDs: ${data.employeeIds}`);
-        }
-      } catch (err) {
-        alert(err.message);
-      }
-    };
+
+     // Define the missing functions
+  const handleExportPayroll = () => {
+    // Implement payroll export functionality
+    alert("Export payroll functionality will be implemented soon");
+  };
+
+  const handleDetectErrors = () => {
+ 
+    alert("Payroll error detection will be implemented soon");
+  };
   
     return (
       <Card>
@@ -608,6 +620,13 @@ export default function HrDashboard() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Button 
+            className="w-full" 
+            onClick={() => setShowCreateModal(true)}
+          >
+            Create Payroll
+          </Button>
+          <Button 
+            variant="outline" 
             className="w-full" 
             onClick={handleExportPayroll}
           >
@@ -621,93 +640,162 @@ export default function HrDashboard() {
             Detect Payroll Errors
           </Button>
         </CardContent>
+  
+        {/* Create Payroll Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Create New Payroll</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Payroll Period</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. April 2025"
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Select Employees</label>
+                  <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+                    {employees.map(emp => (
+                      <div key={emp.employeeId} className="flex items-center p-2 hover:bg-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmployees.includes(emp.employeeId)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedEmployees([...selectedEmployees, emp.employeeId]);
+                            } else {
+                              setSelectedEmployees(selectedEmployees.filter(id => id !== emp.employeeId));
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span>{emp.firstName} {emp.lastName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowCreateModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleCreatePayroll}
+                    disabled={loading}
+                  >
+                    {loading ? "Creating..." : "Create Payroll"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
     );
   }
   
-  function EmployeePayrollTable() {
-    const [employees, setEmployees] = useState([]);
+  function PayrollTable() {
+    const [payrolls, setPayrolls] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [editSalary, setEditSalary] = useState({ employeeId: null, newSalary: "" });
+    const [selectedPayroll, setSelectedPayroll] = useState(null);
   
     useEffect(() => {
-      const fetchEmployees = async () => {
+      const fetchPayrolls = async () => {
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:8080/hr/all-employee", {
-            method: "GET",
+          const response = await fetch("http://localhost:8080/hr/all-payrolls", {
             headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
-  
-          if (!response.ok) {
-            throw new Error("Failed to fetch employees");
-          }
-  
+          
+          if (!response.ok) throw new Error("Failed to fetch payrolls");
+          
           const data = await response.json();
-          setEmployees(data);
+          setPayrolls(data);
         } catch (err) {
           setError(err.message);
         } finally {
           setLoading(false);
         }
       };
-  
-      fetchEmployees();
+      
+      fetchPayrolls();
     }, []);
   
-    const handleSalaryChange = (employeeId, currentSalary) => {
-      setEditSalary({ employeeId, newSalary: currentSalary });
-    };
-  
-    const handleSalaryUpdate = async () => {
-      if (!editSalary.employeeId || !editSalary.newSalary) return;
-  
+    const handleSearch = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem("token");
-        const response = await fetch(
-          `http://localhost:8080/hr/adjust-salary/${editSalary.employeeId}?newSalary=${editSalary.newSalary}`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
+        let url = "http://localhost:8080/hr/search-payrolls?";
+        
+        if (searchQuery) {
+          // Try to match period format (e.g. "April 2025")
+          if (/^[a-zA-Z]+\s\d{4}$/.test(searchQuery)) {
+            url += `period=${searchQuery}`;
+          } else {
+            // Assume it's a status
+            url += `status=${searchQuery.toUpperCase()}`;
           }
-        );
-  
-        if (!response.ok) {
-          throw new Error("Failed to update salary");
         }
-  
-        const updatedEmployee = await response.json();
-        setEmployees(employees.map(emp => 
-          emp.employeeId === updatedEmployee.employeeId ? updatedEmployee : emp
-        ));
-        setEditSalary({ employeeId: null, newSalary: "" });
-        alert("Salary updated successfully");
+        
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) throw new Error("Failed to search payrolls");
+        
+        const data = await response.json();
+        setPayrolls(data);
       } catch (err) {
-        alert(err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
   
-    const filteredEmployees = employees.filter(employee => {
-      const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-      return fullName.includes(searchQuery.toLowerCase());
-    });
+    const handleViewDetails = async (payrollId) => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`http://localhost:8080/hr/payroll/${payrollId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) throw new Error("Failed to fetch payroll details");
+        
+        const data = await response.json();
+        setSelectedPayroll(data);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
   
     if (loading) {
       return (
         <Card>
           <CardHeader>
-            <CardTitle>Employee Payroll</CardTitle>
+            <CardTitle>Payrolls</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-4">Loading employee data...</div>
+            <div className="text-center py-4">Loading payroll data...</div>
           </CardContent>
         </Card>
       );
@@ -717,7 +805,7 @@ export default function HrDashboard() {
       return (
         <Card>
           <CardHeader>
-            <CardTitle>Employee Payroll</CardTitle>
+            <CardTitle>Payrolls</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center text-red-500 py-4">{error}</div>
@@ -727,99 +815,147 @@ export default function HrDashboard() {
     }
   
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Employee Payroll</CardTitle>
-          <CardDescription>Individual employee salary information</CardDescription>
-          <div className="relative mt-2">
-            <input
-              type="text"
-              placeholder="Search employees..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <svg
-              className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      <>
+        <Card>
+          <CardHeader>
+            <CardTitle>Payrolls</CardTitle>
+            <CardDescription>All payroll records</CardDescription>
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                placeholder="Search by period or status..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
-            </svg>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 text-left">
-                  <th className="p-4 font-medium">Employee</th>
-                  <th className="p-4 font-medium">Position</th>
-                  <th className="p-4 font-medium">Base Salary</th>
-                  <th className="p-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEmployees.map((employee) => (
-                  <tr key={employee.employeeId} className="border-t hover:bg-gray-50">
-                    <td className="p-4">
-                      {employee.firstName} {employee.lastName}
-                    </td>
-                    <td className="p-4">{employee.position}</td>
-                    <td className="p-4">
-                      {editSalary.employeeId === employee.employeeId ? (
-                        <input
-                          type="number"
-                          value={editSalary.newSalary}
-                          onChange={(e) => setEditSalary({
-                            ...editSalary,
-                            newSalary: e.target.value
-                          })}
-                          className="px-2 py-1 border rounded-md w-32"
-                        />
-                      ) : (
-                        `₱${employee.baseSalary.toLocaleString()}`
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {editSalary.employeeId === employee.employeeId ? (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={handleSalaryUpdate}
-                            className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditSalary({ employeeId: null, newSalary: "" })}
-                            className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleSalaryChange(employee.employeeId, employee.baseSalary)}
-                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                        >
-                          Edit
-                        </button>
-                      )}
-                    </td>
+              <Button onClick={handleSearch}>
+                Search
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 text-left">
+                    <th className="p-4 font-medium">Period</th>
+                    <th className="p-4 font-medium">Status</th>
+                    <th className="p-4 font-medium">Created On</th>
+                    <th className="p-4 font-medium">Employees</th>
+                    <th className="p-4 font-medium">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {payrolls.map((payroll) => (
+                    <tr key={payroll.id} className="border-t hover:bg-gray-50">
+                      <td className="p-4">{payroll.period}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          payroll.status === 'PAID' ? 'bg-green-100 text-green-700' :
+                          payroll.status === 'PROCESSED' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {payroll.status}
+                        </span>
+                      </td>
+                      <td className="p-4">{new Date(payroll.creationDate).toLocaleDateString()}</td>
+                      <td className="p-4">{payroll.items?.length || 0}</td>
+                      <td className="p-4">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleViewDetails(payroll.id)}
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+  
+        {/* Payroll Details Modal */}
+        {selectedPayroll && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-semibold">
+                    Payroll Details - {selectedPayroll.payroll.period}
+                  </h3>
+                  <p className="text-gray-500">
+                    Status: {selectedPayroll.payroll.status} | 
+                    Created: {new Date(selectedPayroll.payroll.creationDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setSelectedPayroll(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+  
+              <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Total Gross</p>
+                  <p className="font-medium">₱{selectedPayroll.totalGross.toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Total Tax</p>
+                  <p className="font-medium">₱{selectedPayroll.totalTax.toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Total Net</p>
+                  <p className="font-medium">₱{selectedPayroll.totalNet.toLocaleString()}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Employees</p>
+                  <p className="font-medium">{selectedPayroll.employeeCount}</p>
+                </div>
+              </div>
+  
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-100 text-left">
+                      <th className="p-3 font-medium">Employee</th>
+                      <th className="p-3 font-medium">Base Salary</th>
+                      <th className="p-3 font-medium">Gross Pay</th>
+                      <th className="p-3 font-medium">Tax</th>
+                      <th className="p-3 font-medium">Net Pay</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedPayroll.payroll.items.map((item, index) => (
+                      <tr key={index} className="border-t">
+                        <td className="p-3">
+                          {item.employee.firstName} {item.employee.lastName}
+                        </td>
+                        <td className="p-3">₱{item.baseSalary.toLocaleString()}</td>
+                        <td className="p-3">₱{item.grossPay.toLocaleString()}</td>
+                        <td className="p-3">₱{item.tax.toLocaleString()}</td>
+                        <td className="p-3 font-medium">
+                          ₱{item.netPay.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+  
+              <div className="mt-6 flex justify-end">
+                <Button onClick={() => setSelectedPayroll(null)}>
+                  Close
+                </Button>
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </>
     );
   }
 
@@ -1031,7 +1167,7 @@ export default function HrDashboard() {
                 <PayrollOverviewCard />
                 <PayrollActionsCard />
               </div>
-              <EmployeePayrollTable />
+              <PayrollTable />
             </TabsContent>
             
             {/*fetch Users*/}

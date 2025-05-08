@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { CalendarDays } from "lucide-react";
@@ -9,10 +9,46 @@ export default function LeaveRequestForm() {
     startDate: "",
     endDate: "",
     leaveType: "ANNUAL",
-    reason: ""
+    reason: "",
+    hrId: "" // Add HR selection
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [hrList, setHrList] = useState([]); // Add state for HR list
+  const [loadingHr, setLoadingHr] = useState(true);
+
+  // Fetch HR list
+  useEffect(() => {
+    const fetchHrList = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
+
+        const response = await fetch("http://localhost:8080/employee/available-hr", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch HR list");
+        }
+
+        const data = await response.json();
+        setHrList(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoadingHr(false);
+      }
+    };
+
+    fetchHrList();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,6 +108,30 @@ export default function LeaveRequestForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Add HR selection field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Assign to HR
+            </label>
+            {loadingHr ? (
+              <p className="text-sm text-gray-500">Loading HR list...</p>
+            ) : (
+              <select
+                name="hrId"
+                value={formData.hrId}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                required
+              >
+                <option value="">Select HR</option>
+                {hrList.map(hr => (
+                  <option key={hr.hrId} value={hr.hrId}>
+                    {hr.firstName} {hr.lastName} ({hr.position})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Leave Type

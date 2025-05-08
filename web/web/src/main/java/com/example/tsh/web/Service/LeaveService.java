@@ -1,7 +1,9 @@
 package com.example.tsh.web.Service;
 
+import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.LeaveRequest;
 import com.example.tsh.web.Entity.Employee;
+import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Repository.LeaveRequestRepo;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import lombok.RequiredArgsConstructor;
@@ -14,14 +16,19 @@ import java.util.List;
 public class LeaveService {
     private final LeaveRequestRepo leaveRequestRepo;
     private final EmployeeRepo employeeRepo;
+    private final HRRepo hrRepo;
 
-    public LeaveRequest submitLeaveRequest(Long employeeId, LocalDate startDate,
+    public LeaveRequest submitLeaveRequest(Long employeeId, Long hrId, LocalDate startDate,
                                            LocalDate endDate, String reason, String leaveType) {
         Employee employee = employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
+        HR hr = hrRepo.findById(hrId)
+                .orElseThrow(() -> new RuntimeException("HR not found"));
+
         LeaveRequest request = new LeaveRequest();
         request.setEmployee(employee);
+        request.setAssignedHR(hr); // Set the assigned HR
         request.setStartDate(startDate);
         request.setEndDate(endDate);
         request.setReason(reason);
@@ -35,8 +42,8 @@ public class LeaveService {
         return leaveRequestRepo.findByEmployee_EmployeeId(employeeId);
     }
 
-    public List<LeaveRequest> getPendingLeaveRequests() {
-        return leaveRequestRepo.findByStatus("PENDING");
+    public List<LeaveRequest> getPendingLeaveRequestsForHr(Long hrId) {
+        return leaveRequestRepo.findByStatusAndAssignedHR_HrId("PENDING", hrId);
     }
 
     public LeaveRequest approveLeaveRequest(Long requestId) {

@@ -48,6 +48,12 @@ const LeaveRequestCard = ({ request, onClick }) => (
           <span className="ml-2">({getDaysBetweenDates(request.startDate, request.endDate)} days)</span>
         </p>
         <p className="text-sm mt-2 line-clamp-2">{request.reason}</p>
+        {/* Add HR information */}
+        {request.assignedHR && (
+          <p className="text-xs text-gray-500 mt-1">
+            Assigned to: {request.assignedHR.firstName} {request.assignedHR.lastName}
+          </p>
+        )}
       </div>
       {request.status === "PENDING" && (
         <button 

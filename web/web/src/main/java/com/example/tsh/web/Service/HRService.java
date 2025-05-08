@@ -1,8 +1,11 @@
 package com.example.tsh.web.Service;
 
+import com.example.tsh.web.DTO.PayrollCreationRequest;
+import com.example.tsh.web.DTO.PayrollDetails;
 import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
+import com.example.tsh.web.Repository.PayrollRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,10 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,12 +25,16 @@ public class HRService {
     private final EmployeeRepo employeeRepo;
     private final PasswordEncoder passwordEncoder;
     private final TimeLogService timeLogService;
+    private final PayrollRepo payrollRepo;
 
     @Autowired
     private JwtService jwtService;
 
     @Autowired
     AuthenticationManager authenticationManager;
+
+    @Autowired
+    private PayrollCutoffService cutoffService;
 
     public HR saveHr(HR hr) {
         hr.setPassword(passwordEncoder.encode(hr.getPassword()));
@@ -190,5 +195,115 @@ public class HRService {
         attendance.put("totalWorkedMinutes", totalMinutes);
 
         return attendance;
+    }
+
+    public List<Payroll> getAllPayrolls() {
+        return payrollRepo.findAll();
+    }
+
+    public PayrollDetails getPayrollDetails(Long payrollId) {
+        Payroll payroll = payrollRepo.findById(payrollId)
+                .orElseThrow(() -> new RuntimeException("Payroll not found"));
+
+        PayrollDetails details = new PayrollDetails();
+        details.setPayroll(payroll);
+
+        // Add summary calculations
+        double totalGross = payroll.getItems().stream().mapToDouble(PayrollItem::getGrossPay).sum();
+        double totalNet = payroll.getItems().stream().mapToDouble(PayrollItem::getNetPay).sum();
+        double totalTax = payroll.getItems().stream().mapToDouble(PayrollItem::getTax).sum();
+
+        details.setTotalGross(totalGross);
+        details.setTotalNet(totalNet);
+        details.setTotalTax(totalTax);
+        details.setEmployeeCount(payroll.getItems().size());
+
+        return details;
+    }
+
+    public List<Payroll> searchPayrolls(String period, String status) {
+        if (period != null && status != null) {
+            return payrollRepo.findByPeriodContainingAndStatus(period, status);
+        } else if (period != null) {
+            return payrollRepo.findByPeriodContaining(period);
+        } else if (status != null) {
+            return payrollRepo.findByStatus(status);
+        }
+        return payrollRepo.findAll();
+    }
+
+    public Payroll createPayroll(PayrollCreationRequest request) {
+        // Validate request
+        if (request.getPeriod() == null || request.getEmployeeIds().isEmpty()) {
+            throw new RuntimeException("Invalid payroll creation request");
+        }
+
+        // Get the current cutoff period
+        PayrollCutoffService.CutoffPeriod currentCutoff = cutoffService.getCurrentCutoffPeriod();
+
+        Payroll payroll = new Payroll();
+        payroll.setPeriod(request.getPeriod());
+        payroll.setStatus("DRAFT");
+        payroll.setCreationDate(LocalDate.now());
+        payroll.setCutoffStartDate(currentCutoff.getStartDate());
+        payroll.setCutoffEndDate(currentCutoff.getEndDate());
+        payroll.setPayDate(currentCutoff.getPayDate());
+
+        // Calculate payroll for each employee
+        List<PayrollItem> items = new ArrayList<>();
+        for (Long employeeId : request.getEmployeeIds()) {
+            Employee employee = employeeRepo.findById(employeeId)
+                    .orElseThrow(() -> new RuntimeException("Employee not found: " + employeeId));
+
+            PayrollItem item = new PayrollItem();
+            item.setEmployee(employee);
+            item.setBaseSalary(employee.getBaseSalary());
+
+            // Calculate actual values based on cutoff period
+            float grossPay = calculateGrossPayForPeriod(employee, currentCutoff);
+            float netPay = calculateNetPay(grossPay);
+            float tax = grossPay - netPay;
+
+            item.setGrossPay(grossPay);
+            item.setNetPay(netPay);
+            item.setTax(tax);
+
+            items.add(item);
+        }
+
+        payroll.setItems(items);
+        return payrollRepo.save(payroll);
+    }
+
+    private float calculateGrossPayForPeriod(Employee employee, PayrollCutoffService.CutoffPeriod cutoff) {
+        // This is a simplified calculation - you'll need to adjust based on your actual business logic
+
+        // For semi-monthly payroll, each paycheck is typically half the monthly salary
+        float basePay = employee.getBaseSalary() / 2;
+
+        // Adjust for holidays and absences during the cutoff period
+        // You'll need to implement logic to check time logs, holidays, etc. for the specific period
+        float adjustments = calculateAdjustmentsForPeriod(employee, cutoff);
+
+        return basePay + adjustments;
+    }
+
+    private float calculateAdjustmentsForPeriod(Employee employee, PayrollCutoffService.CutoffPeriod cutoff) {
+        // Implement logic to calculate:
+        // - Holiday pays that fall within the cutoff period
+        // - Absence deductions
+        // - Overtime pays
+        // - Other adjustments
+
+        // Placeholder - implement your actual business logic here
+        return 0;
+    }
+
+    private float calculateNetPay(float grossPay) {
+        // Implement your tax calculation logic
+        // This is a simplified version - use your actual tax tables
+        if (grossPay > 50000) return grossPay * 0.8f;
+        else if (grossPay > 30000) return grossPay * 0.85f;
+        else return grossPay * 0.9f;
     }
 }

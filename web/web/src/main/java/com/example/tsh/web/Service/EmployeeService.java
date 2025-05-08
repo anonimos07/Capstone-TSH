@@ -147,4 +147,21 @@ public class EmployeeService {
         // Add more benefits as needed
         return benefits;
     }
+
+    public void updateHolidayPays(String username, float regularHolidayPay, float specialHolidayPay) {
+        Employee employee = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+
+        employee.setRegularHolidayPay(regularHolidayPay);
+        employee.setSpecialHolidayPay(specialHolidayPay);
+        employeeRepository.save(employee);
+    }
+
+    public void updateAbsenceDays(String username, int absenceDays) {
+        Employee employee = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+
+        employee.setAbsenceDays(absenceDays);
+        employeeRepository.save(employee);
+    }
 }

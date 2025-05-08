@@ -8,13 +8,19 @@ export default function HrLeaveRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const [hrId, setHrId] = useState(null); // Add state for HR ID
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchLeaveRequests = async () => {
+    const fetchHrProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:8080/hr/pending-leave-requests", {
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
+
+        // First fetch HR profile to get the HR ID
+        const profileResponse = await fetch("http://localhost:8080/hr/me", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -22,12 +28,28 @@ export default function HrLeaveRequests() {
           }
         });
 
-        if (!response.ok) {
+        if (!profileResponse.ok) {
+          throw new Error("Failed to fetch HR profile");
+        }
+
+        const profileData = await profileResponse.json();
+        setHrId(profileData.hrId); // Assuming the response includes hrId
+
+        // Now fetch leave requests for this HR
+        const leaveResponse = await fetch(`http://localhost:8080/hr/pending-leave-requests/${profileData.hrId}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!leaveResponse.ok) {
           throw new Error("Failed to fetch leave requests");
         }
 
-        const data = await response.json();
-        setLeaveRequests(data);
+        const leaveData = await leaveResponse.json();
+        setLeaveRequests(leaveData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -35,7 +57,7 @@ export default function HrLeaveRequests() {
       }
     };
 
-    fetchLeaveRequests();
+    fetchHrProfile();
   }, []);
 
   const handleApprove = async (requestId) => {

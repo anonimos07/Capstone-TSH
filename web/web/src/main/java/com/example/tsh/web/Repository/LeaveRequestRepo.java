@@ -7,4 +7,5 @@ import java.util.List;
 public interface LeaveRequestRepo extends JpaRepository<LeaveRequest, Long> {
     List<LeaveRequest> findByEmployee_EmployeeId(Long employeeId);
     List<LeaveRequest> findByStatus(String status);
+    List<LeaveRequest> findByStatusAndAssignedHR_HrId(String status, Long hrId);
 }
