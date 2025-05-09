@@ -232,6 +232,7 @@ export function EmployeeTimeLogs() {
                       <TableCell>{`${Math.floor(duration / 60)}h ${duration % 60}m`}</TableCell>
                       <TableCell>
                         <Button
+                          className="cursor-pointer hover:shadow-md transition-shadow"
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(log)}
@@ -249,9 +250,6 @@ export function EmployeeTimeLogs() {
           {/* Edit Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Edit Time Log</DialogTitle>
-              </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="employeeId" className="text-right">
@@ -296,13 +294,16 @@ export function EmployeeTimeLogs() {
               </div>
               <DialogFooter>
                 <Button
+                  className="cursor-pointer hover:shadow-md transition-shadow"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
                   disabled={isLoading}
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={isLoading}>
+                <Button 
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={handleSave} disabled={isLoading}>
                   {isLoading ? "Saving..." : "Save Changes"}
                 </Button>
               </DialogFooter>
