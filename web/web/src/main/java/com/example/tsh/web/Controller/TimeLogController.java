@@ -171,4 +171,31 @@ public class TimeLogController {
     public ResponseEntity<?> testAccess(Principal principal) {
         return ResponseEntity.ok("Hello " + principal.getName());
     }
+
+    // In TimeLogController.java
+    @PostMapping("/assign-hr/{timeLogId}")
+    public ResponseEntity<?> assignHrToTimeLog(
+            @PathVariable Long timeLogId,
+            @RequestParam Long hrId,
+            Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            Employee employee = employeeRepo.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Employee not found"));
+
+            TimeLog timeLog = timeLogService.findTimeLogById(timeLogId)
+                    .orElseThrow(() -> new IllegalArgumentException("TimeLog not found"));
+
+            // Change this line to use == instead of equals() for primitive long comparison
+            if (timeLog.getEmployee().getEmployeeId() != employee.getEmployeeId()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only assign HR to your own time logs");
+            }
+
+            TimeLog updatedLog = timeLogService.assignHrToTimeLog(timeLogId, hrId);
+            return ResponseEntity.ok(updatedLog);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to assign HR: " + e.getMessage()));
+        }
+    }
 }

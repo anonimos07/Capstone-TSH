@@ -221,6 +221,146 @@ export default function TimeLogs() {
     );
   }
 
+  function AssignHrButton({ log, onAssign }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedHr, setSelectedHr] = useState(null);
+    const [hrList, setHrList] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+  
+    const fetchHrList = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8080/employee/available-hr', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch HR list');
+        }
+        
+        const data = await response.json();
+        setHrList(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    const handleAssign = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8080/api/time-logs/assign-hr/${log.timeLogId}?hrId=${selectedHr}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to assign HR');
+        }
+  
+        onAssign();
+        setIsOpen(false);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+  
+    return (
+      <>
+        <button
+          onClick={() => {
+            fetchHrList();
+            setIsOpen(true);
+          }}
+          className="text-primary hover:text-primary/80 text-sm font-medium"
+        >
+          Assign HR
+        </button>
+  
+        {isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Assign HR to Time Log</h3>
+              
+              {error && (
+                <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
+                  {error}
+                </div>
+              )}
+  
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select HR
+                </label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={selectedHr || ''}
+                  onChange={(e) => setSelectedHr(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">Select an HR</option>
+                  {hrList.map((hr) => (
+                    <option key={hr.hrId} value={hr.hrId}>
+                      {hr.firstName} {hr.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+  
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAssign}
+                  disabled={!selectedHr || loading}
+                  className={`px-4 py-2 text-sm font-medium text-white rounded-md ${!selectedHr || loading ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary hover:bg-primary/90'}`}
+                >
+                  {loading ? 'Assigning...' : 'Assign'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  const handleAssignHr = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error("Authentication token not found");
+      }
+  
+      const logsResponse = await fetch('http://localhost:8080/api/time-logs', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+  
+      if (!logsResponse.ok) {
+        throw new Error("Failed to fetch updated time logs");
+      }
+  
+      const logsData = await logsResponse.json();
+      setLogs(logsData);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-white">
@@ -318,25 +458,23 @@ export default function TimeLogs() {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Total Hours
                           </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {filteredLogs.map((log) => (
-                          <tr key={log.id} className="hover:bg-gray-50">
+                          <tr key={log.timeLogId} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm">{formatDate(log.date)}</td>
                             <td className="px-4 py-3 text-sm">{formatTime(log.timeIn)}</td>
                             <td className="px-4 py-3 text-sm">{formatTime(log.timeOut)}</td>
                             <td className="px-4 py-3 text-sm font-medium">{((log.durationMinutes || 0) / 60).toFixed(1)} hrs</td>
-
-                          </tr>
-                        ))}
-                        {filteredLogs.length === 0 && (
-                          <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">
-                              No records found
+                            <td className="px-4 py-3 text-sm">
+                              <AssignHrButton log={log} onAssign={handleAssignHr} />
                             </td>
                           </tr>
-                        )}
+                        ))}
                       </tbody>
                     </table>
                   </div>

@@ -1,6 +1,7 @@
 package com.example.tsh.web.Repository;
 
 import com.example.tsh.web.Entity.Employee;
+import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.TimeLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,4 +26,16 @@ public interface TimeLogRepo extends JpaRepository<TimeLog, Long> {
     // Find active log (without time_out) for an employee
     @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND t.timeOut IS NULL")
     TimeLog findActiveLogByEmployee(@Param("employee") Employee employee);
+
+    // In TimeLogRepo.java
+    List<TimeLog> findByAssignedHr(HR hr);
+
+    @Query("SELECT t FROM TimeLog t WHERE YEAR(t.date) = :year AND MONTH(t.date) = :month")
+    List<TimeLog> findByMonthAndYear(@Param("month") int month, @Param("year") int year);
+
+    @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND YEAR(t.date) = :year AND MONTH(t.date) = :month")
+    List<TimeLog> findByEmployeeAndMonthAndYear(
+            @Param("employee") Employee employee,
+            @Param("month") int month,
+            @Param("year") int year);
 }

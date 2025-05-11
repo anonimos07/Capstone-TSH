@@ -17,6 +17,10 @@ public class LeaveRequest {
     @JoinColumn(name = "employee_id")
     private Employee employee;
 
+    @ManyToOne
+    @JoinColumn(name = "hr_id")
+    private HR assignedHR; // Add this field
+
     private LocalDate startDate;
     private LocalDate endDate;
     private String reason;

@@ -1,8 +1,10 @@
 package com.example.tsh.web.Service;
 
 import com.example.tsh.web.Entity.Employee;
+import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.TimeLog;
 import com.example.tsh.web.Repository.EmployeeRepo;
+import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Repository.TimeLogRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,25 @@ public class TimeLogService {
 
     @Autowired
     private TimeLogRepo timeLogRepository;
+
+    // In TimeLogService.java
+    @Autowired
+    private HRRepo hrRepository;
+
+    @Autowired
+    private EmployeeRepo employeeRepo;
+
+    @Transactional
+    public TimeLog assignHrToTimeLog(Long timeLogId, Long hrId) {
+        TimeLog timeLog = timeLogRepository.findById(timeLogId)
+                .orElseThrow(() -> new IllegalArgumentException("TimeLog not found"));
+
+        HR hr = hrRepository.findById(hrId)
+                .orElseThrow(() -> new IllegalArgumentException("HR not found"));
+
+        timeLog.setAssignedHr(hr);
+        return timeLogRepository.save(timeLog);
+    }
 
     // Find all time logs
     public List<TimeLog> findAllTimeLogs() {
@@ -110,6 +131,13 @@ public class TimeLogService {
         }
 
         return timeLogRepository.save(log);
+    }
+
+    public List<TimeLog> getAttendanceForMonth(Long employeeId, int year, int month) {
+        Employee employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+        return timeLogRepository.findByEmployeeAndMonthAndYear(employee, month, year);
     }
 
 }
