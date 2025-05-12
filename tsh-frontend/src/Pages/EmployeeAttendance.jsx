@@ -4,7 +4,8 @@ import { MainNav } from "../components/dashboard/MainNav";
 import { UserNav } from "../components/dashboard/UserNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
 import { Button } from "../components/ui/button";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
+
 
 const EmployeeAttendance = () => {
   const [employee, setEmployee] = useState({
@@ -53,6 +54,8 @@ const EmployeeAttendance = () => {
     fetchEmployeeData();
   }, []);
 
+
+
   const fetchAttendanceData = async (year, month) => {
     try {
       setLoading(true);
@@ -87,9 +90,12 @@ const EmployeeAttendance = () => {
     }
   };
 
+
+
   useEffect(() => {
     fetchAttendanceData(currentDate.getFullYear(), currentDate.getMonth() + 1);
   }, [currentDate]);
+
 
   const handlePreviousMonth = () => {
     setCurrentDate(
@@ -97,63 +103,77 @@ const EmployeeAttendance = () => {
     );
   };
 
+
   const handleNextMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
     );
   };
 
+
   const renderCalendar = () => {
-    if (!attendanceData) return null;
+  if (!attendanceData) return null;
 
-    const today = new Date(2025, 4, new Date().getDate()); // May 2025 with current day
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
+  const today = new Date();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDay = firstDay.getDay();
 
-    const weeks = [];
-    let day = 1;
+  const weeks = [];
+  let day = 1;
 
-    for (let i = 0; i < 6; i++) {
-      if (day > daysInMonth) break;
+  for (let i = 0; i < 6; i++) {
+    if (day > daysInMonth) break;
 
-      const days = [];
-      for (let j = 0; j < 7; j++) {
-        if ((i === 0 && j < startingDay) || day > daysInMonth) {
-          days.push(<td key={j} className="p-2"></td>);
-        } else {
-          const currentDate = new Date(year, month, day);
-          const dateStr = currentDate.toISOString().split("T")[0];
-          const isPastDate = currentDate < today;
-          const status = isPastDate ? (attendanceData.attendance[dateStr] || "A") : "";
+    const days = [];
+    for (let j = 0; j < 7; j++) {
+      if ((i === 0 && j < startingDay) || day > daysInMonth) {
+        days.push(<td key={j} className="p-2"></td>);
+      } else {
+        const currentDate = new Date(year, month, day);
+        const dateStr = format(currentDate, "yyyy-MM-dd");
 
-          days.push(
-            <td key={j} className="p-2 border text-center">
-              <div className="flex flex-col items-center">
-                <span className="text-sm">{day}</span>
-                {status && (
-                  <span
-                    className={`text-xs font-bold ${
-                      status === "P" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {status}
-                  </span>
-                )}
-              </div>
-            </td>
-          );
-          day++;
-        }
+        const record = attendanceData.attendance[dateStr];
+
+        const isPast = currentDate < today.setHours(0, 0, 0, 0);
+const status = record?.status || (isPast ? "A" : null);
+
+const rawTimeIn = record?.timeIn;
+const rawTimeOut = record?.timeOut;
+
+const timeIn = rawTimeIn ? format(parseISO(rawTimeIn), "hh:mm a") : "-";
+const timeOut = rawTimeOut ? format(parseISO(rawTimeOut), "hh:mm a") : "-";
+
+
+        days.push(
+          <td key={j} className="p-2 border text-center text-xs">
+            <div className="flex flex-col items-center">
+              <span className="font-medium">{day}</span>
+              <span
+                className={`font-bold ${
+                  status === "P" ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {status}
+              </span>
+              <span className="text-gray-500">In: {timeIn}</span>
+              <span className="text-gray-500">Out: {timeOut}</span>
+
+            </div>
+          </td>
+        );
+        day++;
       }
-      weeks.push(<tr key={i}>{days}</tr>);
     }
+    weeks.push(<tr key={i}>{days}</tr>);
+  }
 
-    return weeks;
-  };
+  return weeks;
+};
+
 
   if (loading) {
     return (
@@ -271,9 +291,7 @@ const EmployeeAttendance = () => {
                     </p>
                     <h2 className="mt-2 text-3xl font-bold text-green-600">
                       {attendanceData &&
-                        Object.values(attendanceData.attendance).filter(
-                          (v) => v === "P"
-                        ).length}
+                        Object.values(attendanceData.attendance).filter((v) => v.status === "P").length}
                     </h2>
                   </div>
                   <CalendarDays className="h-8 w-8 text-green-400" />
@@ -288,9 +306,7 @@ const EmployeeAttendance = () => {
                     </p>
                     <h2 className="mt-2 text-3xl font-bold text-red-600">
                       {attendanceData &&
-                        Object.values(attendanceData.attendance).filter(
-                          (v) => v === "A"
-                        ).length}
+                        Object.values(attendanceData.attendance).filter((v) => v.status === "A").length}
                     </h2>
                   </div>
                   <CalendarDays className="h-8 w-8 text-red-400" />

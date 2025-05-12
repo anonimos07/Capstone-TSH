@@ -35,7 +35,7 @@ public class TimeLog {
     @Column(name = "date")
     private LocalDateTime date;
 
-    // In TimeLog.java
+
     @ManyToOne
     @JoinColumn(name = "assigned_hr_id")
     private HR assignedHr;
@@ -55,7 +55,7 @@ public class TimeLog {
         }
     }
 
-    // Calculate duration in minutes
+    // Calculate duration in minutes and to be converted in hours in frontend logic
     private Integer calculateDurationInMinutes(LocalDateTime start, LocalDateTime end) {
         return (int) java.time.Duration.between(start, end).toMinutes();
     }

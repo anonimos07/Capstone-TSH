@@ -237,6 +237,7 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
             Authentication authentication) {
+
         String username = authentication.getName();
         Optional<Employee> employee = employeeRepo.findByUsername(username);
 
@@ -244,7 +245,6 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
             return ResponseEntity.notFound().build();
         }
 
-        // Default to current year/month if not specified
         int queryYear = year != null ? year : LocalDate.now().getYear();
         int queryMonth = month != null ? month : LocalDate.now().getMonthValue();
 
@@ -252,30 +252,53 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
         response.put("year", queryYear);
         response.put("month", queryMonth);
 
-        // Get time logs for the requested month/year
         List<TimeLog> logs = timeLogService.getAttendanceForMonth(
                 employee.get().getEmployeeId(),
                 queryYear,
                 queryMonth
         );
 
-        // Create a map of date to attendance status
-        Map<LocalDate, String> attendanceMap = new HashMap<>();
+        // Use LinkedHashMap to maintain order
+        Map<LocalDate, Map<String, Object>> attendanceMap = new LinkedHashMap<>();
+
+        // Map logs to attendance with time in/out
         for (TimeLog log : logs) {
             LocalDate logDate = log.getDate().toLocalDate();
-            attendanceMap.put(logDate, "P"); // Present
+            Map<String, Object> attendanceDetails = new HashMap<>();
+            attendanceDetails.put("status", "P");
+            attendanceDetails.put("timeIn", log.getTimeIn() != null ? log.getTimeIn().toString() : null);
+            attendanceDetails.put("timeOut", log.getTimeOut() != null ? log.getTimeOut().toString() : null);
+            attendanceMap.put(logDate, attendanceDetails);
         }
 
-        // For demo purposes, let's mark weekends as absent
+        // Fill in absent days for weekdays with no logs
         LocalDate startDate = LocalDate.of(queryYear, queryMonth, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        LocalDate today = LocalDate.now();
+
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            if (!attendanceMap.containsKey(date) && date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                attendanceMap.put(date, "A"); // Absent for weekdays without time logs
+            if (!attendanceMap.containsKey(date)
+                    && date.isBefore(today) // only mark absent if the date is before today
+                    && date.getDayOfWeek() != DayOfWeek.SATURDAY
+                    && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
+
+                Map<String, Object> absentDetails = new HashMap<>();
+                absentDetails.put("status", "A");
+                absentDetails.put("timeIn", null);
+                absentDetails.put("timeOut", null);
+                attendanceMap.put(date, absentDetails);
             }
         }
 
-        response.put("attendance", attendanceMap);
+        // Convert to Map<String, Object> for JSON response
+        Map<String, Object> attendanceResponse = new LinkedHashMap<>();
+        attendanceMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> attendanceResponse.put(entry.getKey().toString(), entry.getValue()));
+
+        response.put("attendance", attendanceResponse);
         return ResponseEntity.ok(response);
     }
+
 }
