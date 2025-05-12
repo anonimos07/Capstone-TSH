@@ -68,24 +68,12 @@ public class HRService {
         if (!passwordEncoder.matches(password, hr.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
-
-        // Role is already set to EMPLOYEE in your saveEmployee method
-        // You can add additional role checks here if needed
         if (hr.getRole() != Role.HR) {
             throw new RuntimeException("Unauthorized");
         }
 
         return hr;
     }
-
-//    public String verify(HR hr){
-//        Authentication authentication =
-//                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(hr.getUser(), hr.getPassword()));
-//        if(authentication.isAuthenticated())
-//            return jwtService.generateToken(hr.getUser());
-//
-//        return "failed";
-//    }
 
     public String verify(HR hr, Role expectedRole) {
         Authentication authentication = authenticationManager.authenticate(
@@ -110,13 +98,11 @@ public class HRService {
         Map<String, Object> overview = new HashMap<>();
         overview.put("totalEmployees", employees.size());
 
-        // Calculate total payroll expenses
         float totalPayroll = employees.stream()
                 .map(Employee::getBaseSalary)
                 .reduce(0f, Float::sum);
         overview.put("totalPayroll", totalPayroll);
 
-        // Calculate total tax deductions (simplified)
         float totalTax = employees.stream()
                 .map(e -> e.getBaseSalary() * 0.2f) // Assuming 20% tax
                 .reduce(0f, Float::sum);
@@ -126,8 +112,6 @@ public class HRService {
     }
 
     public byte[] generatePayrollReport() {
-        // This would typically generate an Excel or PDF report
-        // Simplified example returning CSV format
         List<Employee> employees = employeeRepo.findAll();
         StringBuilder csv = new StringBuilder("ID,Name,Position,Base Salary,Tax\n");
 
@@ -151,7 +135,6 @@ public class HRService {
     }
 
     public Map<String, String> detectPayrollErrors() {
-        // Simple error detection - find employees with zero/negative salary
         List<Employee> problematicEmployees = employeeRepo.findAll().stream()
                 .filter(e -> e.getBaseSalary() <= 0)
                 .toList();
@@ -172,26 +155,21 @@ public class HRService {
     public Map<String, Object> getAttendanceOverview() {
         Map<String, Object> attendance = new HashMap<>();
 
-        // Get all time logs
         List<TimeLog> allTimeLogs = timeLogService.findAllTimeLogs();
 
-        // Calculate present days (count distinct days with at least one time log)
         long totalPresent = allTimeLogs.stream()
                 .filter(log -> log.getTimeIn() != null)
                 .map(log -> log.getDate().toLocalDate())
                 .distinct()
                 .count();
 
-        // Calculate total working minutes (only for completed sessions)
         long totalMinutes = allTimeLogs.stream()
                 .filter(log -> log.getTimeIn() != null && log.getTimeOut() != null)
                 .mapToLong(log -> log.getDurationMinutes() != null ? log.getDurationMinutes() : 0)
                 .sum();
 
-        // Calculate average working hours per present day
         double averageHours = totalPresent > 0 ? totalMinutes / 60.0 / totalPresent : 0;
 
-        // Get total number of employees
         long totalEmployees = employeeRepo.count();
 
         attendance.put("totalPresentDays", totalPresent);
@@ -213,7 +191,6 @@ public class HRService {
         PayrollDetails details = new PayrollDetails();
         details.setPayroll(payroll);
 
-        // Add summary calculations
         double totalGross = payroll.getItems().stream().mapToDouble(PayrollItem::getGrossPay).sum();
         double totalNet = payroll.getItems().stream().mapToDouble(PayrollItem::getNetPay).sum();
         double totalTax = payroll.getItems().stream().mapToDouble(PayrollItem::getTax).sum();
@@ -238,12 +215,10 @@ public class HRService {
     }
 
     public Payroll createPayroll(PayrollCreationRequest request) {
-        // Validate request
         if (request.getPeriod() == null || request.getEmployeeIds().isEmpty()) {
             throw new RuntimeException("Invalid payroll creation request");
         }
 
-        // Get the current cutoff period
         PayrollCutoffService.CutoffPeriod currentCutoff = cutoffService.getCurrentCutoffPeriod();
 
         Payroll payroll = new Payroll();
@@ -254,7 +229,6 @@ public class HRService {
         payroll.setCutoffEndDate(currentCutoff.getEndDate());
         payroll.setPayDate(currentCutoff.getPayDate());
 
-        // Calculate payroll for each employee
         List<PayrollItem> items = new ArrayList<>();
         for (Long employeeId : request.getEmployeeIds()) {
             Employee employee = employeeRepo.findById(employeeId)
@@ -264,7 +238,6 @@ public class HRService {
             item.setEmployee(employee);
             item.setBaseSalary(employee.getBaseSalary());
 
-            // Calculate actual values based on cutoff period
             float grossPay = calculateGrossPayForPeriod(employee, currentCutoff);
             float netPay = calculateNetPay(grossPay);
             float tax = grossPay - netPay;
@@ -281,42 +254,30 @@ public class HRService {
     }
 
     private float calculateGrossPayForPeriod(Employee employee, PayrollCutoffService.CutoffPeriod cutoff) {
-        // This is a simplified calculation - you'll need to adjust based on your actual business logic
 
-        // For semi-monthly payroll, each paycheck is typically half the monthly salary
         float basePay = employee.getBaseSalary() / 2;
 
-        // Adjust for holidays and absences during the cutoff period
-        // You'll need to implement logic to check time logs, holidays, etc. for the specific period
         float adjustments = calculateAdjustmentsForPeriod(employee, cutoff);
 
         return basePay + adjustments;
     }
 
     private float calculateAdjustmentsForPeriod(Employee employee, PayrollCutoffService.CutoffPeriod cutoff) {
-        // Implement logic to calculate:
-        // - Holiday pays that fall within the cutoff period
-        // - Absence deductions
-        // - Overtime pays
-        // - Other adjustments
 
-        // Placeholder - implement your actual business logic here
         return 0;
     }
 
     private float calculateNetPay(float grossPay) {
-        // Implement your tax calculation logic
-        // This is a simplified version - use your actual tax tables
+
         if (grossPay > 50000) return grossPay * 0.8f;
         else if (grossPay > 30000) return grossPay * 0.85f;
         else return grossPay * 0.9f;
     }
 
     public List<AttendanceRecord> getAttendanceRecords(Long employeeId, int month, int year, String statusFilter) {
-        // Get all time logs for the specified period
+
         List<TimeLog> timeLogs = timeLogRepo.findByMonthAndYear(month, year);
 
-        // If employee filter is specified, filter by employee
         if (employeeId != null) {
             timeLogs = timeLogs.stream()
                     .filter(log -> log.getEmployee() != null &&
@@ -324,15 +285,12 @@ public class HRService {
                     .collect(Collectors.toList());
         }
 
-        // Convert time logs to attendance records
         List<AttendanceRecord> records = new ArrayList<>();
 
-        // First, process all time logs to mark present days
         for (TimeLog log : timeLogs) {
             if (log.getTimeIn() != null && log.getEmployee() != null) {
                 String date = log.getDate().toLocalDate().toString();
 
-                // If status filter is specified, check if it matches
                 if (statusFilter == null || "PRESENT".equalsIgnoreCase(statusFilter)) {
                     records.add(new AttendanceRecord(
                             log.getEmployee().getEmployeeId(),
@@ -344,12 +302,9 @@ public class HRService {
             }
         }
 
-        // If no employee filter, we need to mark absent days for all employees
         if (employeeId == null) {
-            // Get all employees
             List<Employee> allEmployees = employeeRepo.findAll();
 
-            // For each day in the month, check if each employee has a record
             LocalDate startDate = LocalDate.of(year, month, 1);
             LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
@@ -358,12 +313,10 @@ public class HRService {
                 while (!currentDate.isAfter(endDate)) {
                     String dateStr = currentDate.toString();
 
-                    // Check if this employee has a record for this date
                     boolean hasRecord = records.stream()
                             .anyMatch(r -> r.getEmployeeId().equals(employee.getEmployeeId())
                                     && r.getDate().equals(dateStr));
 
-                    // If no record and we're not filtering by status or status is ABSENT
                     if (!hasRecord && (statusFilter == null || "ABSENT".equalsIgnoreCase(statusFilter))) {
                         records.add(new AttendanceRecord(
                                 employee.getEmployeeId(),

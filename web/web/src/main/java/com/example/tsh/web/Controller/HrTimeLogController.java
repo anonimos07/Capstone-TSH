@@ -41,7 +41,6 @@ public class HrTimeLogController {
             @RequestBody Map<String, Object> request,
             Authentication authentication) {
 
-        // Authenticate HR
         String hrUsername = authentication.getName();
         HR hr = hrRepository.findByUsername(hrUsername)
                 .orElseThrow(() -> new RuntimeException("Unauthorized: HR not found"));
@@ -49,7 +48,6 @@ public class HrTimeLogController {
         Long employeeId = Long.valueOf(request.get("employeeId").toString());
         Long timeLogId = Long.valueOf(request.get("timeLogId").toString());
 
-        // Parse timeIn and timeOut
         LocalDateTime timeIn = request.get("timeIn") != null
                 ? LocalDateTime.parse(request.get("timeIn").toString().replace(" ", "T"))
                 : null;
@@ -58,11 +56,9 @@ public class HrTimeLogController {
                 ? LocalDateTime.parse(request.get("timeOut").toString().replace(" ", "T"))
                 : null;
 
-        // Find employee
         Employee employee = employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        // Adjust log
         TimeLog updatedLog = timeLogService.adjustTimeLog(timeLogId, employee, timeIn, timeOut);
         return ResponseEntity.ok(updatedLog);
     }
@@ -71,7 +67,6 @@ public class HrTimeLogController {
 
     @GetMapping("/all")
     public ResponseEntity<List<TimeLog>> getAllTimeLogs(Authentication authentication) {
-        // Confirm HR access
         String username = authentication.getName();
         HR hr = hrRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Unauthorized: HR not found"));
@@ -80,7 +75,7 @@ public class HrTimeLogController {
         return ResponseEntity.ok(logs);
     }
 
-    // In HrTimeLogController.java
+
     @GetMapping("/assigned-logs")
     public ResponseEntity<List<TimeLog>> getAssignedTimeLogs(Authentication authentication) {
         String username = authentication.getName();

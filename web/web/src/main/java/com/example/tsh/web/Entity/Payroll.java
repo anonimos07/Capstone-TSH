@@ -16,11 +16,11 @@ public class Payroll {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String period; // e.g. "April 2025"
-    private String status; // DRAFT, PROCESSED, PAID
+    private String period;
+    private String status;
     private LocalDate creationDate;
 
-    // Add these fields for cutoff tracking
+
     private LocalDate cutoffStartDate;
     private LocalDate cutoffEndDate;
     private LocalDate payDate;

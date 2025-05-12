@@ -113,7 +113,7 @@ public class EmployeeService {
     }
 
     public Map<String, Object> getTaxDetails(Long employeeId) {
-        // Implement tax calculation logic
+
         return Collections.emptyMap();
     }
 
@@ -123,8 +123,7 @@ public class EmployeeService {
             throw new RuntimeException("Employee not found");
         }
 
-        // Simplified tax calculation - replace with actual logic
-        float grossSalary = employee.get().getBaseSalary() * 12; // annual
+        float grossSalary = employee.get().getBaseSalary() * 12;
         float tax = 0;
 
         if (grossSalary > 50000) tax = grossSalary * 0.2f;
@@ -140,11 +139,11 @@ public class EmployeeService {
     }
 
     public Map<String, Object> getBenefits(Long employeeId) {
-        // Implement benefits tracking logic
+
         Map<String, Object> benefits = new HashMap<>();
         benefits.put("healthInsurance", true);
         benefits.put("retirementPlan", true);
-        // Add more benefits as needed
+
         return benefits;
     }
 

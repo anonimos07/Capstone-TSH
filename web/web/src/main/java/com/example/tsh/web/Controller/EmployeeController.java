@@ -40,14 +40,11 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
     if (employee.getRole() != Role.EMPLOYEE) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an employee."));
     }
-    //added to extract role
     Map<String, String> response = new HashMap<>();
     response.put("token", result);               // JWT token
     response.put("role", employee.getRole().name());
     response.put("username",employee.getUsername());
 
-
-//    return ResponseEntity.ok(Collections.singletonMap("token", result));
     return ResponseEntity.ok(response);
 }
 
@@ -258,10 +255,8 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
                 queryMonth
         );
 
-        // Use LinkedHashMap to maintain order
         Map<LocalDate, Map<String, Object>> attendanceMap = new LinkedHashMap<>();
 
-        // Map logs to attendance with time in/out
         for (TimeLog log : logs) {
             LocalDate logDate = log.getDate().toLocalDate();
             Map<String, Object> attendanceDetails = new HashMap<>();
@@ -271,7 +266,6 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
             attendanceMap.put(logDate, attendanceDetails);
         }
 
-        // Fill in absent days for weekdays with no logs
         LocalDate startDate = LocalDate.of(queryYear, queryMonth, 1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
@@ -291,7 +285,6 @@ public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee)
             }
         }
 
-        // Convert to Map<String, Object> for JSON response
         Map<String, Object> attendanceResponse = new LinkedHashMap<>();
         attendanceMap.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())

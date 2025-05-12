@@ -45,40 +45,35 @@ public class AdminController {
         if (admin.getRole() != Role.ADMIN) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an admin."));
         }
-        //added to extract role
+
         Map<String, String> response = new HashMap<>();
         response.put("token", result);               // JWT token
         response.put("role", admin.getRole().name());
         response.put("username",admin.getUsername());
-//        return ResponseEntity.ok(Collections.singletonMap("token", result));
         return ResponseEntity.ok(response);
     }
 
-    //create admin
-//    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+
     @PostMapping("/add")
     public ResponseEntity<String> addAdmin(@RequestBody Admin admin) {
         adminService.saveAdmin(admin);
         return ResponseEntity.ok("Admin added successfully!");
     }
 
-    // Admin can create HR accounts
-//    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    //create hr via admn
     @PostMapping("/create-hr")
     public ResponseEntity<String> createHr(@RequestBody HR hr) {
         hrService.saveHr(hr);
         return ResponseEntity.ok("HR created successfully by admin");
     }
 
-    // Admin can create Employee accounts
-//    @PreAuthorize("hasAnyRole('HR', 'ADMIN')")
+    //create employee via admn
     @PostMapping("/create-employee")
     public ResponseEntity<String> createEmployee(@RequestBody Employee employee) {
         employeeService.saveEmployee(employee);
         return ResponseEntity.ok("Employee created successfully by admin");
     }
 
-    //get specific admin
     @GetMapping("/{id}")
     public ResponseEntity<Admin> getAdminById(@PathVariable Long Id) {
         Optional<Admin> admin = adminService.getAdminById(Id);
@@ -86,14 +81,14 @@ public class AdminController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    //delete specific admin
+    //delete
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAdmin(@PathVariable Long Id) {
         adminService.deleteAdmin(Id);
         return ResponseEntity.ok("Admin deleted successfully!");
     }
 
-    //get Employee via admin
+    //get employee
     @GetMapping("/all-employee")
     public List<Employee> getAllEmployee(){
         return employeeService.getAllEmployee();

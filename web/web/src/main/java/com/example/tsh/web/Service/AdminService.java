@@ -33,10 +33,6 @@ public class AdminService {
     @Autowired
     JwtService jwtService;
 
-//    public AdminService(AdminRepo adminRepository, PasswordEncoder passwordEncoder){
-//        this.adminRepository = adminRepository;
-//        this.passwordEncoder = passwordEncoder;
-//    }
 
     public Admin authenticateAdmin(String user, String password) {
         Optional<Admin> adminOptional = adminRepository.findByUsername(user);
@@ -51,8 +47,6 @@ public class AdminService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Role is already set to EMPLOYEE in your saveEmployee method
-        // You can add additional role checks here if needed
         if (admin.getRole() != Role.ADMIN) {
             throw new RuntimeException("Unauthorized");
         }
@@ -88,7 +82,6 @@ public class AdminService {
         String defUsername = "tsh.ADMIN";
         String defPass = "admin123";
 
-        // Check if admin exists (by username only)
         if (!adminRepository.existsByUsername(defUsername)) {
             Admin admin = new Admin();
             admin.setUsername(defUsername);

@@ -4,7 +4,7 @@ import com.example.tsh.web.Entity.Payroll;
 import lombok.Getter;
 import lombok.Setter;
 
-// DTO
+
 @Setter
 @Getter
 public class PayrollDetails {

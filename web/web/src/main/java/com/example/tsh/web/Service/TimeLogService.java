@@ -1,11 +1,13 @@
 package com.example.tsh.web.Service;
 
+import com.example.tsh.web.DTO.TimeLogSummary;
 import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.HR;
 import com.example.tsh.web.Entity.TimeLog;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Repository.TimeLogRepo;
+import com.example.tsh.web.Util.CutoffUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +15,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -28,6 +32,9 @@ public class TimeLogService {
 
     @Autowired
     private EmployeeRepo employeeRepo;
+
+
+    CutoffUtil cutoffUtil;
 
     @Transactional
     public TimeLog assignHrToTimeLog(Long timeLogId, Long hrId) {
@@ -75,9 +82,13 @@ public class TimeLogService {
             throw new IllegalStateException("Employee already timed in");
         }
 
+
+        LocalDateTime now = LocalDateTime.now();
+        String cutoffLabel = CutoffUtil.getCutoffLabel(now.toLocalDate());
+
         // Create a new time log with the current timestamp
         TimeLog timeLog = new TimeLog(employee, LocalDateTime.now(), null);
-
+        timeLog.setCutoffPeriod(cutoffLabel);
         // Save the new time log and return it
         return timeLogRepository.save(timeLog);
     }
@@ -139,5 +150,21 @@ public class TimeLogService {
 
         return timeLogRepository.findByEmployeeAndMonthAndYear(employee, month, year);
     }
+
+
+    //mao ni akoa gigamit logic para cutoff
+    public List<Map<String, Object>> getEmployeeHoursByCutoff(Long employeeId) {
+        List<TimeLogSummary> summaries = timeLogRepository.getWorkedMinutesByCutoff(employeeId);
+
+        return summaries.stream().map(summary -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("cutoffPeriod", summary.getCutoff());
+            map.put("totalHours", summary.getTotalMinutes() / 60.0); // convert mins to hours
+            return map;
+        }).toList();
+    }
+
+
+
 
 }

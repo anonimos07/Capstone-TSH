@@ -45,13 +45,12 @@ public class HRController {
         if (hr.getRole() != Role.HR) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an hr."));
         }
-        //added to extract role
+
         Map<String, String> response = new HashMap<>();
         response.put("token", result);               // JWT token
         response.put("role", hr.getRole().name());
         response.put("username",hr.getUsername());
 
-//        return ResponseEntity.ok(Collections.singletonMap("token", result));
         return ResponseEntity.ok(response);
     }
 
@@ -81,7 +80,6 @@ public class HRController {
     }
 
     //get all timelog
-    // Get all time logs (admin only)
     @GetMapping("/get-all")
     public ResponseEntity<List<TimeLog>> getAllTimeLogs(@RequestHeader("Authorization") String token) {
         try {
@@ -254,13 +252,11 @@ public class HRController {
         return ResponseEntity.ok(response);
     }
 
-    // In HRController.java
     @GetMapping("/available-hr-for-leave")
     public ResponseEntity<List<HR>> getAvailableHRForLeave() {
         return ResponseEntity.ok(hrService.getAllHr());
     }
 
-    // In HRController.java
     @GetMapping("/available-hr-for-timelog")
     public ResponseEntity<List<HR>> getAvailableHRForTimeLog() {
         return ResponseEntity.ok(hrService.getAllHr());
@@ -273,7 +269,6 @@ public class HRController {
             @RequestParam int year,
             @RequestParam(required = false) String status) {
 
-        // Implement logic to fetch attendance records based on filters
         List<AttendanceRecord> records = hrService.getAttendanceRecords(employeeId, month, year, status);
         return ResponseEntity.ok(records);
     }

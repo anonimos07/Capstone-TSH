@@ -66,19 +66,18 @@ public class TimeLogController {
         return ResponseEntity.ok(timeLog);
     }
 
-    @GetMapping // Handles GET /api/time-logs (no ID needed)
+    //get all
+    @GetMapping
     public ResponseEntity<List<TimeLog>> getAllTimeLogsForEmployee(Authentication authentication) {
         String username = authentication.getName();
         Employee employee = employeeRepo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Employee not found"));
 
-        // Assuming you have a method like this in your service:
         List<TimeLog> logs = timeLogService.findTimeLogsByEmployee(employee);
         return ResponseEntity.ok(logs);
     }
 
 
-    // Get today's logs for the authenticated employee
     @GetMapping("/today")
     public ResponseEntity<?> getTodayLogs(Authentication authentication) {
         String username = authentication.getName();
@@ -90,7 +89,6 @@ public class TimeLogController {
         return ResponseEntity.ok(logs);
     }
 
-    // Get logs by date for the authenticated employee
     @GetMapping("/date")
     public ResponseEntity<?> getLogsByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
@@ -104,7 +102,6 @@ public class TimeLogController {
     }
 
 
-    // Time In endpoint
     @PostMapping("/time-in")
     public ResponseEntity<?> timeIn(Authentication authentication) {
         try {
@@ -124,7 +121,6 @@ public class TimeLogController {
     }
 
 
-    // Time Out endpoint
     @PostMapping("/time-out")
     public ResponseEntity<?> timeOut(Authentication authentication) {
         try {
@@ -143,7 +139,6 @@ public class TimeLogController {
     }
 
 
-    // Get current status (whether timed in or not)
     @GetMapping("/status")
     public ResponseEntity<?> getCurrentStatus(Authentication authentication) {
         String username = authentication.getName(); // should return the username from JWT
@@ -172,7 +167,6 @@ public class TimeLogController {
         return ResponseEntity.ok("Hello " + principal.getName());
     }
 
-    // In TimeLogController.java
     @PostMapping("/assign-hr/{timeLogId}")
     public ResponseEntity<?> assignHrToTimeLog(
             @PathVariable Long timeLogId,
@@ -186,7 +180,6 @@ public class TimeLogController {
             TimeLog timeLog = timeLogService.findTimeLogById(timeLogId)
                     .orElseThrow(() -> new IllegalArgumentException("TimeLog not found"));
 
-            // Change this line to use == instead of equals() for primitive long comparison
             if (timeLog.getEmployee().getEmployeeId() != employee.getEmployeeId()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only assign HR to your own time logs");
             }
@@ -198,4 +191,18 @@ public class TimeLogController {
                     .body(Map.of("error", "Failed to assign HR: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/cutoff-hours")
+    public ResponseEntity<?> getCutoffHours(Authentication authentication) {
+        String username = authentication.getName();
+        Employee employee = employeeRepo.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Employee not found"));
+
+        List<Map<String, Object>> result = timeLogService.getEmployeeHoursByCutoff(employee.getEmployeeId());
+
+        return ResponseEntity.ok(result);
+    }
+
+
+
 }

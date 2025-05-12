@@ -7,13 +7,13 @@ import lombok.Setter;
 @Setter
 @Getter
 public class AttendanceRecord {
-    // Getters and Setters
+
     private Long employeeId;
     private Employee employee;
     private String date;
     private String status;
 
-    // Constructors
+
     public AttendanceRecord() {}
 
     public AttendanceRecord(Long employeeId, Employee employee, String date, String status) {

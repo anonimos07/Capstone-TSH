@@ -20,5 +20,5 @@ public class PayrollItem {
     private double netPay;
     private double tax;
 
-    // getters and setters
+
 }

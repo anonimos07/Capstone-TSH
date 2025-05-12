@@ -35,6 +35,9 @@ public class TimeLog {
     @Column(name = "date")
     private LocalDateTime date;
 
+    @Column(name = "cutoff_period")
+    private String cutoffPeriod;
+
 
     @ManyToOne
     @JoinColumn(name = "assigned_hr_id")
@@ -44,7 +47,7 @@ public class TimeLog {
 
     }
 
-    // Constructor with employee
+
     public TimeLog(Employee employee, LocalDateTime timeIn, LocalDateTime timeOut) {
         this.employee = employee;
         this.timeIn = timeIn;
@@ -55,12 +58,20 @@ public class TimeLog {
         }
     }
 
-    // Calculate duration in minutes and to be converted in hours in frontend logic
+
     private Integer calculateDurationInMinutes(LocalDateTime start, LocalDateTime end) {
         return (int) java.time.Duration.between(start, end).toMinutes();
     }
 
-    // Add getter and setter
+    public String getCutoffPeriod() {
+        return cutoffPeriod;
+    }
+
+    public void setCutoffPeriod(String cutoffPeriod) {
+        this.cutoffPeriod = cutoffPeriod;
+    }
+
+
     public HR getAssignedHr() {
         return assignedHr;
     }
@@ -69,7 +80,7 @@ public class TimeLog {
         this.assignedHr = assignedHr;
     }
 
-    // Getters and Setters
+
     public Long getTimeLogId() {
         return timeLogId;
     }

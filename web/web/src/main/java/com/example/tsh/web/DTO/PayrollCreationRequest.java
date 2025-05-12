@@ -5,7 +5,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-// DTO
+
 @Setter
 @Getter
 public class PayrollCreationRequest {

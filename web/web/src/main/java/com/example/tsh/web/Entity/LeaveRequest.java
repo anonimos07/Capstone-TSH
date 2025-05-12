@@ -19,11 +19,11 @@ public class LeaveRequest {
 
     @ManyToOne
     @JoinColumn(name = "hr_id")
-    private HR assignedHR; // Add this field
+    private HR assignedHR;
 
     private LocalDate startDate;
     private LocalDate endDate;
     private String reason;
-    private String status; // PENDING, APPROVED, REJECTED
-    private String leaveType; // ANNUAL, SICK, etc.
+    private String status;
+    private String leaveType;
 }

@@ -43,32 +43,26 @@ public class PasswordResetService {
     public boolean requestPasswordReset(String emailOrUsername) {
         logger.info("Processing password reset request for: {}", emailOrUsername);
 
-        // Try to find employee by email first
         Optional<Employee> employeeOptional = employeeRepository.findByEmail(emailOrUsername);
 
-        // If not found by email, try employee by username
         if (employeeOptional.isEmpty()) {
             logger.debug("No employee found with email: {}, trying username", emailOrUsername);
             employeeOptional = employeeRepository.findByUsername(emailOrUsername);
         }
 
-        // If found employee, process password reset for employee
         if (employeeOptional.isPresent()) {
             Employee employee = employeeOptional.get();
             logger.info("Found employee: {} ({})", employee.firstName, employee.email);
             return processEmployeePasswordReset(employee);
         }
 
-        // If not found as employee, try HR by email
         Optional<HR> hrOptional = hrRepository.findByEmail(emailOrUsername);
 
-        // If not found by email, try HR by username
         if (hrOptional.isEmpty()) {
             logger.debug("No HR found with email: {}, trying username", emailOrUsername);
             hrOptional = hrRepository.findByUsername(emailOrUsername);
         }
 
-        // If found HR, process password reset for HR
         if (hrOptional.isPresent()) {
             HR hr = hrOptional.get();
             logger.info("Found HR: {} ({})", hr.firstName, hr.email);
@@ -81,7 +75,6 @@ public class PasswordResetService {
     }
 
     private boolean processEmployeePasswordReset(Employee employee) {
-        // Create or update token for employee
         String token = createOrUpdateToken(employee, null);
 
         // Send email
@@ -107,10 +100,8 @@ public class PasswordResetService {
     }
 
     private boolean processHRPasswordReset(HR hr) {
-        // Create or update token for HR
         String token = createOrUpdateToken(null, hr);
 
-        // Send email
         String resetUrl = frontendUrl + "/reset-password?token=" + token;
         String emailSubject = "Password Reset Request";
         String emailBody = "Hello " + hr.firstName + ",\n\n" +
@@ -136,12 +127,10 @@ public class PasswordResetService {
         PasswordResetToken token;
 
         if (employee != null) {
-            // Check if a token already exists for this employee
             Optional<PasswordResetToken> existingTokenOpt = tokenRepository.findByEmployee(employee);
 
             if (existingTokenOpt.isPresent()) {
                 token = existingTokenOpt.get();
-                // Refresh token values
                 token.setToken(UUID.randomUUID().toString());
                 token.setExpiryDate(LocalDateTime.now().plusHours(24));
                 logger.debug("Updated existing token for employee: {}", employee.email);
@@ -150,12 +139,10 @@ public class PasswordResetService {
                 logger.debug("Created new token for employee: {}", employee.email);
             }
         } else {
-            // Check if a token already exists for this HR
             Optional<PasswordResetToken> existingTokenOpt = tokenRepository.findByHr(hr);
 
             if (existingTokenOpt.isPresent()) {
                 token = existingTokenOpt.get();
-                // Refresh token values
                 token.setToken(UUID.randomUUID().toString());
                 token.setExpiryDate(LocalDateTime.now().plusHours(24));
                 logger.debug("Updated existing token for HR: {}", hr.email);
@@ -190,7 +177,6 @@ public class PasswordResetService {
             return false;
         }
 
-        // Check if token is for employee or HR
         if (resetToken.getEmployee() != null) {
             Employee employee = resetToken.getEmployee();
             employee.password = passwordEncoder.encode(newPassword);
@@ -203,10 +189,9 @@ public class PasswordResetService {
             logger.info("Password reset successful for HR: {}", hr.email);
         } else {
             logger.error("Password reset failed: Token not associated with any user");
-            return false; // Invalid token - neither employee nor HR associated
+            return false;
         }
 
-        // Delete the used token
         tokenRepository.delete(resetToken);
         logger.debug("Token deleted after successful password reset");
 

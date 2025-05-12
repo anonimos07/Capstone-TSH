@@ -49,15 +49,11 @@ private JwtFilter jwtFilter;
                         .requestMatchers("/hr/**","/api/hr/time-logs/**").hasRole("HR")
                         .requestMatchers("/employee/**","/api/time-logs/**").hasRole("EMPLOYEE")
                                 .requestMatchers("/hr/available-hr-for-leave").hasAnyRole("EMPLOYEE", "HR")
-//                        .requestMatchers("/api/time-logs/**").hasRole("EMPLOYEE")
-
                                 .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-//                .httpBasic(withDefaults());
 
         return http.build();
     }

@@ -39,10 +39,10 @@ public class Employee {
         @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<TimeLog> timeLogs;
 
-    @Transient  // This won't be persisted in DB, will be calculated when needed
+    @Transient
     private float grossIncome;
 
-    @Transient  // This won't be persisted in DB, will be calculated when needed
+    @Transient
     private float netIncome;
 
     @Enumerated(EnumType.STRING)
