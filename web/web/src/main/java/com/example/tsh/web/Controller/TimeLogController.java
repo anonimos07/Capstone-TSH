@@ -202,7 +202,4 @@ public class TimeLogController {
 
         return ResponseEntity.ok(result);
     }
-
-
-
 }

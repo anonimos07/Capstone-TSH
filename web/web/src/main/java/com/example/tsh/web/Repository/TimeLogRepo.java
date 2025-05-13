@@ -45,4 +45,11 @@ public interface TimeLogRepo extends JpaRepository<TimeLog, Long> {
             "ORDER BY t.cutoffPeriod")
     List<TimeLogSummary> getWorkedMinutesByCutoff(@Param("employeeId") Long employeeId);
 
+    // FOR PAYROLL - JARED
+    @Query("SELECT t FROM TimeLog t WHERE t.employee = :employee AND t.date BETWEEN :startDate AND :endDate")
+    List<TimeLog> findByEmployeeAndDateBetween(
+            @Param("employee") Employee employee,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
 }

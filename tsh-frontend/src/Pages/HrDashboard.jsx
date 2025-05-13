@@ -509,36 +509,44 @@ export default function HrDashboard() {
     }
   
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Payroll Overview</CardTitle>
-          <CardDescription>Company-wide payroll summary</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span>Total Employees:</span>
-              <span className="font-medium">{payrollData?.totalEmployees}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total Payroll:</span>
-              <span className="font-medium">₱{payrollData?.totalPayroll?.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total Tax Deductions:</span>
-              <span className="font-medium">₱{payrollData?.totalTaxDeductions?.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between border-t pt-2">
-              <span className="font-medium">Net Payroll:</span>
-              <span className="font-medium">
-                ₱{(payrollData?.totalPayroll - payrollData?.totalTaxDeductions)?.toLocaleString()}
-              </span>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Payroll Overview</CardTitle>
+        <CardDescription>Company-wide payroll summary</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex justify-between">
+            <span>Total Employees:</span>
+            <span className="font-medium">{payrollData?.totalEmployees}</span>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
+          <div className="flex justify-between">
+            <span>Total Base Salary:</span>
+            <span className="font-medium">₱{payrollData?.totalBaseSalary?.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Total Overtime Pay:</span>
+            <span className="font-medium">₱{payrollData?.totalOvertimePay?.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Total Gross Income:</span>
+            <span className="font-medium">₱{payrollData?.totalGrossIncome?.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Total Tax Deductions:</span>
+            <span className="font-medium">₱{payrollData?.totalTaxDeductions?.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between border-t pt-2">
+            <span className="font-medium">Total Net Pay:</span>
+            <span className="font-medium">
+              ₱{payrollData?.totalNetPay?.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
   
   function PayrollActionsCard() {
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -567,36 +575,45 @@ export default function HrDashboard() {
     }, []);
   
     const handleCreatePayroll = async () => {
-      if (!period || selectedEmployees.length === 0) {
-        alert("Please select a period and at least one employee");
-        return;
-      }
-  
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:8080/hr/create-payroll", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            period,
-            employeeIds: selectedEmployees,
-          }),
-        });
-  
-        if (!response.ok) throw new Error("Failed to create payroll");
-        
-        alert("Payroll created successfully");
-        setShowCreateModal(false);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (!period || selectedEmployees.length === 0) {
+    alert("Please select a period and at least one employee");
+    return;
+  }
+
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+    
+    // Get current month and year for attendance
+    const currentDate = new Date();
+    const month = currentDate.getMonth() + 1;
+    const year = currentDate.getFullYear();
+
+    // Create payroll with employee IDs and period
+    const response = await fetch("http://localhost:8080/hr/create-payroll", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        period,
+        employeeIds: selectedEmployees,
+        month,
+        year
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to create payroll");
+    
+    alert("Payroll created successfully");
+    setShowCreateModal(false);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
      // Define the missing functions
   const handleExportPayroll = () => {
@@ -811,43 +828,32 @@ export default function HrDashboard() {
       );
     }
   
-    return (
-      <>
-        <Card>
-          <CardHeader>
-            <CardTitle>Payrolls</CardTitle>
-            <CardDescription>All payroll records</CardDescription>
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="text"
-                placeholder="Search by period or status..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <Button onClick={handleSearch}>
-                Search
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="p-4 font-medium">Period</th>
-                    <th className="p-4 font-medium">Status</th>
-                    <th className="p-4 font-medium">Created On</th>
-                    <th className="p-4 font-medium">Employees</th>
-                    <th className="p-4 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payrolls.map((payroll) => (
-                    <tr key={payroll.id} className="border-t hover:bg-gray-50">
-                      <td className="p-4">{payroll.period}</td>
-                      <td className="p-4">
+   return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Payrolls</CardTitle>
+          <CardDescription>All payroll records</CardDescription>
+          {/* ... search input ... */}
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left">
+                  <th className="p-4 font-medium">Period</th>
+                  <th className="p-4 font-medium">Status</th>
+                  <th className="p-4 font-medium">Created On</th>
+                  <th className="p-4 font-medium">Employees</th>
+                  <th className="p-4 font-medium">Total Net Pay</th>
+                  <th className="p-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payrolls.map((payroll) => (
+                  <tr key={payroll.id} className="border-t hover:bg-gray-50">
+                    <td className="p-4">{payroll.period}</td>
+                    <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           payroll.status === 'PAID' ? 'bg-green-100 text-green-700' :
                           payroll.status === 'PROCESSED' ? 'bg-blue-100 text-blue-700' :
@@ -856,93 +862,84 @@ export default function HrDashboard() {
                           {payroll.status}
                         </span>
                       </td>
-                      <td className="p-4">{new Date(payroll.creationDate).toLocaleDateString()}</td>
-                      <td className="p-4">{payroll.items?.length || 0}</td>
-                      <td className="p-4">
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleViewDetails(payroll.id)}
-                        >
-                          View Details
-                        </Button>
+                    <td className="p-4">{new Date(payroll.creationDate).toLocaleDateString()}</td>
+                    <td className="p-4">{payroll.items?.length || 0}</td>
+                    <td className="p-4">₱{
+                      payroll.items?.reduce((sum, item) => sum + item.netPay, 0).toLocaleString()
+                    }</td>
+                    <td className="p-4">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleViewDetails(payroll.id)}
+                      >
+                        View Details
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+        {/* Payroll Details Modal */}
+      {selectedPayroll && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
+            {/* ... modal header ... */}
+            
+            <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Total Base Salary</p>
+                <p className="font-medium">₱{selectedPayroll.totalBaseSalary?.toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Total Overtime</p>
+                <p className="font-medium">₱{selectedPayroll.totalOvertimePay?.toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Total Gross</p>
+                <p className="font-medium">₱{selectedPayroll.totalGrossIncome?.toLocaleString()}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">Total Net Pay</p>
+                <p className="font-medium">₱{selectedPayroll.totalNetPay?.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-100 text-left">
+                    <th className="p-3 font-medium">Employee</th>
+                    <th className="p-3 font-medium">Base Salary</th>
+                    <th className="p-3 font-medium">Days Worked</th>
+                    <th className="p-3 font-medium">Overtime Hours</th>
+                    <th className="p-3 font-medium">Overtime Pay</th>
+                    <th className="p-3 font-medium">Tax</th>
+                    <th className="p-3 font-medium">Net Pay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedPayroll.payroll.items.map((item, index) => (
+                    <tr key={index} className="border-t">
+                      <td className="p-3">
+                        {item.employee.firstName} {item.employee.lastName}
+                      </td>
+                      <td className="p-3">₱{item.baseSalary.toLocaleString()}</td>
+                      <td className="p-3">{item.daysWorked}</td>
+                      <td className="p-3">{item.overtimeHours}</td>
+                      <td className="p-3">₱{item.overtimePay.toLocaleString()}</td>
+                      <td className="p-3">₱{item.tax.toLocaleString()}</td>
+                      <td className="p-3 font-medium">
+                        ₱{item.netPay.toLocaleString()}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          </CardContent>
-        </Card>
-  
-        {/* Payroll Details Modal */}
-        {selectedPayroll && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold">
-                    Payroll Details - {selectedPayroll.payroll.period}
-                  </h3>
-                  <p className="text-gray-500">
-                    Status: {selectedPayroll.payroll.status} | 
-                    Created: {new Date(selectedPayroll.payroll.creationDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setSelectedPayroll(null)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-  
-              <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Total Gross</p>
-                  <p className="font-medium">₱{selectedPayroll.totalGross.toLocaleString()}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Total Tax</p>
-                  <p className="font-medium">₱{selectedPayroll.totalTax.toLocaleString()}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Total Net</p>
-                  <p className="font-medium">₱{selectedPayroll.totalNet.toLocaleString()}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Employees</p>
-                  <p className="font-medium">{selectedPayroll.employeeCount}</p>
-                </div>
-              </div>
-  
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-100 text-left">
-                      <th className="p-3 font-medium">Employee</th>
-                      <th className="p-3 font-medium">Base Salary</th>
-                      <th className="p-3 font-medium">Gross Pay</th>
-                      <th className="p-3 font-medium">Tax</th>
-                      <th className="p-3 font-medium">Net Pay</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedPayroll.payroll.items.map((item, index) => (
-                      <tr key={index} className="border-t">
-                        <td className="p-3">
-                          {item.employee.firstName} {item.employee.lastName}
-                        </td>
-                        <td className="p-3">₱{item.baseSalary.toLocaleString()}</td>
-                        <td className="p-3">₱{item.grossPay.toLocaleString()}</td>
-                        <td className="p-3">₱{item.tax.toLocaleString()}</td>
-                        <td className="p-3 font-medium">
-                          ₱{item.netPay.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            </div>  
   
               <div className="mt-6 flex justify-end">
                 <Button onClick={() => setSelectedPayroll(null)}>
