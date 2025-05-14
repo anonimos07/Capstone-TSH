@@ -1384,6 +1384,10 @@ export default function HrDashboard() {
               {/* <PayrollTable /> */}
             </TabsContent>
             
+
+
+
+
             {/*fetch Users*/}
             <TabsContent value="viewEmployee" className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm">
@@ -1443,6 +1447,7 @@ export default function HrDashboard() {
                           <th className="p-4 font-medium">Position</th>
                           <th className="p-4 font-medium">Base Salary</th>
                           <th className="p-4 font-medium">Role</th>
+                          <th className="p-4 font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1469,6 +1474,15 @@ export default function HrDashboard() {
                                 {employee.role.toUpperCase()}
                               </span>
                             </td>
+                            <td className="p-4">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleEdit(employee)}
+                              >
+                                Edit
+                              </Button>
+                              </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1478,6 +1492,8 @@ export default function HrDashboard() {
               </div>
             </TabsContent>
             {/*fetch Users*/}
+
+
 
 
 

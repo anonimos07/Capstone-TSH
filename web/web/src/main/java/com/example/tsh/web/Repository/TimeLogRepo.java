@@ -52,4 +52,8 @@ public interface TimeLogRepo extends JpaRepository<TimeLog, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
+
+    //test for overtime
+//    List<TimeLogSummary> getOvertimeMinutesByCutoff(@Param("employeeId") Long employeeId);
+
 }

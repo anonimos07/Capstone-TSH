@@ -8,6 +8,7 @@ import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
 //import com.example.tsh.web.Repository.PayrollRepo;
 import com.example.tsh.web.Repository.TimeLogRepo;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,6 +41,11 @@ public class HRService {
 
 //    @Autowired
 //    private PayrollCutoffService cutoffService;
+    @Autowired
+    EmployeeRepo employeeRepository;
+
+    @Autowired
+    private PayrollCutoffService cutoffService;
 
     public HR saveHr(HR hr) {
         hr.setPassword(passwordEncoder.encode(hr.getPassword()));
@@ -420,4 +426,90 @@ public class HRService {
 //        else if (grossPay > 30000) return grossPay * 0.15; // 15% tax
 //        else return grossPay * 0.1; // 10% tax
 //    }
+
+    //edit employee from hr
+    public void updateEmployeeProfile(String username, Employee updatedData) {
+        Employee employee = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found: " + username));
+
+        // HR can update more fields if needed
+        employee.setPosition(updatedData.getPosition());
+        employee.setBaseSalary(updatedData.getBaseSalary());
+        employee.setFirstName(updatedData.getFirstName());
+        employee.setLastName(updatedData.getLastName());
+        employee.setEmail(updatedData.getEmail());
+        employee.setContact(updatedData.getContact());
+
+        employeeRepository.save(employee);
+    }
+
+
+    // FOR PAYROLL - JARED
+    private double calculateGrossPayForPeriod(Employee employee, PayrollCutoffService.CutoffPeriod cutoff) {
+        // Calculate daily rate (assuming 22 working days per month)
+        double dailyRate = employee.getBaseSalary() / 22.0;
+
+        // Get attendance records for this employee during the cutoff period
+        List<TimeLog> timeLogs = timeLogRepo.findByEmployeeAndDateBetween(
+                employee,
+                cutoff.getStartDate().atStartOfDay(),
+                cutoff.getEndDate().atTime(23, 59, 59)
+        );
+
+        // Calculate days worked
+        long daysWorked = timeLogs.stream()
+                .filter(log -> log.getTimeIn() != null)
+                .map(log -> log.getDate().toLocalDate())
+                .distinct()
+                .count();
+
+        // Calculate base pay for period
+        double basePay = dailyRate * daysWorked;
+
+        // Calculate overtime
+        double overtimeHours = calculateOvertimeHours(timeLogs);
+        double overtimeRate = employee.getBaseSalary() / (22.0 * 8.0); // Assuming 8 hours per day
+        double overtimePay = overtimeHours * overtimeRate * 1.25; // 1.25x for overtime
+
+        return basePay + overtimePay;
+    }
+
+    // FOR PAYROLL - JARED
+    private double calculateOvertimeHours(List<TimeLog> timeLogs) {
+        double overtimeHours = 0;
+        for (TimeLog log : timeLogs) {
+            if (log.getTimeIn() != null && log.getTimeOut() != null) {
+                // Assuming standard work day is 8 hours (9am-5pm)
+                LocalTime standardEnd = LocalTime.of(17, 0);
+                if (log.getTimeOut().toLocalTime().isAfter(standardEnd)) {
+                    Duration overtime = Duration.between(
+                            standardEnd,
+                            log.getTimeOut().toLocalTime()
+                    );
+                    // Convert to hours, including partial hours
+                    overtimeHours += overtime.toMinutes() / 60.0;
+                }
+            }
+        }
+        return overtimeHours;
+    }
+
+    // FOR PAYROLL - JARED
+    private double calculateNetPay(double grossPay) {
+        // Progressive tax calculation
+        if (grossPay > 50000) return grossPay * 0.8; // 20% tax
+        else if (grossPay > 30000) return grossPay * 0.85; // 15% tax
+        else return grossPay * 0.9; // 10% tax
+    }
+
+    // FOR PAYROLL - JARED
+    private double calculateTax(double grossPay) {
+        // Progressive tax calculation
+        if (grossPay > 50000) return grossPay * 0.2; // 20% tax
+        else if (grossPay > 30000) return grossPay * 0.15; // 15% tax
+        else return grossPay * 0.1; // 10% tax
+    }
+
+
+
 }

@@ -38,6 +38,10 @@ public class TimeLog {
     @Column(name = "cutoff_period")
     private String cutoffPeriod;
 
+    @Column(name = "overtime_minutes")
+    private Integer overtimeMinutes;
+
+
 
     @ManyToOne
     @JoinColumn(name = "assigned_hr_id")
@@ -46,6 +50,11 @@ public class TimeLog {
     public TimeLog(){
 
     }
+
+    private static final int STANDARD_WORK_MINUTES = 8 * 60;
+
+
+
 
 
     public TimeLog(Employee employee, LocalDateTime timeIn, LocalDateTime timeOut) {
@@ -110,10 +119,18 @@ public class TimeLog {
         return timeOut;
     }
 
+//    public void setTimeOut(LocalDateTime timeOut) {
+//        this.timeOut = timeOut;
+//        if (this.timeIn != null && timeOut != null) {
+//            this.durationMinutes = calculateDurationInMinutes(this.timeIn, timeOut);
+//        }
+//    }
+
     public void setTimeOut(LocalDateTime timeOut) {
         this.timeOut = timeOut;
         if (this.timeIn != null && timeOut != null) {
             this.durationMinutes = calculateDurationInMinutes(this.timeIn, timeOut);
+            this.overtimeMinutes = Math.max(0, this.durationMinutes - STANDARD_WORK_MINUTES);
         }
     }
 
@@ -131,5 +148,13 @@ public class TimeLog {
 
     public void setDate(LocalDateTime date) {
         this.date = date;
+    }
+
+    public Integer getOvertimeMinutes() {
+        return overtimeMinutes;
+    }
+
+    public void setOvertimeMinutes(Integer overtimeMinutes) {
+        this.overtimeMinutes = overtimeMinutes;
     }
 }

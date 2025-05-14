@@ -122,6 +122,15 @@ public class HRController {
         }
     }
 
+    //update employee by profile
+    @PutMapping("/update-profile-employee")
+    public ResponseEntity<String> updateEmployeeByHr(@RequestBody Employee updatedData) {
+
+        String username = updatedData.getUsername(); // Get target employee username from body
+        hrService.updateEmployeeProfile(username, updatedData);
+        return ResponseEntity.ok("Employee profile updated successfully");
+    }
+
     @GetMapping("/pending-leave-requests/{hrId}")
     public ResponseEntity<List<LeaveRequest>> getPendingLeaveRequestsForHr(@PathVariable Long hrId) {
         return ResponseEntity.ok(leaveService.getPendingLeaveRequestsForHr(hrId));
