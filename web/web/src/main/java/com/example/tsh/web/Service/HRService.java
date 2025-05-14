@@ -8,6 +8,7 @@ import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
 import com.example.tsh.web.Repository.PayrollRepo;
 import com.example.tsh.web.Repository.TimeLogRepo;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,6 +38,9 @@ public class HRService {
 
     @Autowired
     AuthenticationManager authenticationManager;
+
+    @Autowired
+    EmployeeRepo employeeRepository;
 
     @Autowired
     private PayrollCutoffService cutoffService;
@@ -352,6 +356,23 @@ public class HRService {
 
         return records;
     }
+
+    //edit employee from hr
+    public void updateEmployeeProfile(String username, Employee updatedData) {
+        Employee employee = employeeRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found: " + username));
+
+        // HR can update more fields if needed
+        employee.setPosition(updatedData.getPosition());
+        employee.setBaseSalary(updatedData.getBaseSalary());
+        employee.setFirstName(updatedData.getFirstName());
+        employee.setLastName(updatedData.getLastName());
+        employee.setEmail(updatedData.getEmail());
+        employee.setContact(updatedData.getContact());
+
+        employeeRepository.save(employee);
+    }
+
 
     // FOR PAYROLL - JARED
     private double calculateGrossPayForPeriod(Employee employee, PayrollCutoffService.CutoffPeriod cutoff) {
