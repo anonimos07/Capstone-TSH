@@ -439,4 +439,7 @@ public class HRService {
         else if (grossPay > 30000) return grossPay * 0.15; // 15% tax
         else return grossPay * 0.1; // 10% tax
     }
+
+
+
 }
