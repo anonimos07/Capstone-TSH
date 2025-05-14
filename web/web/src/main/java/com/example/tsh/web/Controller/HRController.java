@@ -1,8 +1,8 @@
 package com.example.tsh.web.Controller;
 
 import com.example.tsh.web.DTO.AttendanceRecord;
-import com.example.tsh.web.DTO.PayrollCreationRequest;
-import com.example.tsh.web.DTO.PayrollDetails;
+//import com.example.tsh.web.DTO.PayrollCreationRequest;
+//import com.example.tsh.web.DTO.PayrollDetails;
 import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.HRRepo;
@@ -32,8 +32,8 @@ public class HRController {
     @Autowired
     private TimeLogService timeLogService;
 
-    @Autowired
-    private PayrollCutoffService cutoffService;
+//    @Autowired
+//    private PayrollCutoffService cutoffService;
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody HR hr) {
@@ -138,20 +138,20 @@ public class HRController {
         return ResponseEntity.ok(leaveService.rejectLeaveRequest(requestId, rejectionReason));
     }
 
-    @GetMapping("/payroll-overview")
-    public ResponseEntity<Map<String, Object>> getPayrollOverview() {
-        return ResponseEntity.ok(hrService.getPayrollOverview());
-    }
-
-    @GetMapping("/export-payroll-report")
-    public ResponseEntity<byte[]> exportPayrollReport() {
-        byte[] report = hrService.generatePayrollReport();
-
-        return ResponseEntity.ok()
-                .header("Content-Type", "text/csv")
-                .header("Content-Disposition", "attachment; filename=payroll_report.csv")
-                .body(report);
-    }
+//    @GetMapping("/payroll-overview")
+//    public ResponseEntity<Map<String, Object>> getPayrollOverview() {
+//        return ResponseEntity.ok(hrService.getPayrollOverview());
+//    }
+//
+//    @GetMapping("/export-payroll-report")
+//    public ResponseEntity<byte[]> exportPayrollReport() {
+//        byte[] report = hrService.generatePayrollReport();
+//
+//        return ResponseEntity.ok()
+//                .header("Content-Type", "text/csv")
+//                .header("Content-Disposition", "attachment; filename=payroll_report.csv")
+//                .body(report);
+//    }
 
     @PostMapping("/adjust-salary/{employeeId}")
     public ResponseEntity<Employee> adjustSalary(
@@ -160,10 +160,10 @@ public class HRController {
         return ResponseEntity.ok(hrService.adjustEmployeeSalary(employeeId, newSalary));
     }
 
-    @GetMapping("/detect-payroll-errors")
-    public ResponseEntity<Map<String, String>> detectPayrollErrors() {
-        return ResponseEntity.ok(hrService.detectPayrollErrors());
-    }
+//    @GetMapping("/detect-payroll-errors")
+//    public ResponseEntity<Map<String, String>> detectPayrollErrors() {
+//        return ResponseEntity.ok(hrService.detectPayrollErrors());
+//    }
 
     @GetMapping("/attendance-overview")
     public ResponseEntity<Map<String, Object>> getAttendanceOverview() {
@@ -196,61 +196,61 @@ public class HRController {
         return ResponseEntity.ok(employeeRepo.save(employee));
     }
 
-    @PostMapping("/create-payroll")
-    public ResponseEntity<Payroll> createPayroll(@RequestBody PayrollCreationRequest request) {
-        return ResponseEntity.ok(hrService.createPayroll(request));
-    }
-
-    @GetMapping("/all-payrolls")
-    public ResponseEntity<List<Payroll>> getAllPayrolls() {
-        return ResponseEntity.ok(hrService.getAllPayrolls());
-    }
-
-    @GetMapping("/payroll/{payrollId}")
-    public ResponseEntity<PayrollDetails> getPayrollDetails(@PathVariable Long payrollId) {
-        return ResponseEntity.ok(hrService.getPayrollDetails(payrollId));
-    }
-
-    @GetMapping("/search-payrolls")
-    public ResponseEntity<List<Payroll>> searchPayrolls(
-            @RequestParam(required = false) String period,
-            @RequestParam(required = false) String status) {
-        return ResponseEntity.ok(hrService.searchPayrolls(period, status));
-    }
-
-    @GetMapping("/current-cutoff")
-    public ResponseEntity<Map<String, Object>> getCurrentCutoffPeriod() {
-        PayrollCutoffService.CutoffPeriod current = cutoffService.getCurrentCutoffPeriod();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("startDate", current.getStartDate());
-        response.put("endDate", current.getEndDate());
-        response.put("payDate", current.getPayDate());
-        response.put("description", current.getDescription());
-
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/cutoffs-for-month")
-    public ResponseEntity<List<Map<String, Object>>> getCutoffsForMonth(
-            @RequestParam int year,
-            @RequestParam int month) {
-
-        List<PayrollCutoffService.CutoffPeriod> periods = cutoffService.getCutoffPeriodsForMonth(year, month);
-
-        List<Map<String, Object>> response = periods.stream()
-                .map(p -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("startDate", p.getStartDate());
-                    map.put("endDate", p.getEndDate());
-                    map.put("payDate", p.getPayDate());
-                    map.put("description", p.getDescription());
-                    return map;
-                })
-                .toList();
-
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/create-payroll")
+//    public ResponseEntity<Payroll> createPayroll(@RequestBody PayrollCreationRequest request) {
+//        return ResponseEntity.ok(hrService.createPayroll(request));
+//    }
+//
+//    @GetMapping("/all-payrolls")
+//    public ResponseEntity<List<Payroll>> getAllPayrolls() {
+//        return ResponseEntity.ok(hrService.getAllPayrolls());
+//    }
+//
+//    @GetMapping("/payroll/{payrollId}")
+//    public ResponseEntity<PayrollDetails> getPayrollDetails(@PathVariable Long payrollId) {
+//        return ResponseEntity.ok(hrService.getPayrollDetails(payrollId));
+//    }
+//
+//    @GetMapping("/search-payrolls")
+//    public ResponseEntity<List<Payroll>> searchPayrolls(
+//            @RequestParam(required = false) String period,
+//            @RequestParam(required = false) String status) {
+//        return ResponseEntity.ok(hrService.searchPayrolls(period, status));
+//    }
+//
+//    @GetMapping("/current-cutoff")
+//    public ResponseEntity<Map<String, Object>> getCurrentCutoffPeriod() {
+//        PayrollCutoffService.CutoffPeriod current = cutoffService.getCurrentCutoffPeriod();
+//
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("startDate", current.getStartDate());
+//        response.put("endDate", current.getEndDate());
+//        response.put("payDate", current.getPayDate());
+//        response.put("description", current.getDescription());
+//
+//        return ResponseEntity.ok(response);
+//    }
+//
+//    @GetMapping("/cutoffs-for-month")
+//    public ResponseEntity<List<Map<String, Object>>> getCutoffsForMonth(
+//            @RequestParam int year,
+//            @RequestParam int month) {
+//
+//        List<PayrollCutoffService.CutoffPeriod> periods = cutoffService.getCutoffPeriodsForMonth(year, month);
+//
+//        List<Map<String, Object>> response = periods.stream()
+//                .map(p -> {
+//                    Map<String, Object> map = new HashMap<>();
+//                    map.put("startDate", p.getStartDate());
+//                    map.put("endDate", p.getEndDate());
+//                    map.put("payDate", p.getPayDate());
+//                    map.put("description", p.getDescription());
+//                    return map;
+//                })
+//                .toList();
+//
+//        return ResponseEntity.ok(response);
+//    }
 
     @GetMapping("/available-hr-for-leave")
     public ResponseEntity<List<HR>> getAvailableHRForLeave() {
