@@ -1293,7 +1293,6 @@ export default function HrDashboard() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="payroll">Payroll</TabsTrigger>
               <TabsTrigger value="viewEmployee">View all Employees/HR</TabsTrigger>
               <TabsTrigger value="createEmployee">Create Employee/HR</TabsTrigger>
             </TabsList>
@@ -1306,10 +1305,12 @@ export default function HrDashboard() {
                   icon={CalendarDays}
                 />
                 <HrOverview
-                  title="Next Payday"
-                  value="15 Apr 2025"
-                  description="Estimated amount: ₱5,264"
+                  title="Payroll"
+                  value="Make Payslip for employees "
+                  description="Creates payslips for employees"
                   icon={PhilippinePeso}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => (window.location.href = "/PayrollPage")}
                 />
                 <HrOverview
                   title="Logs"
