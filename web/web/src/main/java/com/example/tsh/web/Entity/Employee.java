@@ -39,11 +39,8 @@ public class Employee {
         @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<TimeLog> timeLogs;
 
-    @Transient
-    private float grossIncome;
-
-    @Transient
-    private float netIncome;
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+    private List<Payroll> payrolls;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.EMPLOYEE;

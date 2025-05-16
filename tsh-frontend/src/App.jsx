@@ -24,6 +24,7 @@ import HrLeaveRequests from './Pages/HrLeaveRequests';
 import EmployeePayslip from './Pages/EmployeePayslip';
 import { EmployeeTimeLogs } from './Pages/EmployeeTimeLogs';
 import EmployeeAttendance from './Pages/EmployeeAttendance';
+import PayrollPage from './Pages/PayrollPage';
 
 function App() {
 
@@ -61,6 +62,7 @@ function App() {
         <Route path="/Hrprofile" element={<HrProfile />} />
         <Route path="/HrLeaveRequests" element={<HrLeaveRequests />} />
         <Route path="/EmployeeTimeLogs" element={<EmployeeTimeLogs />} />
+        <Route path="/PayrollPage" element={<PayrollPage />} />
         </Route>
 
         <Route element={<ProtectedRoutes allowedRoles={["ADMIN"]} />}>
