@@ -829,7 +829,7 @@ const fetchEmployees = async () => {
 
                         <div className="flex justify-between px-4 py-3">
                           <span className="text-gray-600">Absences</span>
-                          <span className="font-medium text-red-600">-{formatCurrency(payroll.absenceDays)}</span>
+                          <span className="font-medium text-red-600">-{(payroll.absenceDays)}</span>
                         </div>
 
                         <div className="flex justify-between px-4 py-3">

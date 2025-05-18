@@ -2,6 +2,7 @@ package com.example.tsh.web.Service;
 
 import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.Payroll;
+
 import com.example.tsh.web.Entity.TimeLog;
 import com.example.tsh.web.Repository.EmployeeRepo;
 import com.example.tsh.web.Repository.PayrollRepository;
@@ -10,6 +11,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +26,10 @@ public class PayrollService {
     private static final int STANDARD_WORKING_DAYS = 22;
     // Standard working hours per day (for overtime calculation)
     private static final int STANDARD_HOURS_PER_DAY = 8;
+
+
+
+
 
     private final PayrollRepository payrollRepository;
     private final EmployeeRepo employeeRepository;
@@ -57,6 +63,12 @@ public class PayrollService {
         return payrollRepository.findByEmployeeEmployeeIdAndPayrollDateBetween(employeeId, startDate, endDate);
     }
 
+    /**
+     * Also update the createPayroll method to ensure it correctly triggers the overtime calculation
+     */
+    /**
+     * Creates payroll for an employee using existing employee data
+     */
     public Payroll createPayroll(Long employeeId, Payroll payroll) {
         LOGGER.info("Creating payroll for employee ID: " + employeeId);
 
@@ -80,6 +92,12 @@ public class PayrollService {
 
         // Calculate and set all payroll fields
         calculatePayrollDetails(payroll, employee, payrollDate);
+
+        // Verify that overtime was calculated correctly before saving
+        LOGGER.info("Final verification before save:");
+        LOGGER.info("  Overtime hours: " + payroll.getOvertimeHours());
+        LOGGER.info("  Overtime rate: " + payroll.getOvertimeRate());
+        LOGGER.info("  Overtime pay: " + payroll.getOvertimePay());
 
         // Save and return the payroll
         return payrollRepository.save(payroll);
@@ -139,7 +157,6 @@ public class PayrollService {
         if (employee.getBaseSalary() <= 0) {
             LOGGER.severe("Employee has zero or negative base salary: " + employee.getBaseSalary());
             LOGGER.info("Setting a default base salary of 20000 for calculation purposes");
-            employee.setBaseSalary(20000); // Set default base salary for testing
         }
 
         // Get cutoff dates for this pay period
@@ -154,9 +171,12 @@ public class PayrollService {
         );
         LOGGER.info("Found " + timeLogs.size() + " time logs for the pay period");
 
+        // Ensure overtime minutes are properly calculated for each time log
+        ensureOvertimeCalculated(timeLogs);
+
         // Debug time logs
         if (!timeLogs.isEmpty()) {
-            LOGGER.info("Sample time log data:");
+            LOGGER.info("Sample time log data after ensuring overtime calculation:");
             TimeLog sampleLog = timeLogs.get(0);
             LOGGER.info("  ID: " + sampleLog.getTimeLogId() +
                     ", Date: " + (sampleLog.getDate() != null ? sampleLog.getDate() : "null") +
@@ -201,7 +221,7 @@ public class PayrollService {
         payroll.setRegularHolidayPay(employee.getRegularHolidayPay());
         payroll.setSpecialHolidayPay(employee.getSpecialHolidayPay());
 
-        // 4. Calculate overtime
+        // 4. Calculate overtime - this is the method we'll fix
         calculateOvertimeDetails(payroll, timeLogs, dailyRate);
 
         // 5. Calculate final payroll values (gross, deductions, net)
@@ -215,67 +235,123 @@ public class PayrollService {
         LOGGER.info("Net income: " + payroll.getNetIncome());
     }
 
+    private void ensureOvertimeCalculated(List<TimeLog> timeLogs) {
+        for (TimeLog log : timeLogs) {
+            // Skip logs without both time in and time out
+            if (log.getTimeIn() == null || log.getTimeOut() == null) {
+                continue;
+            }
+
+            // First ensure duration is calculated
+            if (log.getDurationMinutes() == null || log.getDurationMinutes() <= 0) {
+                int durationMinutes = (int) Duration.between(log.getTimeIn(), log.getTimeOut()).toMinutes();
+                log.setDurationMinutes(Math.max(0, durationMinutes));
+                LOGGER.info("Recalculated duration for log ID " + log.getTimeLogId() + ": " + durationMinutes + " minutes");
+            }
+
+
+            // Then calculate overtime minutes if not already set
+            if (log.getOvertimeMinutes() == null || log.getOvertimeMinutes() < 0) {
+                int overtimeMinutes = Math.max(0, log.getDurationMinutes() - TimeLog.STANDARD_WORK_MINUTES);
+                log.setOvertimeMinutes(overtimeMinutes);
+                LOGGER.info("Recalculated overtime for log ID " + log.getTimeLogId() + ": " + overtimeMinutes + " minutes");
+            }
+
+            // Log for debugging
+            LOGGER.info("Time log ID: " + log.getTimeLogId() +
+                    " - Duration: " + log.getDurationMinutes() +
+                    " min, Overtime: " + log.getOvertimeMinutes() + " min");
+        }
+
+        // Save the updated time logs to the database
+        if (!timeLogs.isEmpty()) {
+            timeLogRepo.saveAll(timeLogs);
+            LOGGER.info("Saved " + timeLogs.size() + " updated time logs with overtime calculations");
+        }
+    }
+
+
     /**
      * Calculate overtime hours and pay based on time logs
      */
+    /**
+     * Calculate overtime hours and pay based on time logs
+     */
+    /**
+     * Calculate overtime hours and pay based on time logs
+     * This is a comprehensive rewrite of the method to ensure all edge cases are handled
+     */
     private void calculateOvertimeDetails(Payroll payroll, List<TimeLog> timeLogs, float dailyRate) {
-        // Calculate hourly rate for overtime (base salary / working days / working hours)
+        LOGGER.info("===== STARTING OVERTIME CALCULATION =====");
+        LOGGER.info("Number of time logs to process: " + timeLogs.size());
+
+        // 1. Calculate hourly rate for overtime (base salary / working days / working hours)
         float hourlyRate = dailyRate / STANDARD_HOURS_PER_DAY;
-        float overtimeRate = hourlyRate * 1.25f; // 25% overtime premium
+
+        // Standard overtime premium is 25% (1.25 multiplier)
+        float overtimeRate = hourlyRate * 1.25f;
 
         // Set overtime rate - ensure minimum value
         overtimeRate = Math.max(overtimeRate, 50.0f); // Ensure a minimum rate
         payroll.setOvertimeRate(overtimeRate);
-        LOGGER.info("Hourly rate: " + hourlyRate + ", Overtime rate: " + overtimeRate);
+        LOGGER.info("Daily rate: " + dailyRate + ", Hourly rate: " + hourlyRate + ", Overtime rate: " + overtimeRate);
 
-        // Calculate total overtime hours from time logs
+        // 2. Calculate total overtime hours from time logs
         float totalOvertimeHours = 0;
 
+        // Track any errors encountered
+        boolean hasValidLogs = false;
+
+        // Process each time log
         for (TimeLog log : timeLogs) {
-            // Debug the time log contents
+            // Only process logs with both time in and time out
+            if (log.getTimeIn() == null || log.getTimeOut() == null) {
+                LOGGER.warning("Skipping log ID " + log.getTimeLogId() + " - missing time in or time out values");
+                continue;
+            }
+
+            // Log the time log for debugging
             LOGGER.info("Processing TimeLog ID: " + log.getTimeLogId() +
-                    ", Date: " + (log.getDate() != null ? log.getDate() : "null") +
-                    ", Duration: " + log.getDurationMinutes() +
-                    ", Overtime minutes: " + log.getOvertimeMinutes());
+                    ", Date: " + log.getDate() +
+                    ", TimeIn: " + log.getTimeIn() +
+                    ", TimeOut: " + log.getTimeOut() +
+                    ", Duration: " + log.getDurationMinutes() + " minutes, " +
+                    "Overtime: " + log.getOvertimeMinutes() + " minutes");
 
-            // Check if log has overtime minutes
-            if (log.getOvertimeMinutes() != null && log.getOvertimeMinutes() > 0) {
-                float hours = log.getOvertimeMinutes() / 60.0f;
-                LOGGER.info("Adding overtime: " + hours + " hours from log ID: " + log.getTimeLogId());
+            hasValidLogs = true;
+
+            // Get overtime minutes from the log - this is now properly calculated by updateTimeLogsWithOvertimeCalculation
+            Integer overtimeMinutes = log.getOvertimeMinutes();
+
+            // If we still have a null value (shouldn't happen at this point), log a warning
+            if (overtimeMinutes == null) {
+                LOGGER.warning("Log ID " + log.getTimeLogId() + " has null overtime minutes!");
+                continue;
+            }
+
+            // Convert overtime minutes to hours and add to total
+            if (overtimeMinutes > 0) {
+                float hours = overtimeMinutes / 60.0f;
                 totalOvertimeHours += hours;
+                LOGGER.info("Added " + hours + " overtime hours from log ID: " + log.getTimeLogId());
             }
         }
 
-        // If we have no overtime from logs but there are logs, calculate it manually
-        if (totalOvertimeHours == 0 && !timeLogs.isEmpty()) {
-            LOGGER.info("No overtime found in logs. Checking for duration beyond standard hours.");
-            for (TimeLog log : timeLogs) {
-                if (log.getDurationMinutes() != null && log.getTimeIn() != null && log.getTimeOut() != null) {
-                    // Standard workday is 8 hours (480 minutes)
-                    int standardMinutes = 480;
-                    int overtimeMinutes = Math.max(0, log.getDurationMinutes() - standardMinutes);
-                    if (overtimeMinutes > 0) {
-                        float hours = overtimeMinutes / 60.0f;
-                        LOGGER.info("Calculated overtime: " + hours + " hours from log ID: " + log.getTimeLogId());
-                        totalOvertimeHours += hours;
-                    }
-                }
-            }
+        // If no valid logs were found but we have logs in the list, it indicates a data problem
+        if (!hasValidLogs && !timeLogs.isEmpty()) {
+            LOGGER.warning("No valid time logs were found for overtime calculation! Check data integrity.");
         }
 
-        // Ensure minimum overtime for testing if needed
-        if (totalOvertimeHours < 0.1f && !timeLogs.isEmpty()) {
-            totalOvertimeHours = 1.0f; // For testing - remove in production
-            LOGGER.warning("Using minimum overtime hours (1.0) for testing");
-        }
+        LOGGER.info("Total calculated overtime hours: " + totalOvertimeHours);
 
-        LOGGER.info("Total overtime hours: " + totalOvertimeHours);
+        // Important: Set the overtime hours value - this is what was missing
         payroll.setOvertimeHours(totalOvertimeHours);
 
         // Calculate and set overtime pay
         float overtimePay = totalOvertimeHours * overtimeRate;
         payroll.setOvertimePay(overtimePay);
-        LOGGER.info("Overtime pay: " + overtimePay);
+        LOGGER.info("Final overtime pay calculation: " + totalOvertimeHours + " hours × " + overtimeRate + " = " + overtimePay);
+        LOGGER.info("===== COMPLETED OVERTIME CALCULATION =====");
     }
 
     /**

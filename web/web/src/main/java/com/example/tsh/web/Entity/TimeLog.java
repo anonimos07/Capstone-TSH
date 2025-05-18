@@ -51,7 +51,7 @@ public class TimeLog {
 
     }
 
-    private static final int STANDARD_WORK_MINUTES = 8 * 60;
+    public static final Integer STANDARD_WORK_MINUTES = 8 * 60;
 
 
 
@@ -126,11 +126,31 @@ public class TimeLog {
 //        }
 //    }
 
+    public void recalculateOvertimeMutates() {
+        if (this.timeIn != null && this.timeOut != null) {
+            // First calculate the duration
+            this.durationMinutes = (int) Duration.between(this.timeIn, this.timeOut).toMinutes();
+
+            // Then calculate overtime (anything beyond 8 hours)
+            int standardWorkMinutes = 8 * 60; // 8 hours = 480 minutes
+            this.overtimeMinutes = Math.max(0, this.durationMinutes - standardWorkMinutes);
+        }
+    }
+
+    /**
+     * Replace your setTimeOut method with this enhanced version
+     */
     public void setTimeOut(LocalDateTime timeOut) {
         this.timeOut = timeOut;
+
+        // Recalculate duration and overtime when timeOut is set
         if (this.timeIn != null && timeOut != null) {
-            this.durationMinutes = calculateDurationInMinutes(this.timeIn, timeOut);
-            this.overtimeMinutes = Math.max(0, this.durationMinutes - STANDARD_WORK_MINUTES);
+            this.durationMinutes = (int) Duration.between(this.timeIn, timeOut).toMinutes();
+
+            // Standard workday is 8 hours (480 minutes)
+            int standardWorkMinutes = 8 * 60;
+            this.overtimeMinutes = Math.max(0, this.durationMinutes - standardWorkMinutes);
+
         }
     }
 
