@@ -1,137 +1,120 @@
 package com.example.tsh.web.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.util.logging.Logger;
 
 @Setter
 @Getter
 @Entity
 @Table(name = "payroll")
 public class Payroll {
+    private static final Logger LOGGER = Logger.getLogger(Payroll.class.getName());
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long payrollId;
 
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
+    @JsonBackReference
     private Employee employee;
 
-//    @Column(nullable = false)
     private LocalDate payrollDate;
 
-//    @Column(nullable = false)
-    private float baseSalary;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
+    private float baseSalary;        // This is the prorated salary based on present days
     private float regularHolidayPay;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float specialHolidayPay;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float overtimeHours;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float overtimeRate;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float overtimePay;
-
-//    @Column(nullable = false, columnDefinition = "int default 0")
     private int absenceDays;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
-    private float absenceDeduction;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
-    private float partialIncome;
+    private float absenceDeduction;  // New explicit field for absence deduction
 
     // Philippine-specific statutory deductions
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float sssContribution;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float philhealthContribution;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float pagibigContribution;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float incomeTax;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float totalDeductions;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float grossIncome;
-
-//    @Column(nullable = false, columnDefinition = "float default 0")
     private float netIncome;
 
     public Payroll() {
-    }
-
-    public Payroll(Employee employee, LocalDate payrollDate) {
-        this.employee = employee;
-        this.payrollDate = payrollDate;
-        this.baseSalary = employee.getBaseSalary();
-        this.regularHolidayPay = employee.getRegularHolidayPay();
-        this.specialHolidayPay = employee.getSpecialHolidayPay();
-        this.absenceDays = employee.getAbsenceDays();
-        calculatePayroll();
+        // Initialize with default values to prevent NullPointerExceptions
+        this.baseSalary = 0f;
+        this.regularHolidayPay = 0f;
+        this.specialHolidayPay = 0f;
+        this.overtimeHours = 0f;
+        this.overtimeRate = 0f;
+        this.overtimePay = 0f;
+        this.absenceDays = 0;
+        this.absenceDeduction = 0f;
+        this.grossIncome = 0f;
+        this.netIncome = 0f;
     }
 
     public void calculatePayroll() {
-        // Calculate overtime pay
-        this.overtimePay = overtimeHours * overtimeRate;
+        LOGGER.info("Starting payroll calculation");
+        LOGGER.info("Base salary (already prorated): " + this.baseSalary);
+        LOGGER.info("Overtime hours: " + this.overtimeHours);
+        LOGGER.info("Overtime rate: " + this.overtimeRate);
 
-        // Calculate absence deduction (based on working days in a month, typically 22)
-        float dailyRate = baseSalary / 22;
-        this.absenceDeduction = absenceDays * dailyRate;
+        // Calculate gross income (prorated base salary + holiday pay + overtime pay)
+        // Note: Absence deduction is already factored into the prorated base salary
+        this.grossIncome = this.baseSalary +
+                this.regularHolidayPay +
+                this.specialHolidayPay +
+                this.overtimePay;
 
-        // Calculate partial income (base salary adjusted for absences)
-        this.partialIncome = baseSalary - absenceDeduction;
+        LOGGER.info("Calculated gross income: " + this.grossIncome);
 
-        // Calculate gross income
-        this.grossIncome = partialIncome + regularHolidayPay + specialHolidayPay + overtimePay;
-
-        // Calculate Philippine statutory contributions
+        // Calculate deductions
         calculatePhilippineDeductions();
+        LOGGER.info("Total deductions: " + this.totalDeductions);
 
         // Calculate net income
-        this.netIncome = grossIncome - totalDeductions;
+        this.netIncome = this.grossIncome - this.totalDeductions;
+        LOGGER.info("Calculated net income: " + this.netIncome);
     }
 
     private void calculatePhilippineDeductions() {
         // SSS Contribution (based on 2023 contribution table)
-        // This is a simplified version; in production, implement the complete SSS contribution table
-        if (grossIncome <= 3250) {
+        if (this.grossIncome <= 3250) {
             this.sssContribution = 135.0f;
-        } else if (grossIncome <= 24750) {
+        } else if (this.grossIncome <= 24750) {
             this.sssContribution = 1125.0f;
         } else {
             this.sssContribution = 1350.0f; // Maximum SSS contribution
         }
+        LOGGER.info("SSS contribution: " + this.sssContribution);
 
         // PhilHealth Contribution (based on 2023 rates - 4% of monthly basic salary)
         float philhealthRate = 0.04f;
-        this.philhealthContribution = Math.min(3200.0f, Math.max(400.0f, grossIncome * philhealthRate));
+        this.philhealthContribution = Math.min(3200.0f, Math.max(400.0f, this.grossIncome * philhealthRate));
+        LOGGER.info("PhilHealth contribution: " + this.philhealthContribution);
 
         // Pag-IBIG Contribution (standard 2% for most salary ranges)
-        this.pagibigContribution = Math.min(100.0f, grossIncome * 0.02f);
+        this.pagibigContribution = Math.min(100.0f, this.grossIncome * 0.02f);
+        LOGGER.info("Pag-IBIG contribution: " + this.pagibigContribution);
 
-        // Income Tax (simplified progressive tax calculation)
+        // Income Tax
         calculateIncomeTax();
+        LOGGER.info("Income tax: " + this.incomeTax);
 
         // Total deductions
-        this.totalDeductions = sssContribution + philhealthContribution + pagibigContribution + incomeTax;
+        this.totalDeductions = this.sssContribution + this.philhealthContribution +
+                this.pagibigContribution + this.incomeTax;
     }
 
     private void calculateIncomeTax() {
         // Monthly taxable income (gross less SSS, PhilHealth, Pag-IBIG)
-        float taxableIncome = grossIncome - (sssContribution + philhealthContribution + pagibigContribution);
+        float taxableIncome = this.grossIncome - (this.sssContribution +
+                this.philhealthContribution + this.pagibigContribution);
+        LOGGER.info("Taxable income: " + taxableIncome);
 
         // 2023 Philippine Income Tax Table (Monthly)
         if (taxableIncome <= 20833) {
@@ -147,5 +130,22 @@ public class Payroll {
         } else {
             this.incomeTax = 183541.8f + (taxableIncome - 666667) * 0.35f; // 183,541.8 + 35% of excess over 666,667
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Payroll{" +
+                "payrollId=" + payrollId +
+                ", employee=" + (employee != null ? employee.getEmployeeId() : "null") +
+                ", payrollDate=" + payrollDate +
+                ", baseSalary=" + baseSalary +
+                ", overtimeHours=" + overtimeHours +
+                ", overtimeRate=" + overtimeRate +
+                ", overtimePay=" + overtimePay +
+                ", absenceDays=" + absenceDays +
+                ", absenceDeduction=" + absenceDeduction +
+                ", grossIncome=" + grossIncome +
+                ", netIncome=" + netIncome +
+                '}';
     }
 }

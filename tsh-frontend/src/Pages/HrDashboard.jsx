@@ -1306,8 +1306,8 @@ export default function HrDashboard() {
                 />
                 <HrOverview
                   title="Payroll"
-                  value="Make Payslip for employees "
-                  description="Creates payslips for employees"
+                  value="Generate Payroll "
+                  description=""
                   icon={PhilippinePeso}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/PayrollPage")}

@@ -116,18 +116,42 @@ const PayrollPage = () => {
     }
   }
 
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true)
-      const response = await apiRequest("get", "http://localhost:8080/hr/all-employee")
-      setEmployees(Array.isArray(response) ? response : response.data || [])
-    } catch (error) {
-      console.error("Fetch employees error:", error)
-      setError("Failed to load employee data. Please check the API endpoint.")
-    } finally {
-      setLoading(false)
+const fetchEmployees = async () => {
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Authentication token not found. Please log in again.");
     }
+
+    const response = await fetch("http://localhost:8080/hr/all-employee", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const raw = await response.text();  // Get raw response
+    // console.log("Raw response:", raw);  // <-- 🔍 Debug here
+
+    const data = JSON.parse(raw);       // Then parse
+    console.log("Parsed employees data:", data);
+
+    setEmployees(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Fetch employees error:", error);
+    setError("Failed to load employee data. Please check the API response format.");
+  } finally {
+    setLoading(false);
   }
+};
+
+
+
+
 
   const fetchAllPayrolls = async () => {
     try {
@@ -802,6 +826,17 @@ const PayrollPage = () => {
                             -{formatCurrency(payroll.pagibigContribution)}
                           </span>
                         </div>
+
+                        <div className="flex justify-between px-4 py-3">
+                          <span className="text-gray-600">Absences</span>
+                          <span className="font-medium text-red-600">-{formatCurrency(payroll.absenceDays)}</span>
+                        </div>
+
+                        <div className="flex justify-between px-4 py-3">
+                          <span className="text-gray-600">Absences Deductions</span>
+                          <span className="font-medium text-red-600">-{formatCurrency(payroll.absenceDeduction)}</span>
+                        </div>
+
                         <div className="flex justify-between px-4 py-3">
                           <span className="text-gray-600">Tax</span>
                           <span className="font-medium text-red-600">-{formatCurrency(payroll.incomeTax)}</span>

@@ -35,11 +35,13 @@ public class Employee {
 
     @Column(nullable = false, columnDefinition = "int default 0")
     private int absenceDays;
-        @JsonIgnoreProperties("employee")
-        @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-        private List<TimeLog> timeLogs;
+
+    @JsonIgnoreProperties("employee")
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TimeLog> timeLogs;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Payroll> payrolls;
 
     @Enumerated(EnumType.STRING)
