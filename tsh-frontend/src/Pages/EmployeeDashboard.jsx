@@ -362,7 +362,6 @@ export default function EmployeeDashboard() {
           <Tabs defaultValue="overview" className="mt-6">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="payroll">Payroll</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -618,18 +617,6 @@ export default function EmployeeDashboard() {
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="payroll" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Salary Breakdown</CardTitle>
-                  <CardDescription>Your current salary components and deductions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button>Download Payslip</Button>
                 </CardContent>
               </Card>
             </TabsContent>

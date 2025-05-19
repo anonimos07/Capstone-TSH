@@ -35,6 +35,7 @@ const PayrollPage = () => {
   const [editMode, setEditMode] = useState(false)
   const [currentPayroll, setCurrentPayroll] = useState(null)
 
+    // const fullName = `${hr.firstName} ${hr.lastName}`;
   const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
 
  const generatePayslip = async (payrollId) => {
@@ -160,9 +161,37 @@ const PayrollPage = () => {
 };
 
   useEffect(() => {
-    fetchEmployees()
-    fetchAllPayrolls() // Fetch all payrolls initially
-  }, [])
+  const fetchHrData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8080/hr/me", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch HR data");
+      }
+      
+      const data = await response.json();
+      setHr({
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        email: data.email || "",
+        ...data,
+      });
+    } catch (error) {
+      console.error("Error fetching HR data:", error);
+    }
+  };
+
+  fetchHrData(); // Add this to fetch HR profile
+  fetchEmployees();
+  fetchAllPayrolls();
+}, []);
 
   // Helper function to get the auth token and create headers
   const getAuthHeaders = () => {

@@ -44,12 +44,30 @@ private JwtFilter jwtFilter;
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/employee/login","/hr/login","/admin/login","/api/password/**").permitAll()
+                        .requestMatchers(
+                                "/employee/login",
+                                "/hr/login",
+                                "/admin/login",
+                                "/api/password/**"
+                        ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/hr/**","/api/hr/time-logs/**","/api/payrolls/**","/api/payslips/**").hasRole("HR")
-                        .requestMatchers("/employee/**","/api/time-logs/**").hasRole("EMPLOYEE")
-                                .requestMatchers("/hr/available-hr-for-leave").hasAnyRole("EMPLOYEE", "HR")
-                                .anyRequest().authenticated()
+                        .requestMatchers(
+                                "/hr/**",
+                                "/api/hr/time-logs/**",
+                                "/api/payrolls/**",
+                                "/api/payslips/**"
+                        ).hasRole("HR")
+                        .requestMatchers(
+                                "/employee/**",
+                                "/api/time-logs/**",
+                                "/api/payslips/employee/{employeeId}",
+                                "/api/payslips/{payslipId}/download",
+                                "/api/payslips/generate/{payrollId}",
+                                "/api/payslips/{id}",
+                                "/api/payslips/payroll/{payrollId}"
+                        ).hasRole("EMPLOYEE")
+                        .requestMatchers("/hr/available-hr-for-leave").hasAnyRole("EMPLOYEE", "HR")
+                        .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
