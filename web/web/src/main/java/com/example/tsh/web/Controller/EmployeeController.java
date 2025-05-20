@@ -2,10 +2,7 @@ package com.example.tsh.web.Controller;
 
 import com.example.tsh.web.Entity.*;
 import com.example.tsh.web.Repository.EmployeeRepo;
-import com.example.tsh.web.Service.EmployeeService;
-import com.example.tsh.web.Service.HRService;
-import com.example.tsh.web.Service.LeaveService;
-import com.example.tsh.web.Service.TimeLogService;
+import com.example.tsh.web.Service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +25,8 @@ public class EmployeeController {
     private final LeaveService leaveService;
     private final HRService hrService;
     private final TimeLogService timeLogService;
+    private final PayslipService payslipService;
+
 //
 //@PostMapping("/login")
 //public ResponseEntity<Map<String, Object>> login(@RequestBody Employee employee) {
@@ -327,4 +326,25 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<List<Payslip>> getPayslipsByEmployeeId(
+            @PathVariable Long employeeId,
+            Authentication authentication) {
+
+        // Get current employee
+        String username = authentication.getName();
+        Optional<Employee> currentEmployee = employeeRepo.findByUsername(username);
+
+        if (currentEmployee.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Verify the requested employee ID matches the logged-in employee
+        if (currentEmployee.get().getEmployeeId() != employeeId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<Payslip> payslips = payslipService.getPayslipsByEmployeeId(employeeId);
+        return ResponseEntity.ok(payslips);
+    }
 }

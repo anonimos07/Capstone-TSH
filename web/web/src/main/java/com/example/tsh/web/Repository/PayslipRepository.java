@@ -2,6 +2,8 @@ package com.example.tsh.web.Repository;
 
 import com.example.tsh.web.Entity.Payslip;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -11,7 +13,9 @@ import java.util.Optional;
 @Repository
 public interface PayslipRepository extends JpaRepository<Payslip, Long> {
 
-    List<Payslip> findByEmployeeEmployeeId(Long employeeId);
+    // Added to help debug with explicit query
+    @Query("SELECT p FROM Payslip p WHERE p.employee.employeeId = :employeeId")
+    List<Payslip> findPayslipsByEmployeeId(@Param("employeeId") Long employeeId);
 
     List<Payslip> findByPayrollPayrollId(Long payrollId);
 

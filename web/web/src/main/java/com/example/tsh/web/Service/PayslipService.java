@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class PayslipService {
@@ -52,6 +54,7 @@ public class PayslipService {
     /**
      * Generate a payslip for a specific payroll
      */
+    @Transactional
     public Payslip generatePayslip(Long payrollId) {
         LOGGER.info("Generating payslip for payroll ID: " + payrollId);
 
@@ -96,6 +99,7 @@ public class PayslipService {
     /**
      * Mark payslip as sent to employee
      */
+    @Transactional
     public Payslip markPayslipAsSent(Long payslipId) {
         Payslip payslip = payslipRepository.findById(payslipId)
                 .orElseThrow(() -> new EntityNotFoundException("Payslip not found with ID: " + payslipId));
@@ -109,6 +113,7 @@ public class PayslipService {
     /**
      * Mark payslip as downloaded by employee
      */
+    @Transactional
     public Payslip markPayslipAsDownloaded(Long payslipId) {
         Payslip payslip = payslipRepository.findById(payslipId)
                 .orElseThrow(() -> new EntityNotFoundException("Payslip not found with ID: " + payslipId));
@@ -151,7 +156,7 @@ public class PayslipService {
 
             // Add company header
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
-            Paragraph companyName = new Paragraph(data.get("companyName").toString(), headerFont);
+            Paragraph companyName = new Paragraph(data.get("IdealTechStaffing").toString(), headerFont);
             companyName.setAlignment(Element.ALIGN_CENTER);
             document.add(companyName);
 
@@ -383,8 +388,20 @@ public class PayslipService {
     /**
      * Get payslips by employee ID
      */
+    @Transactional
     public List<Payslip> getPayslipsByEmployeeId(Long employeeId) {
-        return payslipRepository.findByEmployeeEmployeeId(employeeId);
+        // First check if the employee exists
+        if (!employeeRepository.existsById(employeeId)) {
+            throw new EntityNotFoundException("Employee not found with ID: " + employeeId);
+        }
+
+        // Get all payslips for this employee
+        List<Payslip> payslips = payslipRepository.findPayslipsByEmployeeId(employeeId);
+
+        // Log the number of payslips found
+        LOGGER.info("Found " + payslips.size() + " payslips for employee ID: " + employeeId);
+
+        return payslips;
     }
 
     /**
@@ -397,6 +414,7 @@ public class PayslipService {
     /**
      * Delete payslip
      */
+    @Transactional
     public void deletePayslip(Long id) {
         Payslip payslip = getPayslipById(id);
         payslipRepository.delete(payslip);

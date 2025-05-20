@@ -1,6 +1,9 @@
 package com.example.tsh.web.Controller;
 
+import com.example.tsh.web.Entity.Employee;
 import com.example.tsh.web.Entity.Payslip;
+import com.example.tsh.web.Repository.EmployeeRepo;
+import com.example.tsh.web.Service.EmployeeService;
 import com.example.tsh.web.Service.PayslipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -9,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -25,9 +29,12 @@ public class PayslipController {
 
     private final PayslipService payslipService;
 
+    private final EmployeeRepo employeeRepo;
+
     @Autowired
-    public PayslipController(PayslipService payslipService) {
+    public PayslipController(PayslipService payslipService, EmployeeRepo employeeRepo) {
         this.payslipService = payslipService;
+        this.employeeRepo = employeeRepo;
     }
 
     /**
@@ -125,5 +132,17 @@ public class PayslipController {
     @GetMapping("/test")
     public String test(){
         return "Hello";
+    }
+
+    @GetMapping("/my-payslips")
+    public ResponseEntity<List<Payslip>> getLoggedInEmployeePayslips(Authentication authentication) {
+        String username = authentication.getName(); // get logged-in user's username
+
+        Employee employee = employeeRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Employee not found with username: " + username));
+
+        Long employeeId = employee.getEmployeeId();
+        List<Payslip> payslips = payslipService.getPayslipsByEmployeeId(employeeId);
+        return ResponseEntity.ok(payslips);
     }
 }

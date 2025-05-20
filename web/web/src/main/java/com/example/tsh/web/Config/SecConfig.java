@@ -55,16 +55,14 @@ private JwtFilter jwtFilter;
                                 "/hr/**",
                                 "/api/hr/time-logs/**",
                                 "/api/payrolls/**",
-                                "/api/payslips/**"
+                                "/api/payslips/generate/{payrollId}"
                         ).hasRole("HR")
                         .requestMatchers(
                                 "/employee/**",
                                 "/api/time-logs/**",
                                 "/api/payslips/employee/{employeeId}",
                                 "/api/payslips/{payslipId}/download",
-                                "/api/payslips/generate/{payrollId}",
-                                "/api/payslips/{id}",
-                                "/api/payslips/payroll/{payrollId}"
+                                "/api/payslips/my-payslips"
                         ).hasRole("EMPLOYEE")
                         .requestMatchers("/hr/available-hr-for-leave").hasAnyRole("EMPLOYEE", "HR")
                         .anyRequest().authenticated()
