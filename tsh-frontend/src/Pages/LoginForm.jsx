@@ -55,6 +55,7 @@ export function Login({ className, ...props }) {
 
       localStorage.setItem("token", data.token)
       localStorage.setItem("username", data.username)
+      localStorage.setItem("employeeId", data.employeeId)
       localStorage.setItem(
         "user",
         JSON.stringify({

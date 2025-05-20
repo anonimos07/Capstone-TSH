@@ -28,25 +28,58 @@ public class EmployeeController {
     private final LeaveService leaveService;
     private final HRService hrService;
     private final TimeLogService timeLogService;
+//
+//@PostMapping("/login")
+//public ResponseEntity<Map<String, Object>> login(@RequestBody Employee employee) {
+//    String result = employeeService.verify(employee, Role.EMPLOYEE);
+//
+//    if (result.equals("failed")) {
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", result));
+//    }
+//
+//    if (employee.getRole() != Role.EMPLOYEE) {
+//        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an employee."));
+//    }
+//    Map<String, Object> response = new HashMap<>();
+//    response.put("token", result);               // JWT token
+//    response.put("role", employee.getRole().name());
+//    response.put("username",employee.getUsername());
+//    response.put("employeeId",employee.getEmployeeId());
+//
+//    return ResponseEntity.ok(response);
+//}
 
-@PostMapping("/login")
-public ResponseEntity<Map<String, String>> login(@RequestBody Employee employee) {
-    String result = employeeService.verify(employee, Role.EMPLOYEE);
 
-    if (result.equals("failed")) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", result));
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Employee employee) {
+        String result = employeeService.verify(employee, Role.EMPLOYEE);
+
+        if (result.equals("failed")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", result));
+        }
+
+        if (employee.getRole() != Role.EMPLOYEE) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an employee."));
+        }
+
+        Optional<Employee> dbEmployeeOpt = employeeRepo.findByUsername(employee.getUsername());
+        if (dbEmployeeOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("error", "Employee not found"));
+        }
+
+        Employee dbEmployee = dbEmployeeOpt.get();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", result);  // JWT token
+        response.put("role", dbEmployee.getRole().name());
+        response.put("username", dbEmployee.getUsername());
+        response.put("employeeId", dbEmployee.getEmployeeId()); // Correct ID from DB
+
+        return ResponseEntity.ok(response);
     }
 
-    if (employee.getRole() != Role.EMPLOYEE) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an employee."));
-    }
-    Map<String, String> response = new HashMap<>();
-    response.put("token", result);               // JWT token
-    response.put("role", employee.getRole().name());
-    response.put("username",employee.getUsername());
 
-    return ResponseEntity.ok(response);
-}
 
     @GetMapping("/me")
     @CrossOrigin(origins = "http://localhost:5173")
