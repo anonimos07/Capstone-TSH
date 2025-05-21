@@ -1,10 +1,14 @@
-import { useState } from "react"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom" // ✅ Vite-compatible router
 import { Building2, Lock, User, Eye, EyeOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import employeebg from "@/assets/employeebg.jpg" // Background image
 
 export function Login({ className, ...props }) {
   const [formData, setFormData] = useState({
@@ -14,6 +18,17 @@ export function Login({ className, ...props }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [backgroundPosition, setBackgroundPosition] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  const navigate = useNavigate() // ✅ Use this instead of useRouter
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBackgroundPosition((prev) => (prev + 0.5) % 100)
+    }, 50)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleChange = (e) => {
     const { id, value } = e.target
@@ -37,12 +52,10 @@ export function Login({ className, ...props }) {
         body: JSON.stringify(formData),
       })
 
-      // First check if the response has content
       const text = await response.text()
       let data
 
       try {
-        // Try to parse it as JSON if there's content
         data = text ? JSON.parse(text) : {}
       } catch (jsonError) {
         console.error("Failed to parse JSON:", jsonError)
@@ -56,17 +69,11 @@ export function Login({ className, ...props }) {
       localStorage.setItem("token", data.token)
       localStorage.setItem("username", data.username)
       localStorage.setItem("employeeId", data.employeeId)
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          role: data.role,
-        }),
-      )
+      localStorage.setItem("user", JSON.stringify({ role: data.role }))
 
-      window.location.href = "/EmployeeDashboard"
-      console.log("Login successful:", data)
+      navigate("/EmployeeDashboard") // ✅ Clean navigation
     } catch (error) {
-      setError(error.message || "Wrong credentials")
+      setError(error instanceof Error ? error.message : "Wrong credentials")
     } finally {
       setIsLoading(false)
     }
@@ -76,65 +83,79 @@ export function Login({ className, ...props }) {
     setShowPassword(!showPassword)
   }
 
+  const handleHRLogin = (e) => {
+    e.preventDefault()
+    setIsTransitioning(true)
+
+    setTimeout(() => {
+      navigate("/hr") // ✅ HR redirect
+    }, 500)
+  }
+
   return (
-    <div className={cn("flex min-h-screen flex-col items-center justify-center bg-background", className)} {...props}>
-      <div className="w-full max-w-5xl overflow-hidden rounded-xl shadow-2xl">
-        <div className="flex flex-col md:flex-row">
-          {/* Left side with illustration */}
-          <div className="relative hidden w-full bg-white p-8 md:flex md:w-1/2 md:flex-col md:items-center md:justify-center">
-            {/* Decorative elements */}
-            <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-[#8b1e3f]/10 -translate-x-1/2 -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#8b1e3f]/10 translate-x-1/3 translate-y-1/3"></div>
-            <div className="absolute right-12 top-12 h-16 w-16 rounded-full bg-[#8b1e3f]/20"></div>
-            <div className="absolute bottom-20 left-12 h-12 w-12 rounded-full bg-[#8b1e3f]/15"></div>
-
-            {/* Grid pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <div className="h-full w-full bg-[linear-gradient(#8b1e3f_1px,transparent_1px),linear-gradient(to_right,#8b1e3f_1px,transparent_1px)] bg-[size:20px_20px]"></div>
-            </div>
-
-            <div className="relative z-10 flex flex-col items-center justify-center space-y-6">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#8b1e3f]/10">
-                <Building2 className="h-10 w-10 text-[#8b1e3f]" />
-              </div>
-              <h1 className="text-3xl font-bold text-[#8b1e3f]">TechStaffHub</h1>
-              <div className="max-w-xs text-center text-[#8b1e3f]/70">
-                <p>Empowering your workforce with streamlined technology solutions</p>
-              </div>
-
-              {/* Simplified illustration */}
-              <div className="mt-8 flex h-48 w-48 items-center justify-center rounded-lg bg-[#8b1e3f]/5 p-4 shadow-sm">
-                <div className="space-y-3 w-full">
-                  <div className="h-4 w-3/4 rounded bg-[#8b1e3f]/20"></div>
-                  <div className="h-4 w-full rounded bg-[#8b1e3f]/20"></div>
-                  <div className="h-4 w-5/6 rounded bg-[#8b1e3f]/20"></div>
-                  <div className="h-8 w-1/3 rounded bg-[#8b1e3f]/30 mx-auto mt-6"></div>
+    <div
+      className={cn("flex min-h-screen items-center justify-center w-full", className)}
+      style={{
+        backgroundImage: `url(${employeebg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        top: 0,
+        left: 0,
+      }}
+      {...props}
+    >
+      <div
+        className={cn(
+          "relative w-full max-w-6xl overflow-hidden rounded-xl shadow-2xl bg-white/90 backdrop-blur-sm z-10",
+          isTransitioning ? "opacity-0 translate-y-10" : "opacity-100",
+        )}
+        style={{ transition: "opacity 500ms ease, transform 500ms ease" }}
+      >
+        <div className="relative z-10 flex flex-col md:flex-row">
+          {/* Left side - Branding */}
+          <div className="hidden w-full items-center justify-center p-12 md:flex md:w-1/2">
+            <div className="max-w-md space-y-6 text-gray-800">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-800/10 backdrop-blur-sm">
+                  <Building2 className="h-8 w-8 text-gray-800" />
                 </div>
+                <h1 className="text-4xl font-bold">TechStaffHub</h1>
               </div>
+              <h2 className="text-2xl font-semibold">Streamlined Workforce Management</h2>
+              <p className="text-gray-700">
+                Our employee portal provides secure access to all your work tools, schedules, and resources in one
+                convenient location.
+              </p>
+              <div className="pt-4"><div className="h-1 w-24 bg-gray-800/30"></div></div>
             </div>
           </div>
 
-          {/* Right side with form */}
-          <div className="w-full bg-[#8b1e3f] p-8 md:w-1/2">
-            <div className="flex h-full flex-col justify-center space-y-6">
-              <div className="text-center">
-                <h2 className="text-3xl font-bold text-white">Welcome!</h2>
-                <p className="mt-2 text-white/80">Employee Portal Login</p>
+          {/* Right side - Login Form */}
+          <div className="w-full bg-white p-8 md:w-1/2 md:p-0">
+            <div className="mx-auto max-w-md h-full flex flex-col justify-center p-8 md:p-12">
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-[#8b1e3f]">Employee Login</h2>
+                <div className="h-1 w-16 bg-[#8b1e3f] mt-2 mb-4"></div>
+                <p className="text-gray-600">Enter your credentials to access your account</p>
               </div>
 
               {error && (
-                <Alert variant="destructive" className="border-0 bg-red-500/20 text-white">
+                <Alert variant="destructive" className="mb-6 border-l-4 border-red-600 bg-red-50 text-red-800">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-white">
-                    Username
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-[#8b1e3f]" />
+                <div className="space-y-1">
+                  <Label htmlFor="username" className="text-gray-700 font-medium">Username</Label>
+                  <div className="relative group">
+                    <div className="absolute left-0 top-0 w-10 h-full flex items-center justify-center border-r border-gray-200 bg-gray-50 rounded-l-md">
+                      <User className="h-4 w-4 text-gray-500" />
+                    </div>
                     <Input
                       id="username"
                       type="text"
@@ -142,30 +163,30 @@ export function Login({ className, ...props }) {
                       required
                       value={formData.username}
                       onChange={handleChange}
-                      className="border-0 bg-white pl-10 text-[#8b1e3f] placeholder:text-[#8b1e3f]/50"
+                      className="pl-12 h-11 border-gray-200 focus:border-[#8b1e3f] focus:ring-[#8b1e3f]/10 transition-all"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">
-                    Password
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-[#8b1e3f]" />
+                <div className="space-y-1">
+                  <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                  <div className="relative group">
+                    <div className="absolute left-0 top-0 w-10 h-full flex items-center justify-center border-r border-gray-200 bg-gray-50 rounded-l-md">
+                      <Lock className="h-4 w-4 text-gray-500" />
+                    </div>
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="border-0 bg-white pl-10 text-[#8b1e3f]"
+                      className="pl-12 h-11 border-gray-200 focus:border-[#8b1e3f] focus:ring-[#8b1e3f]/10 transition-all"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute right-1 top-1 h-8 w-8 text-[#8b1e3f] hover:bg-transparent hover:text-[#8b1e3f]/70"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-gray-500 hover:text-[#8b1e3f]"
                       onClick={togglePasswordVisibility}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -174,16 +195,59 @@ export function Login({ className, ...props }) {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-white text-[#8b1e3f] hover:bg-white/90" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign in"}
-                </Button>
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center">
+                    <div className="relative inline-flex items-center">
+                      <input
+                        id="remember-me"
+                        name="remember-me"
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 text-[#8b1e3f] focus:ring-[#8b1e3f]/20"
+                      />
+                      <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                        Remember me
+                      </label>
+                    </div>
+                  </div>
 
-                <div className="text-center">
-                  <a href="/ForgotPassword" className="text-sm text-white/80 hover:text-white hover:underline">
-                    Forgot your password?
-                  </a>
+                  <div className="text-sm">
+                    <a href="/ForgotPassword" className="font-medium text-[#8b1e3f] hover:text-[#8b1e3f]/80 transition-colors">
+                      Forgot password?
+                    </a>
+                  </div>
                 </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-11 mt-4 bg-[#8b1e3f] hover:bg-[#8b1e3f]/90 transition-colors shadow-md hover:shadow-lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Signing in...
+                    </span>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
               </form>
+
+              <div className="mt-8 text-center text-sm">
+                <p>
+                  HR Personnel?{" "}
+                  <a href="/hr" onClick={handleHRLogin} className="font-medium text-[#8b1e3f] hover:text-[#8b1e3f]/80 transition-colors">
+                    Login as HR
+                  </a>
+                </p>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+                <p className="text-xs text-gray-400">© {new Date().getFullYear()} TechStaffHub. All rights reserved.</p>
+              </div>
             </div>
           </div>
         </div>
