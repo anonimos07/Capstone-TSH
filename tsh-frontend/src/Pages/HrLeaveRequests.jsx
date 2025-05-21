@@ -127,7 +127,10 @@ export default function HrLeaveRequests() {
               <h1 className="text-2xl font-bold">Leave Requests</h1>
               <p className="text-gray-500">Review and manage employee leave requests</p>
             </div>
-            <Button onClick={() => navigate(-1)}>Back to Dashboard</Button>
+            <Button
+            className="cursor-pointer hover:shadow-md transition-shadow" 
+            onClick={() => navigate(-1)}>Back to Dashboard
+            </Button>
           </div>
 
           <Card>

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { HrNav } from "../components/dashboard/HrNav";
+import { HrUser } from "../components/dashboard/HrUser";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 const HrProfile = () => {
   const [hr, setHr] = useState({
@@ -17,6 +20,29 @@ const HrProfile = () => {
   const [error, setError] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
+  const [profilePicture, setProfilePicture] = useState(null);
+
+  // Function to handle file selection
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicture(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Ref for the hidden file input
+  const fileInputRef = React.useRef(null);
+
+  // Function to trigger the hidden file input
+  const handleProfilePictureClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   useEffect(() => {
     const fetchHrData = async () => {
@@ -97,11 +123,22 @@ const HrProfile = () => {
     }));
   };
 
-  if (isLoading) return <div className="text-center py-4">Loading...</div>;
+  if (isLoading) return <LoadingSpinner />;
   if (error) return <div className="text-center py-4 text-red-500">{error}</div>;
+
+  const fullName = `${hr.firstName} ${hr.lastName}`;
 
   return (
     <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b bg-white">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+            <HrNav userType="hr" />
+          </div>
+          <HrUser userName={fullName} userEmail={hr.email} />
+        </div>
+      </header>
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
           <Card>
@@ -116,7 +153,29 @@ const HrProfile = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center mb-6">
-                <div className="w-20 h-20 bg-gray-300 rounded-full mr-4"></div>
+                <div
+                  className="w-20 h-20 rounded-full mr-4 flex items-center justify-center overflow-hidden bg-gray-300 cursor-pointer"
+                  onClick={handleProfilePictureClick}
+                >
+                  {profilePicture ? (
+                    <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <svg
+                      className="w-12 h-12 text-gray-600"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4.002 4.002 0 11-8 0 4.002 4.002 0 018 0z" />
+                    </svg>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
                 <div>
                   <h2 className="text-xl font-semibold">{hr.firstName} {hr.lastName}</h2>
                   <p className="text-gray-600">{hr.position} <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded ml-2">{hr.role}</span></p>
@@ -182,6 +241,14 @@ const HrProfile = () => {
           </Card>
         </div>
       </main>
+      <footer className="border-t py-4">
+        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="text-center text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} TechStaffHub. All rights reserved.
+          </p>
+          <p className="text-center text-sm text-gray-500">Developed by TechStaffHub</p>
+        </div>
+      </footer>
     </div>
   );
 };

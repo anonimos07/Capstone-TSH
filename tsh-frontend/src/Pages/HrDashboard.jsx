@@ -6,6 +6,7 @@ import { HrHeader } from "../components/dashboard/HrHeader";
 import { HrOverview } from "../components/dashboard/HrOverview";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 function Progress({ value, className }) {
   return (
@@ -427,13 +428,7 @@ export default function HrDashboard() {
   }, []);
   
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg">Loading hr data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
@@ -781,7 +776,10 @@ export default function HrDashboard() {
         <div className="container mx-auto px-4 py-6">
           <HrHeader heading="Hr Dashboard" subheading={`Welcome back, ${fullName}`}>
             <div className="flex items-center gap-2">
-            <Button onClick={() => navigate("/HrLeaveRequests")}>See Leave Requests</Button>
+            <Button 
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate("/HrLeaveRequests")}>See Leave Requests
+            </Button>
             </div>
           </HrHeader>
 

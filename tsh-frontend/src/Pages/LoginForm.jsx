@@ -177,6 +177,7 @@ export function Login({ className, ...props }) {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
+                      placeholder="password"
                       required
                       value={formData.password}
                       onChange={handleChange}
@@ -219,7 +220,7 @@ export function Login({ className, ...props }) {
 
                 <Button
                   type="submit"
-                  className="w-full h-11 mt-4 bg-[#8b1e3f] hover:bg-[#8b1e3f]/90 transition-colors shadow-md hover:shadow-lg"
+                  className="w-full h-11 mt-4 bg-[#8b1e3f] hover:bg-[#8b1e3f]/90 transition-colors shadow-md cursor-pointer hover:shadow-lg"
                   disabled={isLoading}
                 >
                   {isLoading ? (
