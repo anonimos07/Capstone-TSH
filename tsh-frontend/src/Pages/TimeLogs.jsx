@@ -3,7 +3,16 @@ import { Calendar, Clock, Download, Filter, Search } from "lucide-react";
 import { MainNav } from "../components/dashboard/MainNav";
 import { UserNav } from "../components/dashboard/UserNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
-import LoadingSpinner from "../components/ui/LoadingSpinner"; // Updated import path
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function Card({ children, className }) {
   return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>;
@@ -25,37 +34,7 @@ function CardContent({ children }) {
   return <div className="p-6 pt-0">{children}</div>;
 }
 
-function Button({ children, variant, size, className, onClick }) {
-  const baseStyles =
-    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50";
-
-  const variantStyles = {
-    default: "bg-primary text-white hover:bg-primary/90",
-    outline: "border border-gray-300 bg-transparent hover:bg-gray-50",
-    ghost: "bg-transparent hover:bg-gray-50",
-  };
-
-  const sizeStyles = {
-    default: "h-10 px-4 py-2",
-    sm: "h-8 px-3 text-xs",
-  };
-
-  return (
-    <button
-      className={`
-        ${baseStyles} 
-        ${variantStyles[variant || "default"]} 
-        ${sizeStyles[size || "default"]} 
-        ${className || ""}
-      `}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Input({ className, ...props }) {
+function InputWrapper({ className, ...props }) {
   return (
     <input
       className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
@@ -74,6 +53,7 @@ function AssignHrButton({ log, onAssign }) {
   const fetchHrList = async () => {
     try {
       setLoading(true);
+      setError(null);
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:8080/employee/available-hr', {
         headers: {
@@ -95,6 +75,8 @@ function AssignHrButton({ log, onAssign }) {
   };
 
   const handleAssign = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8080/api/time-logs/assign-hr/${log.timeLogId}?hrId=${selectedHr}`, {
@@ -113,38 +95,42 @@ function AssignHrButton({ log, onAssign }) {
       setIsOpen(false);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
-      <button
+      <Button
         onClick={() => {
           fetchHrList();
           setIsOpen(true);
         }}
         className="text-primary hover:text-primary/80 text-sm font-medium"
+        variant="ghost"
       >
         Assign HR
-      </button>
+      </Button>
 
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Assign HR to Time Log</h3>
-
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[425px] custom-dialog">
+          <DialogHeader>
+            <DialogTitle>Assign HR to Time Log</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
             {error && (
-              <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 {error}
               </div>
             )}
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select HR
-              </label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="hrSelect" className="text-right">
+                HR
+              </Label>
               <select
-                className="w-full p-2 border rounded-md"
+                id="hrSelect"
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={selectedHr || ''}
                 onChange={(e) => setSelectedHr(e.target.value)}
                 disabled={loading}
@@ -157,25 +143,26 @@ function AssignHrButton({ log, onAssign }) {
                 ))}
               </select>
             </div>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAssign}
-                disabled={!selectedHr || loading}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-md ${!selectedHr || loading ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary hover:bg-primary/90'}`}
-              >
-                {loading ? 'Assigning...' : 'Assign'}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={handleAssign}
+              disabled={!selectedHr || loading}
+            >
+              {loading ? "Assigning..." : "Assign"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -331,7 +318,7 @@ export default function TimeLogs() {
   const fullName = `${employee.firstName} ${employee.lastName}`;
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
 
   if (error) {
