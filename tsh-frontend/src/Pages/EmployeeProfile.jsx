@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { MainNav } from '../components/dashboard/MainNav'; // Added MainNav import
+import { UserNav } from '../components/dashboard/UserNav'; // Added UserNav import
 
 const EmployeeProfile = () => {
   const [employee, setEmployee] = useState({
@@ -18,7 +20,6 @@ const EmployeeProfile = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
-
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -119,8 +120,6 @@ const EmployeeProfile = () => {
     }
   };
   
-  
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEmployee(prev => ({
@@ -132,8 +131,19 @@ const EmployeeProfile = () => {
   if (isLoading) return <div className="text-center py-4">Loading...</div>;
   if (error) return <div className="text-center py-4 text-red-500">{error}</div>;
 
+  const fullName = `${employee.firstName} ${employee.lastName}`; // Added for UserNav
+
   return (
     <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b bg-white">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+            <MainNav userType="employee" />
+          </div>
+          <UserNav userName={fullName} userEmail={employee.email} />
+        </div>
+      </header>
       <main className="flex-1">
         <div className="container mx-auto px-4 py-6">
           <Card>
@@ -142,12 +152,11 @@ const EmployeeProfile = () => {
               <div className="space-x-2">
                 <Button variant="outline">Change Password</Button>
                 <Button
-  onClick={isEditMode ? handleSaveProfile : () => setIsEditMode(true)}
-  disabled={isSaving}
->
-  {isEditMode ? (isSaving ? "Saving..." : "Save Profile") : "Edit Profile"}
-</Button>
-
+                  onClick={isEditMode ? handleSaveProfile : () => setIsEditMode(true)}
+                  disabled={isSaving}
+                >
+                  {isEditMode ? (isSaving ? "Saving..." : "Save Profile") : "Edit Profile"}
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -218,6 +227,14 @@ const EmployeeProfile = () => {
           </Card>
         </div>
       </main>
+      <footer className="border-t py-4">
+        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="text-center text-sm text-gray-500">
+            © {new Date().getFullYear()} TechStaffHub. All rights reserved.
+          </p>
+          <p className="text-center text-sm text-gray-500">Developed by TechStaffHub</p>
+        </div>
+      </footer>
     </div>
   );
 };
