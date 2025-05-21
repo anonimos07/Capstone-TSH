@@ -11,13 +11,14 @@ import {
 } from '../components/ui/dialog';
 import { MainNav } from "../components/dashboard/MainNav";
 import { UserNav } from "../components/dashboard/UserNav";
+import LoadingSpinner from "../components/ui/LoadingSpinner"; // Import LoadingSpinner
 
 const EmployeePayslip = ({ employeeId }) => {
   const [employee, setEmployee] = useState({
-      firstName: "",
-      lastName: "",
-      email: "",
-    });
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
   const [activeTab, setActiveTab] = useState('payslips');
   const [payslips, setPayslips] = useState([]);
   const [taxDetails, setTaxDetails] = useState(null);
@@ -31,7 +32,7 @@ const EmployeePayslip = ({ employeeId }) => {
   const fullName = employee ? `${employee.firstName} ${employee.lastName}` : "";
 
   useEffect(() => {
-   const fetchEmployeeData = async () => {
+    const fetchEmployeeData = async () => {
       try {
         setIsLoading(true);
         setError(null);
@@ -63,20 +64,21 @@ const EmployeePayslip = ({ employeeId }) => {
           ...data,
         });
 
-      if (activeTab === 'payslips') {
-        fetchPayslips();
-      } else {
-        fetchTaxDetails();
+        if (activeTab === 'payslips') {
+          fetchPayslips();
+        } else {
+          fetchTaxDetails();
+        }
+      } catch (error) {
+        console.error("Error fetching HR data:", error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching HR data:", error);
-    }
-  };  
+    };  
 
-  fetchEmployeeData();
-  }, []);
-
-
+    fetchEmployeeData();
+  }, [activeTab]);
 
   const fetchPayslips = async () => {
     console.log('[fetchPayslips] Starting fetch operation...');
@@ -92,7 +94,7 @@ const EmployeePayslip = ({ employeeId }) => {
         throw new Error(errorMsg);
       }
 
-      const apiUrl = 'http://localhost:8080/api/payslips/my-payslips'; // matches your backend GetMapping
+      const apiUrl = 'http://localhost:8080/api/payslips/my-payslips';
 
       console.log('[fetchPayslips] Calling API:', apiUrl);
 
@@ -102,7 +104,7 @@ const EmployeePayslip = ({ employeeId }) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include' // Only needed if cookies are involved
+        credentials: 'include'
       });
 
       console.log('[fetchPayslips] Received response:', {
@@ -165,7 +167,6 @@ const EmployeePayslip = ({ employeeId }) => {
       const a = document.createElement('a');
       a.href = url;
       
-      // Get filename from content-disposition header or use a default
       const contentDisposition = response.headers.get('content-disposition');
       let filename = `payslip-${payslipId}.pdf`;
       if (contentDisposition) {
@@ -193,7 +194,7 @@ const EmployeePayslip = ({ employeeId }) => {
 
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <p className="text-gray-500">Loading payslips...</p>
+          <LoadingSpinner size="8" text="Loading payslips..." />
         </div>
       ) : error ? (
         <div className="bg-red-50 p-4 rounded-lg">
@@ -236,17 +237,26 @@ const EmployeePayslip = ({ employeeId }) => {
     </div>
   );
 
+  const TaxDetailsCard = () => (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Tax Details</h3>
+      <div className="border rounded-lg p-4">
+        <p className="text-gray-500">Tax details will be displayed here.</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="container mx-auto px-4 py-6">
-        <header className="sticky top-0 z-40 border-b bg-white">
-            <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
-              <div className="flex items-center gap-8">
-                <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
-                <MainNav userType="employee" />
-              </div>
-            <UserNav userName={fullName} userEmail={employee.email} />
+      <header className="sticky top-0 z-40 border-b bg-white">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+            <MainNav userType="employee" />
           </div>
-       </header>
+          <UserNav userName={fullName} userEmail={employee.email} />
+        </div>
+      </header>
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Back
@@ -271,6 +281,9 @@ const EmployeePayslip = ({ employeeId }) => {
           }`}
           onClick={() => setActiveTab('tax')}
         >
+          <div className="flex items-center gap-2">
+            <Banknote className="h-4 w-4" /> Tax Details
+          </div>
         </button>
       </div>
 

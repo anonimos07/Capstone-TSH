@@ -3,6 +3,7 @@ import { DollarSign, CalendarDays, Clock, FileText, PieChart, UserCheck, Chevron
 import { MainNav } from "../components/dashboard/MainNav";
 import { UserNav } from "../components/dashboard/UserNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
+import LoadingSpinner from "../components/ui/LoadingSpinner"; // Import LoadingSpinner
 
 // Utility functions
 const formatDate = (dateString) => {
@@ -316,21 +317,19 @@ export default function EmployeeDashboard() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg">Loading employee data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-red-500">Error: {error}</p>
-          <Button className="mt-4" onClick={() => window.location.reload()}>
+        <div className="text-center max-w-md mx-auto p-6 bg-red-50 rounded-lg border border-red-200">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-700">{error}</p>
+          <Button
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
             Try Again
           </Button>
         </div>
@@ -494,7 +493,7 @@ export default function EmployeeDashboard() {
                     
                     {leaveRequestsLoading ? (
                       <div className="flex justify-center py-8">
-                        <p className="text-gray-500">Loading leave requests...</p>
+                        <LoadingSpinner size="8" text="Loading leave requests..." />
                       </div>
                     ) : leaveRequestsError ? (
                       <div className="p-4 rounded-lg bg-red-50">
@@ -626,7 +625,7 @@ export default function EmployeeDashboard() {
       <footer className="border-t py-4">
         <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-center text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} TechStaffHub. All rights reserved.
+            © {new Date().getFullYear()} TechStaffHub. All rights reserved.
           </p>
           <p className="text-center text-sm text-gray-500">Developed by TechStaffHub</p>
         </div>

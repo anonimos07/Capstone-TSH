@@ -1,8 +1,9 @@
-import { useState, useEffect, use } from "react"
+import { useState, useEffect } from "react"
 import { Clock, ArrowRight } from "lucide-react"
 import { MainNav } from "../components/dashboard/MainNav"
 import { UserNav } from "../components/dashboard/UserNav"
 import { PageHeader } from "../components/dashboard/PageHeader"
+import LoadingSpinner from "../components/ui/LoadingSpinner" // Import LoadingSpinner
 
 // API Service
 const API_BASE_URL = 'http://localhost:8080/api/time-logs';
@@ -48,8 +49,6 @@ const callApi = async (endpoint, method = 'GET', body = null) => {
     const text = await response.text();
     return JSON.parse(text);
   } catch (e) {
-    // console.warn("JSON parse error - using fallback logic:", e);
-    
     // For time-in endpoint
     if (endpoint === '/time-in') {
       // Reload data instead of trying to process malformed response
@@ -182,13 +181,12 @@ export default function TimeTracking() {
     }
     
     // Load employee info
-    // In a real app, you might fetch additional user details from an API using the token
     setEmployee({
-      username: userData.username, // Using role as ID for this example
+      username: userData.username,
       firstName: userData.firstName,
       lastName: userData.lastName,
       email: userData.email,
-      role: userData.role // Include the role from localStorage
+      role: userData.role
     });
     
     setIsAuthenticated(true);
@@ -213,10 +211,9 @@ export default function TimeTracking() {
       setError(null);
 
       const normalizedLogs = Array.isArray(logs) ? logs.map(log => ({
-        id: log.timeLogId,  // Map timeLogId to id
+        id: log.timeLogId,
         timeIn: log.timeIn,
         timeOut: log.timeOut,
-        // Add any other fields you need
       })) : [];
       
       console.log("Today's logs (normalized):", normalizedLogs);
@@ -231,12 +228,11 @@ export default function TimeTracking() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadData();  // Load data once on authentication or page load
+      loadData();
       
-      // Optionally reduce the refresh frequency or use conditions
       const intervalId = setInterval(() => {
-        loadData(); // Refresh after a longer interval, like every 5 minutes
-      }, 300000);  // 5 minutes (300000 ms)
+        loadData();
+      }, 300000);
       
       return () => clearInterval(intervalId);
     }
@@ -247,13 +243,11 @@ export default function TimeTracking() {
       setLoading(true);
       await timeIn();
       
-      // Instead of processing the direct response, just reload all data
       await loadData();
       setError(null);
     } catch (error) {
       console.error('Time in error:', error);
       setError('Failed to time in. Please try again.');
-      // Try to reload data anyway
       try {
         await loadData();
       } catch (e) {
@@ -269,13 +263,11 @@ export default function TimeTracking() {
       setLoading(true);
       await timeOut();
       
-      // Instead of processing the direct response, just reload all data
       await loadData();
       setError(null);
     } catch (error) {
       console.error('Time out error:', error);
       setError('Failed to time out. Please try again.');
-      // Try to reload data anyway
       try {
         await loadData();
       } catch (e) {
@@ -424,7 +416,7 @@ export default function TimeTracking() {
               <CardContent>
                 {loading ? (
                   <div className="flex h-40 items-center justify-center">
-                    <p className="text-gray-500">Loading records...</p>
+                    <LoadingSpinner size="8" text="Loading records..." />
                   </div>
                 ) : timeRecords.length === 0 ? (
                   <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
@@ -463,7 +455,7 @@ export default function TimeTracking() {
       <footer className="border-t py-4">
         <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-center text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} TechStaffHub. All rights reserved.
+            © {new Date().getFullYear()} TechStaffHub. All rights reserved.
           </p>
           <p className="text-center text-sm text-gray-500">Developed by TechStaffHub</p>
         </div>

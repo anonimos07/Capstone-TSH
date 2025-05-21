@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { MainNav } from '../components/dashboard/MainNav'; // Added MainNav import
-import { UserNav } from '../components/dashboard/UserNav'; // Added UserNav import
+import { MainNav } from '../components/dashboard/MainNav';
+import { UserNav } from '../components/dashboard/UserNav';
+import LoadingSpinner from '../components/ui/LoadingSpinner'; // Import LoadingSpinner
 
 const EmployeeProfile = () => {
   const [employee, setEmployee] = useState({
@@ -128,10 +129,23 @@ const EmployeeProfile = () => {
     }));
   };
 
-  if (isLoading) return <div className="text-center py-4">Loading...</div>;
-  if (error) return <div className="text-center py-4 text-red-500">{error}</div>;
+  if (isLoading) return <LoadingSpinner />;
+  if (error) return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center max-w-md mx-auto p-6 bg-red-50 rounded-lg border border-red-200">
+        <h2 className="text-xl font-semibold text-red-600 mb-2">Error</h2>
+        <p className="text-gray-700">{error}</p>
+        <Button
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Try Again
+        </Button>
+      </div>
+    </div>
+  );
 
-  const fullName = `${employee.firstName} ${employee.lastName}`; // Added for UserNav
+  const fullName = `${employee.firstName} ${employee.lastName}`;
 
   return (
     <div className="flex min-h-screen flex-col">
