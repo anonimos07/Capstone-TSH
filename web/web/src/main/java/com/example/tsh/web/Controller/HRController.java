@@ -52,8 +52,12 @@ public class HRController {
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/create-hr")
     public ResponseEntity<String> createHr(@RequestBody HR hr) {
-        hrService.saveHr(hr);
-        return ResponseEntity.ok("HR created successfully by HR");
+        try {
+            hrService.saveHr(hr);
+            return ResponseEntity.ok("HR created successfully by Admin");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @CrossOrigin(origins = "http://localhost:5173")
@@ -65,8 +69,13 @@ public class HRController {
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/create-employee")
     public ResponseEntity<String> createEmployee(@RequestBody Employee employee) {
-        employeeService.saveEmployee(employee);
-        return ResponseEntity.ok("Employee created successfully by HR");
+        try {
+            employeeService.saveEmployee(employee);
+            return ResponseEntity.ok("Employee created successfully by HR");
+        } catch (RuntimeException e) {
+            // Handle the username already exists error
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/all-employee")
@@ -149,6 +158,7 @@ public class HRController {
         return ResponseEntity.ok(hrService.adjustEmployeeSalary(employeeId, newSalary));
     }
 
+    //overview attendance employee (working hours, avg hours, days of attendance)
     @GetMapping("/attendance-overview")
     public ResponseEntity<Map<String, Object>> getAttendanceOverview() {
         return ResponseEntity.ok(hrService.getAttendanceOverview());
@@ -190,6 +200,7 @@ public class HRController {
         return ResponseEntity.ok(hrService.getAllHr());
     }
 
+    //view attendance employee in calendar
     @GetMapping("/attendance-calendar")
     public ResponseEntity<List<AttendanceRecord>> getAttendanceCalendar(
             @RequestParam(required = false) Long employeeId,

@@ -61,11 +61,22 @@ public class AdminController {
     }
 
     //create hr via admn
+//    @PostMapping("/create-hr")
+//    public ResponseEntity<String> createHr(@RequestBody HR hr) {
+//        hrService.saveHr(hr);
+//        return ResponseEntity.ok("HR created successfully by admin");
+//    }
+
     @PostMapping("/create-hr")
     public ResponseEntity<String> createHr(@RequestBody HR hr) {
-        hrService.saveHr(hr);
-        return ResponseEntity.ok("HR created successfully by admin");
+        try {
+            hrService.saveHr(hr);
+            return ResponseEntity.ok("HR created successfully by Admin");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+
 
     //create employee via admn
     @PostMapping("/create-employee")

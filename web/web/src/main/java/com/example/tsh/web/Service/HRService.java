@@ -38,12 +38,38 @@ public class HRService {
     @Autowired
     EmployeeRepo employeeRepository;
 
+//    public HR saveHr(HR hr) {
+//        hr.setPassword(passwordEncoder.encode(hr.getPassword()));
+//        hr.setRole(Role.HR);
+//        return hrRepository.save(hr);
+//    }
+
     public HR saveHr(HR hr) {
+        // Check if username already exists
+        Optional<HR> existingHr = hrRepository.findByUsername(hr.getUsername());
+
+        if (existingHr.isPresent()) {
+            throw new RuntimeException("Username already exists: " + hr.getUsername());
+        }
+
         hr.setPassword(passwordEncoder.encode(hr.getPassword()));
-        hr.setRole(Role.HR);
+        hr.setRole(Role.HR); // Set role explicitly
         return hrRepository.save(hr);
     }
+//    public Employee createEmployee(Employee employee) {
+//        employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+//        employee.setRole(Role.EMPLOYEE);
+//        return employeeRepo.save(employee);
+//    }
+
     public Employee createEmployee(Employee employee) {
+        // Check if username already exists using your existing repository method
+        Optional<Employee> existingEmployee = employeeRepo.findByUsername(employee.getUsername());
+
+        if (existingEmployee.isPresent()) {
+            throw new RuntimeException("Username already exists: " + employee.getUsername());
+        }
+
         employee.setPassword(passwordEncoder.encode(employee.getPassword()));
         employee.setRole(Role.EMPLOYEE);
         return employeeRepo.save(employee);

@@ -27,12 +27,24 @@ public class EmployeeService {
     private JwtService jwtService;
 
 
+//    public Employee saveEmployee(Employee employee) {
+//        employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+//        employee.setRole(Role.EMPLOYEE); // Set role explicitly
+//        return employeeRepository.save(employee);
+//    }
+
     public Employee saveEmployee(Employee employee) {
+        // Check if username already exists
+        Optional<Employee> existingEmployee = employeeRepository.findByUsername(employee.getUsername());
+
+        if (existingEmployee.isPresent()) {
+            throw new RuntimeException("Username already exists: " + employee.getUsername());
+        }
+
         employee.setPassword(passwordEncoder.encode(employee.getPassword()));
         employee.setRole(Role.EMPLOYEE); // Set role explicitly
         return employeeRepository.save(employee);
     }
-
 
     public Employee authenticateEmployee(String user, String password) {
         Optional<Employee> employeeOptional = employeeRepository.findByUsername(user);
