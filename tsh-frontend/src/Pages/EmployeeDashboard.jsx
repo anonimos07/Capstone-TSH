@@ -39,34 +39,44 @@ const LeaveRequestCard = ({ request, onClick }) => (
     onClick={onClick}
   >
     <div className="flex justify-between items-start">
-      <div>
-        <h4 className="font-medium flex items-center gap-2">
-          {request.leaveType} Leave
-          <StatusBadge status={request.status} />
-        </h4>
-        <p className="text-sm text-gray-500 mt-1">
-          {formatDate(request.startDate)} - {formatDate(request.endDate)} 
-          <span className="ml-2">({getDaysBetweenDates(request.startDate, request.endDate)} days)</span>
-        </p>
-        <p className="text-sm mt-2 line-clamp-2">{request.reason}</p>
-        {/* Add HR information */}
+      <div className="w-full">
+        <div className="flex justify-between items-start">
+          <div className="text-left"> {/* Ensure left alignment */}
+            <h4 className="font-medium flex items-center gap-2">
+              {request.leaveType} Leave
+              <StatusBadge status={request.status} />
+            </h4>
+            <p className="text-sm text-gray-500 mt-1">
+              {formatDate(request.startDate)} - {formatDate(request.endDate)} 
+              <span className="ml-2">({getDaysBetweenDates(request.startDate, request.endDate)} days)</span>
+            </p>
+          </div>
+          {request.status === "PENDING" && (
+            <button 
+              className="text-xs text-gray-500 hover:text-gray-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Add cancel functionality here
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+        
+        <div className="mt-2 text-left"> {/* Left-align reason */}
+          <p className="text-sm">
+            <span className="font-medium">Reason:</span> {request.reason}
+          </p>
+        </div>
+        
+        {/* Left-align HR info */}
         {request.assignedHR && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-2 text-left">
             Assigned to: {request.assignedHR.firstName} {request.assignedHR.lastName}
           </p>
         )}
       </div>
-      {request.status === "PENDING" && (
-        <button 
-          className="text-xs text-gray-500 hover:text-gray-700"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Add cancel functionality here
-          }}
-        >
-          Cancel
-        </button>
-      )}
     </div>
   </div>
 );
