@@ -791,16 +791,10 @@ export default function HrDashboard() {
               <TabsTrigger value="createEmployee">Create Employee/HR</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <HrOverview
-                  title="Available Leave"
-                  value="15 days"
-                  description="Out of 24 days annual leave"
-                  icon={CalendarDays}
-                />
+            <div className="grid gap-4 grid-cols-2">
                 <HrOverview
                   title="Payroll"
-                  value="Generate Payroll "
+                  value="Generate Payroll"
                   description=""
                   icon={PhilippinePeso}
                   className="cursor-pointer hover:shadow-md transition-shadow"
@@ -814,51 +808,29 @@ export default function HrDashboard() {
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/EmployeeTimeLogs")}
                 />
-                <HrOverview title="Attendance" value="94%" description="Last 30 days" icon={UserCheck} />
-                <HrOverview title="Overtime" value="8 hours" description="This month" icon={Clock} />
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
+              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+                <Card>
                   <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>Your recent activities and notifications</CardDescription>
                   </CardHeader>
-                  
+                  <CardContent>
+                    {/* Recent activity content */}
+                  </CardContent>
                 </Card>
-
-                <Card className="col-span-3">
+                <Card>
                   <CardHeader>
-                    <CardTitle>Benefits Overview</CardTitle>
-                    <CardDescription>Your current benefits and utilization</CardDescription>
-                  </CardHeader>            
-                </Card>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Upcoming Holidays</CardTitle>
-                    <CalendarDays className="h-4 w-4 text-gray-500" />
+                    <CardTitle>Upcoming Holidays</CardTitle>
+                    <CardDescription>Stay informed about upcoming holidays</CardDescription>
                   </CardHeader>
                   <CardContent>
-                   
+                    {/* Holidays content */}
                   </CardContent>
                 </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Recent Payslips</CardTitle>
-                    <FileText className="h-4 w-4 text-gray-500" />
-                  </CardHeader>
-                  <CardContent>
-                   
-                  </CardContent>
-                </Card>
-
-               
               </div>
+
             </TabsContent>
-
             <TabsContent value="attendance" className="space-y-4">
               <Card>
                 <CardHeader>

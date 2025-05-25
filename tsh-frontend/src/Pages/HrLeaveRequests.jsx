@@ -2,14 +2,23 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/card";
+import { HrNav } from "../components/dashboard/HrNav";
+import { HrUser } from "../components/dashboard/HrUser";
 
 export default function HrLeaveRequests() {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
-  const [hrId, setHrId] = useState(null); // Add state for HR ID
+  const [hr, setHr] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    hrId: null
+  });
   const navigate = useNavigate();
+
+  const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
 
   useEffect(() => {
     const fetchHrProfile = async () => {
@@ -33,7 +42,12 @@ export default function HrLeaveRequests() {
         }
 
         const profileData = await profileResponse.json();
-        setHrId(profileData.hrId); // Assuming the response includes hrId
+        setHr({
+          firstName: profileData.firstName || "",
+          lastName: profileData.lastName || "",
+          email: profileData.email || "",
+          hrId: profileData.hrId
+        });
 
         // Now fetch leave requests for this HR
         const leaveResponse = await fetch(`http://localhost:8080/hr/pending-leave-requests/${profileData.hrId}`, {
@@ -96,7 +110,7 @@ export default function HrLeaveRequests() {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(rejectionReason)
+        body: JSON.stringify({ reason: rejectionReason })
       });
 
       if (!response.ok) {
@@ -117,7 +131,9 @@ export default function HrLeaveRequests() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
           <div className="flex items-center gap-8">
             <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+            <HrNav userType="hr" />
           </div>
+          <HrUser userName={fullName} userEmail={hr.email} />
         </div>
       </header>
       <main className="flex-1">
@@ -128,8 +144,10 @@ export default function HrLeaveRequests() {
               <p className="text-gray-500">Review and manage employee leave requests</p>
             </div>
             <Button
-            className="cursor-pointer hover:shadow-md transition-shadow" 
-            onClick={() => navigate(-1)}>Back to Dashboard
+              className="cursor-pointer hover:shadow-md transition-shadow" 
+              onClick={() => navigate(-1)}
+            >
+              Back to Dashboard
             </Button>
           </div>
 
@@ -165,16 +183,18 @@ export default function HrLeaveRequests() {
                             {request.employee?.firstName} {request.employee?.lastName}
                           </td>
                           <td className="p-4">{request.leaveType}</td>
-                          <td className="p-4">{request.startDate}</td>
-                          <td className="p-4">{request.endDate}</td>
+                          <td className="p-4">{new Date(request.startDate).toLocaleDateString()}</td>
+                          <td className="p-4">{new Date(request.endDate).toLocaleDateString()}</td>
                           <td className="p-4">{request.reason}</td>
                           <td className="p-4 flex space-x-2">
-                            <button
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleApprove(request.id)}
-                              className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                              className="bg-green-500 hover:bg-green-600 text-white"
                             >
                               Approve
-                            </button>
+                            </Button>
                             <div className="flex items-center space-x-2">
                               <input
                                 type="text"
@@ -183,12 +203,14 @@ export default function HrLeaveRequests() {
                                 onChange={(e) => setRejectionReason(e.target.value)}
                                 className="px-2 py-1 border rounded-md text-sm w-40"
                               />
-                              <button
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => handleReject(request.id)}
-                                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                                className="bg-red-500 hover:bg-red-600 text-white"
                               >
                                 Reject
-                              </button>
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -201,6 +223,14 @@ export default function HrLeaveRequests() {
           </Card>
         </div>
       </main>
+      <footer className="border-t py-4">
+        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
+          <p className="text-center text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} TechStaffHub. All rights reserved.
+          </p>
+          <p className="text-center text-sm text-gray-500">Developed by TechStaffHub</p>
+        </div>
+      </footer>
     </div>
   );
 }

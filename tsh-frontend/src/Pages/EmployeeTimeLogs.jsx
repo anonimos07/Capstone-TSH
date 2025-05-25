@@ -23,6 +23,11 @@ import { HrUser } from "../components/dashboard/HrUser";
 import { useNavigate } from "react-router-dom";
 
 export function EmployeeTimeLogs() {
+  const [hr, setHr] = useState({
+    firstName: "",
+    lastName: "",
+    email: ""
+  });
   const [timeLogs, setTimeLogs] = useState([]);
   const [selectedLog, setSelectedLog] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,6 +35,76 @@ export function EmployeeTimeLogs() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Fetch HR data like in HrDashboard
+  useEffect(() => {
+    const fetchHrData = async () => {
+      setIsLoading(true);
+      setError("");
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.");
+      }
+
+      try {
+        const response = await fetch("http://localhost:8080/hr/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const responseClone = response.clone();
+          let errorMessage = `Server error: ${response.status}`;
+          
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            try {
+              const text = await responseClone.text();
+              if (text) errorMessage += ` - ${text}`;
+            } catch (textError) {
+              console.error("Failed to read response body", textError);
+            }
+          }
+          
+          if (response.status === 401) {
+            localStorage.removeItem("token");
+            navigate("/unauthorized");
+            return;
+          } 
+          else if (response.status === 403) {
+            navigate("/403");
+            return; 
+          }
+          
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        setHr({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          ...data,
+        });
+      } catch (fetchError) {
+        console.error("API fetch failed:", fetchError);
+        setError(fetchError.message || "Failed to load HR data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHrData();
+    fetchTimeLogs();
+  }, []);
+
+  const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
 
   // Fetch all time logs
   const fetchTimeLogs = async () => {
@@ -60,10 +135,6 @@ export function EmployeeTimeLogs() {
       console.error("Error fetching time logs:", error);
     }
   };
-
-  useEffect(() => {
-    fetchTimeLogs();
-  }, []);
 
   // Handle opening the edit modal
   const handleEdit = (log) => {
@@ -180,7 +251,7 @@ export function EmployeeTimeLogs() {
             <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
             <HrNav userType="hr" />
           </div>
-          <HrUser userName="HR User" userEmail="hr@example.com" />
+          <HrUser userName={fullName} userEmail={hr.email} />
         </div>
       </header>
       <main className="flex-1">
