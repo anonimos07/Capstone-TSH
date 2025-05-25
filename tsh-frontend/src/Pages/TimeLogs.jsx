@@ -14,6 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
+}
+
 function Card({ children, className }) {
   return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>;
 }
@@ -109,8 +117,9 @@ function AssignHrButton({ log, onAssign }) {
         }}
         className="text-primary hover:text-primary/80 text-sm font-medium"
         variant="ghost"
+        disabled={loading}
       >
-        Assign HR
+        {loading ? "Loading..." : "Assign HR"}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -118,32 +127,36 @@ function AssignHrButton({ log, onAssign }) {
           <DialogHeader>
             <DialogTitle>Assign HR to Time Log</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {error}
+          {loading ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="grid gap-4 py-4">
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="hrSelect" className="text-right">
+                  HR
+                </Label>
+                <select
+                  id="hrSelect"
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={selectedHr || ''}
+                  onChange={(e) => setSelectedHr(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">Select an HR</option>
+                  {hrList.map((hr) => (
+                    <option key={hr.hrId} value={hr.hrId}>
+                      {hr.firstName} {hr.lastName}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="hrSelect" className="text-right">
-                HR
-              </Label>
-              <select
-                id="hrSelect"
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={selectedHr || ''}
-                onChange={(e) => setSelectedHr(e.target.value)}
-                disabled={loading}
-              >
-                <option value="">Select an HR</option>
-                {hrList.map((hr) => (
-                  <option key={hr.hrId} value={hr.hrId}>
-                    {hr.firstName} {hr.lastName}
-                  </option>
-                ))}
-              </select>
             </div>
-          </div>
+          )}
           <DialogFooter>
             <Button
               className="cursor-pointer hover:shadow-md transition-shadow"
@@ -169,72 +182,74 @@ function AssignHrButton({ log, onAssign }) {
 
 export default function TimeLogs() {
   const [employee, setEmployee] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@techstaffhub.com",
+    firstName: "",
+    lastName: "",
+    email: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Function to get authentication token from localStorage
   const getAuthToken = () => {
     return localStorage.getItem('token');
   };
 
-  useEffect(() => {
-    // Fetch user profile and time logs
-    const fetchUserData = async () => {
-      try {
-        const token = getAuthToken();
-        if (!token) {
-          throw new Error("Authentication token not found");
-        }
-
-        // Fetch user profile
-        const profileResponse = await fetch('http://localhost:8080/employee/me', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!profileResponse.ok) {
-          throw new Error("Failed to fetch profile");
-        }
-
-        const profileData = await profileResponse.json();
-        setEmployee({
-          firstName: profileData.firstName,
-          lastName: profileData.lastName,
-          email: profileData.email,
-        });
-
-        const logsResponse = await fetch('http://localhost:8080/api/time-logs', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!logsResponse.ok) {
-          throw new Error("Failed to fetch time logs");
-        }
-
-        const logsData = await logsResponse.json();
-        setLogs(logsData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error("Authentication token not found");
       }
-    };
 
+      // Fetch user profile
+      const profileResponse = await fetch('http://localhost:8080/employee/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+
+      const profileData = await profileResponse.json();
+      setEmployee({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+      });
+
+      // Fetch time logs
+      const logsResponse = await fetch('http://localhost:8080/api/time-logs', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!logsResponse.ok) {
+        throw new Error("Failed to fetch time logs");
+      }
+
+      const logsData = await logsResponse.json();
+      setLogs(logsData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUserData();
   }, []);
 
-  // Filter logs based on search term and date filter
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
       searchTerm === "" ||
@@ -293,23 +308,8 @@ export default function TimeLogs() {
 
   const handleAssignHr = async () => {
     try {
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
-
-      const logsResponse = await fetch('http://localhost:8080/api/time-logs', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!logsResponse.ok) {
-        throw new Error("Failed to fetch updated time logs");
-      }
-
-      const logsData = await logsResponse.json();
-      setLogs(logsData);
+      setIsRefreshing(true);
+      await fetchUserData();
     } catch (err) {
       setError(err.message);
     }
@@ -317,8 +317,23 @@ export default function TimeLogs() {
 
   const fullName = `${employee.firstName} ${employee.lastName}`;
 
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-40 border-b bg-white">
+          <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
+            <div className="flex items-center gap-8">
+              <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+              <MainNav userType="employee" />
+            </div>
+            <UserNav userName={fullName} userEmail={employee.email} />
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <LoadingSpinner />
+        </main>
+      </div>
+    );
   }
 
   if (error) {
@@ -419,48 +434,65 @@ export default function TimeLogs() {
                 </div>
 
                 <div className="rounded-lg border">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b bg-gray-50">
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Time In
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Time Out
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Total Hours
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {filteredLogs.map((log) => (
-                          <tr key={log.timeLogId} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm">{formatDate(log.date)}</td>
-                            <td className="px-4 py-3 text-sm">{formatTime(log.timeIn)}</td>
-                            <td className="px-4 py-3 text-sm">{formatTime(log.timeOut)}</td>
-                            <td className="px-4 py-3 text-sm font-medium">{((log.durationMinutes || 0) / 60).toFixed(1)} hrs</td>
-                            <td className="px-4 py-3 text-sm">
-                              <AssignHrButton log={log} onAssign={handleAssignHr} />
-                            </td>
+                  {isRefreshing ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b bg-gray-50">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Time In
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Time Out
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Total Hours
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Actions
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y">
+                          {filteredLogs.length === 0 ? (
+                            <tr>
+                              <td colSpan="5" className="px-4 py-6 text-center text-gray-500">
+                                No records found
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredLogs.map((log) => (
+                              <tr key={log.timeLogId} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-sm">{formatDate(log.date)}</td>
+                                <td className="px-4 py-3 text-sm">{formatTime(log.timeIn)}</td>
+                                <td className="px-4 py-3 text-sm">{formatTime(log.timeOut)}</td>
+                                <td className="px-4 py-3 text-sm font-medium">{((log.durationMinutes || 0) / 60).toFixed(1)} hrs</td>
+                                <td className="px-4 py-3 text-sm">
+                                  <AssignHrButton log={log} onAssign={handleAssignHr} />
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                  <Button variant="outline" size="sm" onClick={exportToCSV}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportToCSV}
+                    disabled={filteredLogs.length === 0 || isRefreshing}
+                  >
                     <Download className="mr-2 h-4 w-4" />
-                    Export
+                    {isRefreshing ? "Processing..." : "Export"}
                   </Button>
                 </div>
               </CardContent>

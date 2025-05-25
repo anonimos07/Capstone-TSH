@@ -404,17 +404,17 @@ export default function EmployeeDashboard() {
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>Your recent activities and notifications</CardDescription>
                   </CardHeader>
-                </Card>
+                </Card> 
 
                 <Card className="col-span-3">
                   <CardHeader>
-                    <CardTitle>Benefits Overview</CardTitle>
-                    <CardDescription>Your current benefits and utilization</CardDescription>
-                  </CardHeader>      
+                    <CardTitle>Upcoming Holidays</CardTitle>
+                    <CardDescription>Stay informed about upcoming holidays and plan ahead</CardDescription>
+                  </CardHeader>
                 </Card>
-                
+
                 <Card className="col-span-7">
-                  <CardHeader>
+                  <CardHeader>  
                     <div className="flex justify-between items-center">
                       <div>
                         <CardTitle>My Leave Requests</CardTitle>
@@ -559,29 +559,6 @@ export default function EmployeeDashboard() {
                       </div>
                     )}
                   </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Upcoming Holidays</CardTitle>
-                    <CalendarDays className="h-4 w-4 text-gray-500" />
-                  </CardHeader>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Recent Payslips</CardTitle>
-                    <FileText className="h-4 w-4 text-gray-500" />
-                  </CardHeader>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Time Off Balance</CardTitle>
-                    <PieChart className="h-4 w-4 text-gray-500" />
-                  </CardHeader>
                 </Card>
               </div>
             </TabsContent>

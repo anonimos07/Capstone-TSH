@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Building2 } from 'lucide-react';
+import { Building2, ArrowLeft } from 'lucide-react';
 import forgotpassbg from "@/assets/forgotpassbg.jpg"
 
 const ForgotPassword = () => {
@@ -35,7 +35,7 @@ const ForgotPassword = () => {
             
             // You can redirect after a short delay
             setTimeout(() => {
-                navigate('/login');
+                navigate('/');
             }, 5000);
             
         } catch (error) {
@@ -110,6 +110,17 @@ const ForgotPassword = () => {
                         type="submit" className="w-full bg-[#8b1e3f] text-white py-2 rounded-md cursor-pointer hover:shadow-md transition-shadow" disabled={isLoading}>
                         {isLoading ? "Sending Reset Link..." : "Submit"}
                     </Button>
+                    
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full mt-4 flex items-center justify-center gap-2" 
+                        onClick={() => navigate('/')}
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Login
+                    </Button>
+                    
                     <div className="mt-6 pt-4 border-t border-gray-200 text-center">
                         <p className="text-xs text-gray-500">© {new Date().getFullYear()} TechStaffHub. All rights reserved.</p>
                     </div>

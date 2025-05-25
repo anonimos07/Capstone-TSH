@@ -11,7 +11,7 @@ import {
 } from '../components/ui/dialog';
 import { MainNav } from "../components/dashboard/MainNav";
 import { UserNav } from "../components/dashboard/UserNav";
-import LoadingSpinner from "../components/ui/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 const EmployeePayslip = ({ employeeId }) => {
   const [employee, setEmployee] = useState({
@@ -21,13 +21,15 @@ const EmployeePayslip = ({ employeeId }) => {
   });
   const [activeTab, setActiveTab] = useState('payslips');
   const [payslips, setPayslips] = useState([]);
-  const [taxDetails, setTaxDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Initial loading state
+  const [isFetchingPayslips, setIsFetchingPayslips] = useState(false); // Specific to payslips fetch
   const [error, setError] = useState(null);
   const [payrollId, setPayrollId] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState(null);
   const [generateSuccess, setGenerateSuccess] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false); // For download operations
+  const [downloadingId, setDownloadingId] = useState(null); // Track which payslip is downloading
 
   const fullName = employee ? `${employee.firstName} ${employee.lastName}` : "";
 
@@ -65,9 +67,7 @@ const EmployeePayslip = ({ employeeId }) => {
         });
 
         if (activeTab === 'payslips') {
-          fetchPayslips();
-        } else {
-          fetchTaxDetails();
+          await fetchPayslips();
         }
       } catch (error) {
         console.error("Error fetching HR data:", error);
@@ -82,7 +82,7 @@ const EmployeePayslip = ({ employeeId }) => {
 
   const fetchPayslips = async () => {
     console.log('[fetchPayslips] Starting fetch operation...');
-    setIsLoading(true);
+    setIsFetchingPayslips(true);
     setError(null);
 
     try {
@@ -144,12 +144,15 @@ const EmployeePayslip = ({ employeeId }) => {
       setError(err.message);
     } finally {
       console.log('[fetchPayslips] Completing operation');
-      setIsLoading(false);
+      setIsFetchingPayslips(false);
     }
   };
 
   const downloadPayslip = async (payslipId) => {
     try {
+      setDownloadingId(payslipId);
+      setIsDownloading(true);
+      
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8080/api/payslips/${payslipId}/download`, {
         method: 'GET',
@@ -183,6 +186,9 @@ const EmployeePayslip = ({ employeeId }) => {
       a.remove();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsDownloading(false);
+      setDownloadingId(null);
     }
   };
 
@@ -190,23 +196,46 @@ const EmployeePayslip = ({ employeeId }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Your Payslips</h3>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={fetchPayslips}
+          disabled={isFetchingPayslips}
+        >
+          {isFetchingPayslips ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
-      {isLoading ? (
+      {isFetchingPayslips && payslips.length === 0 ? (
         <div className="flex justify-center py-8">
           <LoadingSpinner size="8" text="Loading payslips..." />
         </div>
       ) : error ? (
         <div className="bg-red-50 p-4 rounded-lg">
           <p className="text-red-600">{error}</p>
-          <Button variant="outline" size="sm" className="mt-2" onClick={fetchPayslips}>
-            Retry
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2" 
+            onClick={fetchPayslips}
+            disabled={isFetchingPayslips}
+          >
+            {isFetchingPayslips ? 'Retrying...' : 'Retry'}
           </Button>
         </div>
       ) : payslips.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8">
           <FileText className="h-8 w-8 text-gray-400 mb-2" />
           <p className="text-gray-500">No payslips found</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2" 
+            onClick={fetchPayslips}
+            disabled={isFetchingPayslips}
+          >
+            {isFetchingPayslips ? 'Checking...' : 'Check Again'}
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -225,8 +254,13 @@ const EmployeePayslip = ({ employeeId }) => {
                     size="sm"
                     onClick={() => downloadPayslip(payslip.payslipId)}
                     className="text-gray-500 hover:text-gray-700"
+                    disabled={isDownloading && downloadingId === payslip.payslipId}
                   >
-                    <Download className="h-4 w-4" />
+                    {isDownloading && downloadingId === payslip.payslipId ? (
+                      <LoadingSpinner size="4" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -237,14 +271,24 @@ const EmployeePayslip = ({ employeeId }) => {
     </div>
   );
 
-  const TaxDetailsCard = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Tax Details</h3>
-      <div className="border rounded-lg p-4">
-        <p className="text-gray-500">Tax details will be displayed here.</p>
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <header className="sticky top-0 z-40 border-b bg-white">
+          <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
+            <div className="flex items-center gap-8">
+              <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+              <MainNav userType="employee" />
+            </div>
+            <UserNav userName={fullName} userEmail={employee.email} />
+          </div>
+        </header>
+        <div className="flex justify-center py-20">
+          <LoadingSpinner size="10" text="Loading your payslip information..." />
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -270,6 +314,7 @@ const EmployeePayslip = ({ employeeId }) => {
             activeTab === 'payslips' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-900'
           }`}
           onClick={() => setActiveTab('payslips')}
+          disabled={isLoading}
         >
           <div className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" /> Payslips
@@ -280,10 +325,8 @@ const EmployeePayslip = ({ employeeId }) => {
             activeTab === 'tax' ? 'bg-white shadow-sm' : 'text-gray-500 hover:text-gray-900'
           }`}
           onClick={() => setActiveTab('tax')}
-        >
-          <div className="flex items-center gap-2">
-            <Banknote className="h-4 w-4" /> Tax Details
-          </div>
+          disabled={isLoading}
+        >         
         </button>
       </div>
 

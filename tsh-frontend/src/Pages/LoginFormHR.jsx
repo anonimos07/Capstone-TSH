@@ -10,6 +10,14 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import hrbg from "@/assets/hrbg.jpg" // HR background image
 
+function LoadingSpinner() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#8b1e3f]"></div>
+    </div>
+  );
+}
+
 export function LoginHR({ className, ...props }) {
   const [formData, setFormData] = useState({
     username: "",
@@ -20,6 +28,7 @@ export function LoginHR({ className, ...props }) {
   const [showPassword, setShowPassword] = useState(false)
   const [backgroundPosition, setBackgroundPosition] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isForgotPasswordLoading, setIsForgotPasswordLoading] = useState(false)
 
   const navigate = useNavigate()
 
@@ -88,6 +97,19 @@ export function LoginHR({ className, ...props }) {
     setTimeout(() => {
       navigate("/")
     }, 500)
+  }
+
+  const handleForgotPassword = (e) => {
+    e.preventDefault()
+    setIsForgotPasswordLoading(true)
+    setTimeout(() => {
+      navigate("/ForgotPassword")
+      setIsForgotPasswordLoading(false)
+    }, 1000)
+  }
+
+  if (isForgotPasswordLoading) {
+    return <LoadingSpinner />
   }
 
   return (
@@ -209,7 +231,11 @@ export function LoginHR({ className, ...props }) {
                   </div>
 
                   <div className="text-sm">
-                    <a href="/ForgotPassword" className="font-medium text-[#8b1e3f] hover:text-[#8b1e3f]/80 transition-colors">
+                    <a 
+                      href="/ForgotPassword" 
+                      onClick={handleForgotPassword} 
+                      className="font-medium text-[#8b1e3f] hover:text-[#8b1e3f]/80 transition-colors"
+                    >
                       Forgot password?
                     </a>
                   </div>
