@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { MainNav } from '../components/dashboard/MainNav';
 import { UserNav } from '../components/dashboard/UserNav';
-import LoadingSpinner from '../components/ui/LoadingSpinner'; // Import LoadingSpinner
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const EmployeeProfile = () => {
   const [employee, setEmployee] = useState({

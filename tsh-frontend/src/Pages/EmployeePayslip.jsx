@@ -14,7 +14,6 @@ import { UserNav } from "../components/dashboard/UserNav";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 const EmployeePayslip = ({ employeeId }) => {
-  // State declarations remain exactly the same
   const [employee, setEmployee] = useState({
     firstName: "",
     lastName: "",
@@ -34,7 +33,6 @@ const EmployeePayslip = ({ employeeId }) => {
 
   const fullName = employee ? `${employee.firstName} ${employee.lastName}` : "";
 
-  // useEffect remains exactly the same
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
@@ -82,7 +80,6 @@ const EmployeePayslip = ({ employeeId }) => {
     fetchEmployeeData();
   }, [activeTab]);
 
-  // fetchPayslips remains exactly the same
   const fetchPayslips = async () => {
     console.log('[fetchPayslips] Starting fetch operation...');
     setIsFetchingPayslips(true);
@@ -151,7 +148,6 @@ const EmployeePayslip = ({ employeeId }) => {
     }
   };
 
-  // downloadPayslip remains exactly the same
   const downloadPayslip = async (payslipId) => {
     try {
       setDownloadingId(payslipId);
@@ -196,7 +192,6 @@ const EmployeePayslip = ({ employeeId }) => {
     }
   };
 
-  // PayslipsList component remains exactly the same
   const PayslipsList = () => (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -276,7 +271,6 @@ const EmployeePayslip = ({ employeeId }) => {
     </div>
   );
 
-  // Loading state remains exactly the same
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6">
@@ -296,7 +290,6 @@ const EmployeePayslip = ({ employeeId }) => {
     );
   }
 
-  // Main return remains exactly the same
   return (
     <div className="container mx-auto px-4 py-6">
       <header className="sticky top-0 z-40 border-b bg-white">

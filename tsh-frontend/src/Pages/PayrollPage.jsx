@@ -35,7 +35,6 @@ const PayrollPage = () => {
   const [editMode, setEditMode] = useState(false)
   const [currentPayroll, setCurrentPayroll] = useState(null)
 
-    // const fullName = `${hr.firstName} ${hr.lastName}`;
   const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
 
  const generatePayslip = async (payrollId) => {
@@ -62,7 +61,7 @@ const PayrollPage = () => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      responseType: 'json' // Start with JSON, fallback to blob if needed
+      responseType: 'json'
     };
 
     console.log("Request config:", config);
@@ -70,7 +69,6 @@ const PayrollPage = () => {
     const response = await axios.post(url, null, config)
       .catch(async (error) => {
         console.error("Initial request failed, trying with blob responseType:", error);
-        // Retry with blob responseType if first attempt fails
         return await axios.post(url, null, {
           ...config,
           responseType: 'blob'
@@ -100,7 +98,6 @@ const PayrollPage = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
     } 
-    // Handle JSON response with PDF data
     else if (response.data?.pdfData) {
       console.log("JSON with PDF data detected");
       const blob = new Blob([response.data.pdfData], { type: 'application/pdf' });
@@ -113,14 +110,12 @@ const PayrollPage = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
     }
-    // Handle plain JSON response
     else {
       console.log("JSON response detected");
       const payslipData = JSON.stringify(response.data, null, 2);
       const blob = new Blob([payslipData], { type: 'application/json' });
       const blobUrl = window.URL.createObjectURL(blob);
       window.open(blobUrl, '_blank');
-      // Note: Can't revoke URL here as it's used in new tab
     }
     
     setSuccessMessage("Payslip generated successfully!");
@@ -133,14 +128,11 @@ const PayrollPage = () => {
     });
 
     if (error.response) {
-      // Handle 403 Forbidden specifically
       if (error.response.status === 403) {
         console.error("Authentication failed - possible token issues");
         setError("Access denied. Your session may have expired. Please log in again.");
         
-        // Optionally clear invalid token and redirect to login
         localStorage.removeItem("token");
-        // window.location.href = "/login"; // Uncomment if you want auto-redirect
       } 
       else if (error.response.status === 404) {
         setError(`Payslip endpoint not found (404). Please check the URL.`);
@@ -188,12 +180,11 @@ const PayrollPage = () => {
     }
   };
 
-  fetchHrData(); // Add this to fetch HR profile
+  fetchHrData();
   fetchEmployees();
   fetchAllPayrolls();
 }, []);
 
-  // Helper function to get the auth token and create headers
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token")
     return {
@@ -204,7 +195,6 @@ const PayrollPage = () => {
     }
   }
 
-  // Function to refresh the token if needed
   const refreshToken = async () => {
     try {
       const refreshToken = localStorage.getItem("refreshToken")
@@ -220,13 +210,11 @@ const PayrollPage = () => {
       return response.data.token
     } catch (error) {
       console.error("Failed to refresh token:", error)
-      // Redirect to login page if token refresh fails
       window.location.href = "/login"
       throw error
     }
   }
 
-  // Enhanced axios request with token refresh capability
   const apiRequest = async (method, url, data = null) => {
     try {
       const config = getAuthHeaders()
@@ -245,7 +233,6 @@ const PayrollPage = () => {
       return response.data
     } catch (error) {
       if (error.response && error.response.status === 403) {
-        // Try to refresh the token and retry the request
         try {
           await refreshToken()
           const newConfig = getAuthHeaders()
@@ -285,10 +272,9 @@ const fetchEmployees = async () => {
       },
     });
 
-    const raw = await response.text();  // Get raw response
-    // console.log("Raw response:", raw);  // <-- 🔍 Debug here
+    const raw = await response.text();
 
-    const data = JSON.parse(raw);       // Then parse
+    const data = JSON.parse(raw);
     console.log("Parsed employees data:", data);
 
     setEmployees(Array.isArray(data) ? data : []);
@@ -369,13 +355,11 @@ const fetchEmployees = async () => {
       let allPayrolls = []
 
       if (startDate && endDate) {
-        // Use the combined endpoint for employee + date range
         for (const employeeId of selectedEmployees) {
           const payrolls = await fetchPayrollsByEmployeeAndDateRange(employeeId, startDate, endDate)
           allPayrolls = [...allPayrolls, ...payrolls]
         }
       } else {
-        // Use the employee-specific endpoint
         for (const employeeId of selectedEmployees) {
           const payrolls = await fetchPayrollsByEmployee(employeeId)
           allPayrolls = [...allPayrolls, ...payrolls]
@@ -698,7 +682,6 @@ const fetchEmployees = async () => {
           </div>
         )}
 
-        {/* Filters Section */}
         <div className="bg-white rounded-lg shadow-md mb-8">
           <div className="px-6 py-4 border-b border-gray-200 bg-blue-600 rounded-t-lg flex items-center">
             <FiFilter className="mr-2 text-white" />
@@ -853,7 +836,6 @@ const fetchEmployees = async () => {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && !editMode && (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="flex flex-col items-center justify-center py-12">
@@ -875,7 +857,6 @@ const fetchEmployees = async () => {
           </div>
         )}
 
-        {/* Payroll Results */}
         {!loading && payrolls.length > 0 && (
           <div className="bg-white rounded-lg shadow-md mb-8">
             <div className="px-6 py-4 border-b border-gray-200 bg-purple-600 rounded-t-lg flex justify-between items-center">
@@ -1060,7 +1041,6 @@ const fetchEmployees = async () => {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && payrolls.length === 0 && (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <div className="flex flex-col items-center justify-center py-12">

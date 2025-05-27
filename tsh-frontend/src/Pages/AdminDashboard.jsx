@@ -2,13 +2,12 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LayoutDashboard, Users, Briefcase, LogOut } from "lucide-react";  // Added LogOut here
+import { LayoutDashboard, Users, Briefcase, LogOut } from "lucide-react";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Check if user is authenticated
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token || user?.role !== "ADMIN") {

@@ -132,9 +132,8 @@ export default function HrDashboard() {
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [employeesError, setEmployeesError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [hrList, setHrList] = useState([]);     // for all HRs
-  
-  // const fullName = `${hr.firstName} ${hr.lastName}`;
+  const [hrList, setHrList] = useState([]);    
+
   const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
 
 
@@ -235,8 +234,6 @@ export default function HrDashboard() {
     return;
   };
   
-
- 
   const handleEdit = (employee) => {
     
     setFormData({
@@ -261,6 +258,8 @@ export default function HrDashboard() {
 
     try {
       const token = localStorage.getItem('token');
+
+
   const response = await fetch("http://localhost:8080/hr/create-employee", {
     method: "POST",
     headers: {
@@ -299,7 +298,6 @@ export default function HrDashboard() {
       }
 
       try {
-        // Use the "me" endpoint to get current user's profile
         const response = await fetch("http://localhost:8080/hr/me", {
           method: "GET",
           headers: {
@@ -392,7 +390,6 @@ export default function HrDashboard() {
   
         setEmployees(combinedData);
         setHrList(hrList);
-        // setHr(hrData); 
   
       } catch (error) {
         console.error("Fetch error:", error);
@@ -501,7 +498,6 @@ export default function HrDashboard() {
       );
     }
   
-    // Calculate attendance percentage - PROPERLY FIXED VERSION
     const attendancePercentage = attendanceData.totalEmployees > 0 
     ? Math.round((attendanceData.totalPresentDays / (attendanceData.totalEmployees * 30)) * 100)
     : 0;
@@ -558,7 +554,7 @@ export default function HrDashboard() {
     const [filters, setFilters] = useState({
       employee: "",
       month: new Date().getMonth() + 1,
-      year: 2025, // Default to 2025 as requested
+      year: 2025,
       status: ""
     });
     const [employees, setEmployees] = useState([]);
@@ -569,7 +565,6 @@ export default function HrDashboard() {
           setLoading(true);
           const token = localStorage.getItem("token");
           
-          // Fetch employees for filter dropdown
           const empResponse = await fetch("http://localhost:8080/hr/all-employee", {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -578,7 +573,6 @@ export default function HrDashboard() {
           const empData = await empResponse.json();
           setEmployees(empData);
   
-          // Fetch attendance data with filters
           const params = new URLSearchParams();
           if (filters.employee) params.append('employeeId', filters.employee);
           if (filters.month) params.append('month', filters.month);
@@ -624,7 +618,6 @@ export default function HrDashboard() {
       return <div className="text-center text-red-500 py-4">{error}</div>;
     }
   
-    // Group data by employee
     const groupedData = attendanceData.reduce((acc, record) => {
       if (!acc[record.employeeId]) {
         acc[record.employeeId] = {
@@ -636,7 +629,6 @@ export default function HrDashboard() {
       return acc;
     }, {});
   
-    // Generate days for the selected month
     const daysInMonth = new Date(filters.year, filters.month, 0).getDate();
     const daysArray = Array.from({length: daysInMonth}, (_, i) => i + 1);
   
@@ -708,7 +700,6 @@ export default function HrDashboard() {
               </div>
             </div>
   
-            {/* Calendar Table */}
             <div className="overflow-x-auto">
               <table className="w-full border">
                 <thead>
@@ -744,7 +735,6 @@ export default function HrDashboard() {
               </table>
             </div>
   
-            {/* Legend */}
             <div className="flex flex-wrap gap-4 mt-4">
               <div className="flex items-center">
                 <span className="w-4 h-4 rounded-full bg-green-100 text-green-700 text-xs flex items-center justify-center mr-2">P</span>
@@ -760,6 +750,199 @@ export default function HrDashboard() {
       </Card>
     );
   }
+
+function getPhilippineHolidays(year) {
+  const fixedHolidays = [
+    { date: new Date(year, 0, 1), name: "New Year's Day" },
+    { date: new Date(year, 3, 9), name: "Araw ng Kagitingan" },
+    { date: new Date(year, 4, 1), name: "Labor Day" },
+    { date: new Date(year, 5, 12), name: "Independence Day" },
+    { date: new Date(year, 7, 21), name: "Ninoy Aquino Day" },
+    { date: new Date(year, 7, 26), name: "National Heroes Day" },
+    { date: new Date(year, 10, 30), name: "Bonifacio Day" },
+    { date: new Date(year, 11, 25), name: "Christmas Day" },
+    { date: new Date(year, 11, 30), name: "Rizal Day" },
+  ];
+
+  const easter = calculateEaster(year);
+  const goodFriday = new Date(easter);
+  goodFriday.setDate(easter.getDate() - 2);
+
+  const movableHolidays = [
+    { date: goodFriday, name: "Good Friday" },
+    { date: new Date(year, 11, 8), name: "Feast of the Immaculate Conception" },
+    { date: new Date(year, 11, 31), name: "New Year's Eve" },
+  ];
+
+  const specialDays = [
+    { date: new Date(year, 0, 2), name: "Special Non-Working Day" },
+    { date: new Date(year, 3, 10), name: "Eid'l Fitr" },
+    { date: new Date(year, 5, 28), name: "Eid'l Adha" },
+    { date: new Date(year, 10, 1), name: "All Saints' Day" },
+    { date: new Date(year, 11, 24), name: "Christmas Eve" },
+  ];
+
+  return [...fixedHolidays, ...movableHolidays, ...specialDays].sort((a, b) => a.date - b.date);
+}
+
+function calculateEaster(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  
+  return new Date(year, month, day);
+}
+
+function HolidaysCalendar() {
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [holidays, setHolidays] = useState([]);
+
+  useEffect(() => {
+    const phHolidays = getPhilippineHolidays(currentYear);
+    setHolidays(phHolidays);
+  }, [currentYear]);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const navigateMonth = (direction) => {
+    if (direction === 'prev') {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(currentYear - 1);
+      } else {
+        setCurrentMonth(currentMonth - 1);
+      }
+    } else {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(currentYear + 1);
+      } else {
+        setCurrentMonth(currentMonth + 1);
+      }
+    }
+  };
+
+  const getDaysInMonth = (month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month, year) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const renderCalendar = () => {
+    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+    const days = [];
+    
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(currentYear, currentMonth, day);
+      const holiday = holidays.find(h => 
+        h.date.getDate() === day && 
+        h.date.getMonth() === currentMonth && 
+        h.date.getFullYear() === currentYear
+      );
+
+      const isToday = 
+        day === new Date().getDate() && 
+        currentMonth === new Date().getMonth() && 
+        currentYear === new Date().getFullYear();
+
+      days.push(
+        <div 
+          key={`day-${day}`}
+          className={`h-8 w-8 flex items-center justify-center rounded-full text-sm relative
+            ${holiday ? 'bg-red-100 text-red-700 font-medium' : ''}
+            ${isToday ? 'border border-primary' : ''}
+          `}
+          title={holiday ? holiday.name : ''}
+        >
+          {day}
+          {holiday && (
+            <div className="absolute -bottom-5 text-xs w-24 text-center truncate">
+              {holiday.name}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => navigateMonth('prev')}
+          className="p-1 rounded hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+        <h3 className="font-medium">
+          {months[currentMonth]} {currentYear}
+        </h3>
+        <button 
+          onClick={() => navigateMonth('next')}
+          className="p-1 rounded hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day}>{day}</div>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1">
+        {renderCalendar()}
+      </div>
+      
+      <div className="pt-4">
+        <h4 className="font-medium mb-2">Upcoming Holidays:</h4>
+        <ul className="space-y-2">
+          {holidays
+            .filter(h => h.date >= new Date())
+            .slice(0, 3)
+            .map(holiday => (
+              <li key={holiday.name} className="flex items-center">
+                <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                <span>
+                  {holiday.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}: 
+                  <span className="font-medium ml-1">{holiday.name}</span>
+                </span>
+              </li>
+            ))}
+        </ul>
+      </div>  
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -816,18 +999,17 @@ export default function HrDashboard() {
                     <CardDescription>Your recent activities and notifications</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {/* Recent activity content */}
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upcoming Holidays</CardTitle>
-                    <CardDescription>Stay informed about upcoming holidays</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Holidays content */}
-                  </CardContent>
-                </Card>
+               <Card>
+                <CardHeader>
+                  <CardTitle>Upcoming Holidays</CardTitle>
+                  <CardDescription>Philippine holidays and special non-working days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <HolidaysCalendar />
+                </CardContent>
+              </Card>
               </div>
 
             </TabsContent>
@@ -848,7 +1030,6 @@ export default function HrDashboard() {
               </div>
             </TabsContent>
 
-            {/*fetch Users*/}
             <TabsContent value="viewEmployee" className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm">
                 <div className="p-6 border-b">
@@ -951,13 +1132,7 @@ export default function HrDashboard() {
                 )}
               </div>
             </TabsContent>
-            {/*fetch Users*/}
 
-
-
-
-
-            {/*Create Employee Form*/}
             <TabsContent value="createEmployee" className="space-y-4">
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="mb-6">
@@ -968,7 +1143,6 @@ export default function HrDashboard() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-2 gap-6">
-                    {/* First Name and Last Name */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         First Name
@@ -998,7 +1172,6 @@ export default function HrDashboard() {
                       />
                     </div>
 
-                    {/* Username and Password */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Username
@@ -1028,7 +1201,6 @@ export default function HrDashboard() {
                       />
                     </div>
 
-                    {/* Email and Position */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
@@ -1073,7 +1245,6 @@ export default function HrDashboard() {
                       />
                     </div>
 
-                    {/* Base Salary and Role */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Base Salary

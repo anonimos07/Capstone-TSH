@@ -36,7 +36,6 @@ export function EmployeeTimeLogs() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch HR data like in HrDashboard
   useEffect(() => {
     const fetchHrData = async () => {
       setIsLoading(true);
@@ -106,7 +105,6 @@ export function EmployeeTimeLogs() {
 
   const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
 
-  // Fetch all time logs
   const fetchTimeLogs = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -136,11 +134,9 @@ export function EmployeeTimeLogs() {
     }
   };
 
-  // Handle opening the edit modal
   const handleEdit = (log) => {
     console.log("Editing log:", log);
     
-    // Ensure we have the employee ID
     const employeeId = log.employee?.employeeId || log.employeeId;
     if (!employeeId) {
       setError("Could not determine employee ID");
@@ -150,36 +146,32 @@ export function EmployeeTimeLogs() {
     setSelectedLog(log);
     setEditedLog({
       timeLogId: log.timeLogId,
-      employeeId: employeeId, // Use the properly extracted ID
+      employeeId: employeeId,
       timeIn: formatDate(new Date(log.timeIn), "yyyy-MM-dd'T'HH:mm"),
       timeOut: formatDate(new Date(log.timeOut), "yyyy-MM-dd'T'HH:mm"),
     });
     setIsModalOpen(true);
   };
 
-  // Handle saving the edited log
   const handleSave = async () => {
     setIsLoading(true);
     setError("");
   
     try {
-      // Format dates exactly as expected by the backend
       const timeInDate = parseISO(editedLog.timeIn);
       const timeOutDate = parseISO(editedLog.timeOut);
       
       const formattedLog = {
         timeLogId: editedLog.timeLogId,
         employeeId: editedLog.employeeId,
-        timeIn: formatDate(timeInDate, "yyyy-MM-dd HH:mm:ss"),  // Removed .SSS to match your Postman example
-        timeOut: formatDate(timeOutDate, "yyyy-MM-dd HH:mm:ss"), // Removed .SSS to match your Postman example
+        timeIn: formatDate(timeInDate, "yyyy-MM-dd HH:mm:ss"),
+        timeOut: formatDate(timeOutDate, "yyyy-MM-dd HH:mm:ss"),
       };
   
       console.log("Sending to backend:", formattedLog);
       
       const token = localStorage.getItem("token");
       
-      // Add CSRF token if your backend requires it
-      // You might need to fetch this token from a cookie or from a dedicated endpoint
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       
       const headers = {
@@ -188,7 +180,6 @@ export function EmployeeTimeLogs() {
         "Accept": "application/json"
       };
       
-      // Add CSRF token if available
       if (csrfToken) {
         headers["X-CSRF-TOKEN"] = csrfToken;
       }
@@ -197,7 +188,6 @@ export function EmployeeTimeLogs() {
         method: "PUT",
         headers: headers,
         body: JSON.stringify(formattedLog),
-        // Include credentials if your backend requires cookies
         credentials: 'include'
       });
       
@@ -225,7 +215,6 @@ export function EmployeeTimeLogs() {
     }
   };
 
-  // Handle input changes in the modal
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditedLog((prev) => ({
@@ -234,13 +223,11 @@ export function EmployeeTimeLogs() {
     }));
   };
 
-  // Helper function to get employee ID
   const getEmployeeId = (log) => {
-    // Check different possible structures based on your API response
     if (log.employeeId) return log.employeeId;
     if (log.employee && log.employee.employeeId) return log.employee.employeeId;
     if (log.employee && log.employee.id) return log.employee.id;
-    return "N/A"; // Fallback if no ID can be found
+    return "N/A";
   };
 
   return (
@@ -267,7 +254,6 @@ export function EmployeeTimeLogs() {
                     variant="outline" 
                     size="sm"
                     onClick={() => {
-                      // Redirect to login page
                       navigate("/login");
                     }}
                   >
@@ -293,7 +279,7 @@ export function EmployeeTimeLogs() {
                 {timeLogs.map((log) => {
                   const timeIn = new Date(log.timeIn);
                   const timeOut = new Date(log.timeOut);
-                  const duration = Math.round((timeOut - timeIn) / (1000 * 60)); // Duration in minutes
+                  const duration = Math.round((timeOut - timeIn) / (1000 * 60));
 
                   return (
                     <TableRow key={log.timeLogId}>

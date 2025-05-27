@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Building2, Lock, User, Eye, EyeOff } from "lucide-react"
@@ -8,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import hrbg from "@/assets/hrbg.jpg" // HR background image
+import hrbg from "@/assets/hrbg.jpg"
 
 function LoadingSpinner() {
   return (
@@ -136,7 +134,6 @@ export function LoginHR({ className, ...props }) {
         style={{ transition: "opacity 500ms ease, transform 500ms ease" }}
       >
         <div className="relative z-10 flex flex-col md:flex-row">
-          {/* Left side - Branding */}
           <div className="hidden w-full items-center justify-center p-12 md:flex md:w-1/2">
             <div className="max-w-md space-y-6 text-gray-800">
               <div className="flex items-center gap-4">
@@ -153,7 +150,6 @@ export function LoginHR({ className, ...props }) {
             </div>
           </div>
 
-          {/* Right side - Login Form */}
           <div className="w-full bg-white p-8 md:w-1/2 md:p-0">
             <div className="mx-auto max-w-md h-full flex flex-col justify-center p-8 md:p-12">
               <div className="mb-8">

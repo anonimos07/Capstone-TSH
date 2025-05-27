@@ -13,7 +13,6 @@ export function UserNav({ userName, userEmail }) {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
-    // Fetch notifications for the logged-in user
     const fetchNotifications = async () => {
       try {
         const res = await fetch(`/api/notifications/${userEmail}`);

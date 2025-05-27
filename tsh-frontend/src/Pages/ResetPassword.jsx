@@ -68,7 +68,6 @@ const ResetPassword = () => {
             setMessage(response.data.message || 'Password has been reset successfully');
             setIsSuccess(true);
             
-            // Redirect to login after a short delay
             setTimeout(() => {
                 navigate('/login');
             }, 3000);

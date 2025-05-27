@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom" // ✅ Vite-compatible router
+import { useNavigate } from "react-router-dom"
 import { Building2, Lock, User, Eye, EyeOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import employeebg from "@/assets/employeebg.jpg" // Background image
+import employeebg from "@/assets/employeebg.jpg"
 
 function LoadingSpinner() {
   return (
@@ -28,7 +28,7 @@ export function Login({ className, ...props }) {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isForgotPasswordLoading, setIsForgotPasswordLoading] = useState(false)
 
-  const navigate = useNavigate() // ✅ Use this instead of useRouter
+  const navigate = useNavigate()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -78,7 +78,7 @@ export function Login({ className, ...props }) {
       localStorage.setItem("employeeId", data.employeeId)
       localStorage.setItem("user", JSON.stringify({ role: data.role }))
 
-      navigate("/EmployeeDashboard") // ✅ Clean navigation
+      navigate("/EmployeeDashboard")
     } catch (error) {
       setError(error instanceof Error ? error.message : "Wrong credentials")
     } finally {
@@ -95,7 +95,7 @@ export function Login({ className, ...props }) {
     setIsTransitioning(true)
 
     setTimeout(() => {
-      navigate("/hr") // ✅ HR redirect
+      navigate("/hr")
     }, 500)
   }
 
@@ -136,7 +136,6 @@ export function Login({ className, ...props }) {
         style={{ transition: "opacity 500ms ease, transform 500ms ease" }}
       >
         <div className="relative z-10 flex flex-col md:flex-row">
-          {/* Left side - Branding */}
           <div className="hidden w-full items-center justify-center p-12 md:flex md:w-1/2">
             <div className="max-w-md space-y-6 text-gray-800">
               <div className="flex items-center gap-4">
@@ -154,7 +153,6 @@ export function Login({ className, ...props }) {
             </div>
           </div>
 
-          {/* Right side - Login Form */}
           <div className="w-full bg-white p-8 md:w-1/2 md:p-0">
             <div className="mx-auto max-w-md h-full flex flex-col justify-center p-8 md:p-12">
               <div className="mb-8">

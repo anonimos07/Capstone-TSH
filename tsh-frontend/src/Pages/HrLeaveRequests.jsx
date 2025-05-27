@@ -28,7 +28,6 @@ export default function HrLeaveRequests() {
           throw new Error("Authentication token not found");
         }
 
-        // First fetch HR profile to get the HR ID
         const profileResponse = await fetch("http://localhost:8080/hr/me", {
           method: "GET",
           headers: {
@@ -49,7 +48,6 @@ export default function HrLeaveRequests() {
           hrId: profileData.hrId
         });
 
-        // Now fetch leave requests for this HR
         const leaveResponse = await fetch(`http://localhost:8080/hr/pending-leave-requests/${profileData.hrId}`, {
           method: "GET",
           headers: {

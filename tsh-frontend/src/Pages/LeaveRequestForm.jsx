@@ -137,7 +137,6 @@ export default function LeaveRequestForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with navigation - outside of form content */}
       <header className="sticky top-0 z-40 border-b bg-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
           <div className="flex items-center gap-8">
@@ -148,7 +147,6 @@ export default function LeaveRequestForm() {
         </div>
       </header>
 
-      {/* Main content area */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -157,7 +155,6 @@ export default function LeaveRequestForm() {
           <h2 className="text-2xl font-bold">Leave Request</h2>
         </div>
 
-        {/* Form content */}
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Leave Request Form</h1>

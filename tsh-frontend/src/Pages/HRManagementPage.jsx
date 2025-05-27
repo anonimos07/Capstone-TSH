@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +21,6 @@ export default function HRManagementPage() {
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Get auth data from localStorage
   const getAuthData = () => {
     const token = localStorage.getItem("token") || "";
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -32,7 +29,6 @@ export default function HRManagementPage() {
     return { token, role, username };
   };
 
-  // Check admin status on component mount
   useEffect(() => {
     const { role } = getAuthData();
     setIsAdmin(role === "ADMIN");
@@ -44,7 +40,6 @@ export default function HRManagementPage() {
     fetchHRs();
   }, []);
 
-  // Fetch HRs from backend
   const fetchHRs = async () => {
     try {
       setLoading(true);
@@ -264,7 +259,7 @@ export default function HRManagementPage() {
                       onClick={() => {
                         setCurrentHR({
                           ...hr,
-                          password: "" // Clear password when editing
+                          password: ""
                         });
                         setOpenDialog(true);
                       }}
@@ -287,7 +282,6 @@ export default function HRManagementPage() {
         )}
       </Card>   
 
-      {/* Add/Edit HR Dialog */}
       {openDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md p-6">
@@ -307,7 +301,6 @@ export default function HRManagementPage() {
                 />
               </div>
               
-              {/* Only show password field for new HRs */}
               {!currentHR.hrId && (
                 <div>
                   <Label htmlFor="password">Password*</Label>

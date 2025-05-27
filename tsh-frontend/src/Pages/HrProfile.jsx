@@ -22,7 +22,6 @@ const HrProfile = () => {
   const navigate = useNavigate();
   const [profilePicture, setProfilePicture] = useState(null);
 
-  // Function to handle file selection
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -34,10 +33,8 @@ const HrProfile = () => {
     }
   };
 
-  // Ref for the hidden file input
   const fileInputRef = React.useRef(null);
 
-  // Function to trigger the hidden file input
   const handleProfilePictureClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();

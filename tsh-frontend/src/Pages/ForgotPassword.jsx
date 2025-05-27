@@ -25,7 +25,6 @@ const ForgotPassword = () => {
         }
 
         try {
-            // Call the backend API to initiate password reset
             const response = await axios.post('http://localhost:8080/api/password/forgot', { 
                 emailOrUsername: emailOrUsername 
             });
@@ -33,7 +32,6 @@ const ForgotPassword = () => {
             setIsSuccess(true);
             setMessage(response.data.message || 'Password reset email has been sent');
             
-            // You can redirect after a short delay
             setTimeout(() => {
                 navigate('/');
             }, 5000);
@@ -59,7 +57,7 @@ const ForgotPassword = () => {
                 position: "absolute",
                 top: 0,
                 left: 0,
-                zIndex: 0, // Ensure background is behind content
+                zIndex: 0,
             }}
         >
             <Card className="forgot-password-page flex flex-col items-center justify-center bg-white/90 p-20 rounded-lg shadow-md relative z-10 backdrop-blur-m">

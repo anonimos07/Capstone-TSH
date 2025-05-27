@@ -5,7 +5,7 @@ import { UserNav } from "../components/dashboard/UserNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
 import { Button } from "../components/ui/button";
 import { format, parseISO } from "date-fns";
-import LoadingSpinner from "../components/ui/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 const EmployeeAttendance = () => {
   const [employee, setEmployee] = useState({
@@ -16,10 +16,8 @@ const EmployeeAttendance = () => {
   const [attendanceData, setAttendanceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // Set to May 2025 as requested
   const [currentDate, setCurrentDate] = useState(new Date(2025, 4, 1)); 
 
-  // Fetch employee data (just like EmployeeDashboard)
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {

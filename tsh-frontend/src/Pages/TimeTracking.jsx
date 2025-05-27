@@ -3,12 +3,10 @@ import { Clock, ArrowRight } from "lucide-react"
 import { MainNav } from "../components/dashboard/MainNav"
 import { UserNav } from "../components/dashboard/UserNav"
 import { PageHeader } from "../components/dashboard/PageHeader"
-import LoadingSpinner from "../components/ui/LoadingSpinner" // Import LoadingSpinner
+import LoadingSpinner from "../components/ui/LoadingSpinner"
 
-// API Service
 const API_BASE_URL = 'http://localhost:8080/api/time-logs';
 
-// Get token from localStorage
 const getToken = () => {
   return localStorage.getItem('token');
 };
@@ -16,7 +14,6 @@ const userData = {
   username: localStorage.getItem("username") || ""
 };
 
-// API request helper with token
 const callApi = async (endpoint, method = 'GET', body = null) => {
   const token = getToken();
   
@@ -45,27 +42,21 @@ const callApi = async (endpoint, method = 'GET', body = null) => {
   }
   
   try {
-    // Try to parse as normal JSON first
     const text = await response.text();
     return JSON.parse(text);
   } catch (e) {
-    // For time-in endpoint
     if (endpoint === '/time-in') {
-      // Reload data instead of trying to process malformed response
       const status = await getCurrentStatus();
       const logs = await getTodayLogs();
       return { success: true };
     }
     
-    // For time-out endpoint
     if (endpoint === '/time-out') {
-      // Reload data instead of trying to process malformed response
       const status = await getCurrentStatus();
       const logs = await getTodayLogs();
       return { success: true };
     }
     
-    // For other endpoints, return empty success
     return { success: true };
   }
 };
@@ -159,9 +150,7 @@ export default function TimeTracking() {
   const [error, setError] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Function to check if user is authenticated
   useEffect(() => {
-    // Get the token from local storage
     const token = localStorage.getItem("token");
     
     if (!token) {
@@ -170,7 +159,6 @@ export default function TimeTracking() {
       return;
     }
     
-    // Get the user object from local storage
     const userStr = localStorage.getItem("user");
     const userData = userStr ? JSON.parse(userStr) : null;
     
@@ -180,7 +168,6 @@ export default function TimeTracking() {
       return;
     }
     
-    // Load employee info
     setEmployee({
       username: userData.username,
       firstName: userData.firstName,
@@ -192,18 +179,15 @@ export default function TimeTracking() {
     setIsAuthenticated(true);
   }, []);
 
-  // Function to load time status and records
   const loadData = async () => {
     if (!isAuthenticated) return;
     
     try {
       setLoading(true);
       
-      // Get current status
       const status = await getCurrentStatus();
       setTimeStatus(status);
       
-      // Get today's records
       const logs = await getTodayLogs();
       console.log("Today's logs:", logs);
       setTimeRecords(logs);
@@ -251,7 +235,6 @@ export default function TimeTracking() {
       try {
         await loadData();
       } catch (e) {
-        // Ignore secondary errors
       }
     } finally {
       setLoading(false);
@@ -271,7 +254,6 @@ export default function TimeTracking() {
       try {
         await loadData();
       } catch (e) {
-        // Ignore secondary errors
       }
     } finally {
       setLoading(false);

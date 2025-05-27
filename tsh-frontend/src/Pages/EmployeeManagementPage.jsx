@@ -23,7 +23,6 @@ export default function EmployeeManagementPage() {
   const [error, setError] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Get auth data from localStorage
   const getAuthData = () => {
     const token = localStorage.getItem("token") || "";
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -36,8 +35,6 @@ export default function EmployeeManagementPage() {
     window.location.href = "/adminDashboard";
   };
 
-
-  // Check admin status on component mount
   useEffect(() => {
     const { role } = getAuthData();
     setIsAdmin(role === "ADMIN");
@@ -49,7 +46,6 @@ export default function EmployeeManagementPage() {
     fetchEmployees();
   }, []);
 
-  // Fetch employees from backend
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -264,7 +260,7 @@ export default function EmployeeManagementPage() {
                       onClick={() => {
                         setCurrentEmployee({
                           ...employee,
-                          password: "" // Clear password when editing
+                          password: ""
                         });
                         setOpenDialog(true);
                       }}
@@ -287,7 +283,6 @@ export default function EmployeeManagementPage() {
         )}
       </Card>   
 
-      {/* Add/Edit Employee Dialog */}
       {openDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md p-6">
@@ -307,7 +302,6 @@ export default function EmployeeManagementPage() {
                 />
               </div>
               
-              {/* Only show password field for new employees */}
               {!currentEmployee.employeeId && (
                 <div>
                   <Label htmlFor="password">Password*</Label>

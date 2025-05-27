@@ -6,8 +6,7 @@ import Unauthorized from "../components/layout/Unauthorized";
  * @param {string[]} props.allowedRoles - Roles permitted to access this route (e.g., ["ADMIN", "HR", "EMPLOYEE"])
  */
 const ProtectedRoute = ({ allowedRoles }) => {
-  // Safely get user data from localStorage
-  const userData = localStorage.getItem("user"); // Changed from "username" to "user" as it likely stores user object
+  const userData = localStorage.getItem("user");
   let user = { role: null };
 
   try {

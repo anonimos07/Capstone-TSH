@@ -3,7 +3,7 @@ import { DollarSign, CalendarDays, Clock, FileText, PieChart, UserCheck, Chevron
 import { MainNav } from "../components/dashboard/MainNav";
 import { UserNav } from "../components/dashboard/UserNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
-import LoadingSpinner from "../components/ui/LoadingSpinner"; // Import LoadingSpinner
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 // Utility functions
 const formatDate = (dateString) => {
@@ -18,7 +18,6 @@ const getDaysBetweenDates = (startDate, endDate) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
-// Status badge component
 const StatusBadge = ({ status }) => (
   <span className={`px-2 py-1 text-xs rounded-full ${
     status === "APPROVED" 
@@ -31,7 +30,6 @@ const StatusBadge = ({ status }) => (
   </span>
 );
 
-// Leave Request Card component
 const LeaveRequestCard = ({ request, onClick }) => (
   <div 
     key={request.id} 
@@ -41,7 +39,7 @@ const LeaveRequestCard = ({ request, onClick }) => (
     <div className="flex justify-between items-start">
       <div className="w-full">
         <div className="flex justify-between items-start">
-          <div className="text-left"> {/* Ensure left alignment */}
+          <div className="text-left">
             <h4 className="font-medium flex items-center gap-2">
               {request.leaveType} Leave
               <StatusBadge status={request.status} />
@@ -56,7 +54,6 @@ const LeaveRequestCard = ({ request, onClick }) => (
               className="text-xs text-gray-500 hover:text-gray-700"
               onClick={(e) => {
                 e.stopPropagation();
-                // Add cancel functionality here
               }}
             >
               Cancel
@@ -64,13 +61,12 @@ const LeaveRequestCard = ({ request, onClick }) => (
           )}
         </div>
         
-        <div className="mt-2 text-left"> {/* Left-align reason */}
+        <div className="mt-2 text-left">
           <p className="text-sm">
             <span className="font-medium">Reason:</span> {request.reason}
           </p>
         </div>
         
-        {/* Left-align HR info */}
         {request.assignedHR && (
           <p className="text-xs text-gray-500 mt-2 text-left">
             Assigned to: {request.assignedHR.firstName} {request.assignedHR.lastName}
@@ -81,7 +77,6 @@ const LeaveRequestCard = ({ request, onClick }) => (
   </div>
 );
 
-// Progress component
 function Progress({ value, className }) {
   return (
     <div className={`w-full bg-gray-200 rounded-full h-2 ${className || ""}`}>
@@ -90,7 +85,6 @@ function Progress({ value, className }) {
   );
 }
 
-// Tabs components
 function Tabs({ defaultValue, children, className }) {
   const [activeTab, setActiveTab] = useState(defaultValue);
 
@@ -137,7 +131,6 @@ function TabsContent({ value, children, className }) {
   return <div className={className}>{children}</div>;
 }
 
-// Card components
 function Card({ children, className }) {
   return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>;
 }
@@ -158,7 +151,6 @@ function CardContent({ children }) {
   return <div className="p-6 pt-0">{children}</div>;
 }
 
-// Button component
 function Button({ children, variant, size, className, ...props }) {
   const baseStyles =
     "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50";
@@ -184,7 +176,6 @@ function Button({ children, variant, size, className, ...props }) {
   );
 }
 
-// OverviewCard component
 function OverviewCard({ title, value, description, icon: Icon, className, onClick }) {
   return (
     <div className={`rounded-lg border bg-white p-6 shadow-sm ${className || ""}`} onClick={onClick}>
@@ -209,7 +200,6 @@ export default function EmployeeDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Leave requests state
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [leaveRequestsLoading, setLeaveRequestsLoading] = useState(false);
   const [leaveRequestsError, setLeaveRequestsError] = useState(null);
@@ -220,7 +210,6 @@ export default function EmployeeDashboard() {
   const [itemsPerPage] = useState(5);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch employee data
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
@@ -265,7 +254,6 @@ export default function EmployeeDashboard() {
     fetchEmployeeData();
   }, []);
 
-  // Fetch leave requests
   const fetchLeaveRequests = async () => {
     try {
       setLeaveRequestsLoading(true);
@@ -297,7 +285,6 @@ export default function EmployeeDashboard() {
     }
   };
 
-  // Filter and sort leave requests
   const filteredRequests = leaveRequests.filter(request => 
     filterStatus === "ALL" || request.status === filterStatus
   );
@@ -311,7 +298,6 @@ export default function EmployeeDashboard() {
     return 0;
   });
 
-  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = sortedRequests.slice(indexOfFirstItem, indexOfLastItem);
@@ -348,6 +334,199 @@ export default function EmployeeDashboard() {
   }
 
   const fullName = `${employee.firstName} ${employee.lastName}`;
+
+function getPhilippineHolidays(year) {
+  const fixedHolidays = [
+    { date: new Date(year, 0, 1), name: "New Year's Day" },
+    { date: new Date(year, 3, 9), name: "Araw ng Kagitingan" },
+    { date: new Date(year, 4, 1), name: "Labor Day" },
+    { date: new Date(year, 5, 12), name: "Independence Day" },
+    { date: new Date(year, 7, 21), name: "Ninoy Aquino Day" },
+    { date: new Date(year, 7, 26), name: "National Heroes Day" },
+    { date: new Date(year, 10, 30), name: "Bonifacio Day" },
+    { date: new Date(year, 11, 25), name: "Christmas Day" },
+    { date: new Date(year, 11, 30), name: "Rizal Day" },
+  ];
+
+  const easter = calculateEaster(year);
+  const goodFriday = new Date(easter);
+  goodFriday.setDate(easter.getDate() - 2);
+
+  const movableHolidays = [
+    { date: goodFriday, name: "Good Friday" },
+    { date: new Date(year, 11, 8), name: "Feast of the Immaculate Conception" },
+    { date: new Date(year, 11, 31), name: "New Year's Eve" },
+  ];
+
+  const specialDays = [
+    { date: new Date(year, 0, 2), name: "Special Non-Working Day" },
+    { date: new Date(year, 3, 10), name: "Eid'l Fitr" },
+    { date: new Date(year, 5, 28), name: "Eid'l Adha" },
+    { date: new Date(year, 10, 1), name: "All Saints' Day" },
+    { date: new Date(year, 11, 24), name: "Christmas Eve" },
+  ];
+
+  return [...fixedHolidays, ...movableHolidays, ...specialDays].sort((a, b) => a.date - b.date);
+}
+
+function calculateEaster(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  
+  return new Date(year, month, day);
+}
+
+function HolidaysCalendar() {
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [holidays, setHolidays] = useState([]);
+
+  useEffect(() => {
+    const phHolidays = getPhilippineHolidays(currentYear);
+    setHolidays(phHolidays);
+  }, [currentYear]);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const navigateMonth = (direction) => {
+    if (direction === 'prev') {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(currentYear - 1);
+      } else {
+        setCurrentMonth(currentMonth - 1);
+      }
+    } else {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(currentYear + 1);
+      } else {
+        setCurrentMonth(currentMonth + 1);
+      }
+    }
+  };
+
+  const getDaysInMonth = (month, year) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month, year) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const renderCalendar = () => {
+    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+    const days = [];
+    
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(currentYear, currentMonth, day);
+      const holiday = holidays.find(h => 
+        h.date.getDate() === day && 
+        h.date.getMonth() === currentMonth && 
+        h.date.getFullYear() === currentYear
+      );
+
+      const isToday = 
+        day === new Date().getDate() && 
+        currentMonth === new Date().getMonth() && 
+        currentYear === new Date().getFullYear();
+
+      days.push(
+        <div 
+          key={`day-${day}`}
+          className={`h-8 w-8 flex items-center justify-center rounded-full text-sm relative
+            ${holiday ? 'bg-red-100 text-red-700 font-medium' : ''}
+            ${isToday ? 'border border-primary' : ''}
+          `}
+          title={holiday ? holiday.name : ''}
+        >
+          {day}
+          {holiday && (
+            <div className="absolute -bottom-5 text-xs w-24 text-center truncate">
+              {holiday.name}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => navigateMonth('prev')}
+          className="p-1 rounded hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+        <h3 className="font-medium">
+          {months[currentMonth]} {currentYear}
+        </h3>
+        <button 
+          onClick={() => navigateMonth('next')}
+          className="p-1 rounded hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day}>{day}</div>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-7 gap-1">
+        {renderCalendar()}
+      </div>
+      
+      <div className="pt-4">
+        <h4 className="font-medium mb-2">Upcoming Holidays:</h4>
+        <ul className="space-y-2">
+          {holidays
+            .filter(h => h.date >= new Date())
+            .slice(0, 3)
+            .map(holiday => (
+              <li key={holiday.name} className="flex items-center">
+                <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                <span>
+                  {holiday.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}: 
+                  <span className="font-medium ml-1">{holiday.name}</span>
+                </span>
+              </li>
+            ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -419,8 +598,11 @@ export default function EmployeeDashboard() {
                 <Card className="col-span-3">
                   <CardHeader>
                     <CardTitle>Upcoming Holidays</CardTitle>
-                    <CardDescription>Stay informed about upcoming holidays and plan ahead</CardDescription>
+                    <CardDescription>Philippine holidays and special non-working days</CardDescription>
                   </CardHeader>
+                  <CardContent>
+                    <HolidaysCalendar />
+                  </CardContent>
                 </Card>
 
                 <Card className="col-span-7">
@@ -537,8 +719,6 @@ export default function EmployeeDashboard() {
                             key={request.id} 
                             request={request}
                             onClick={() => {
-                              // Navigate to leave request details
-                              // window.location.href = `/leave-requests/${request.id}`;
                             }}
                           />
                         ))}
