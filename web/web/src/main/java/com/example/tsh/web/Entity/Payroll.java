@@ -23,6 +23,11 @@ public class Payroll {
     @JsonBackReference
     private Employee employee;
 
+    //newly added para sa sdd nga erd
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hr_id") // optional but recommended for tracking
+    private HR hr;
+
     private LocalDate payrollDate;
 
     private float baseSalary;        // This is the prorated salary based on present days
