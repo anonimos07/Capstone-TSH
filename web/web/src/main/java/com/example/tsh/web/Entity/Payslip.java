@@ -40,10 +40,8 @@ public class Payslip {
 
     private LocalDateTime downloadedDateTime;
 
-    // Status can be: GENERATED, SENT, DOWNLOADED
     private String status;
 
-    // File format (PDF, etc.)
     private String fileFormat;
 
     @Lob

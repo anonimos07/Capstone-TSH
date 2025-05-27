@@ -42,7 +42,7 @@ public class HRController {
         }
 
         Map<String, String> response = new HashMap<>();
-        response.put("token", result);               // JWT token
+        response.put("token", result);
         response.put("role", hr.getRole().name());
         response.put("username",hr.getUsername());
 
@@ -73,7 +73,7 @@ public class HRController {
             employeeService.saveEmployee(employee);
             return ResponseEntity.ok("Employee created successfully by HR");
         } catch (RuntimeException e) {
-            // Handle the username already exists error
+
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -83,11 +83,11 @@ public class HRController {
         return employeeService.getAllEmployee();
     }
 
-    //get all timelog
+
     @GetMapping("/get-all")
     public ResponseEntity<List<TimeLog>> getAllTimeLogs(@RequestHeader("Authorization") String token) {
         try {
-            // Here you would check if the employee has admin privileges
+
             return ResponseEntity.ok(timeLogService.findAllTimeLogs());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -113,7 +113,7 @@ public class HRController {
 
             HR hr = hrOptional.get();
             return ResponseEntity.ok(Map.of(
-                    "hrId", hr.getHrId(), // Make sure this is included
+                    "hrId", hr.getHrId(),
                     "username", hr.getUsername(),
                     "firstName", hr.getFirstName(),
                     "lastName", hr.getLastName(),
@@ -126,7 +126,7 @@ public class HRController {
         }
     }
 
-    //update employee by profile
+    //updte emp via hr
     @PutMapping("/update-profile-employee")
     public ResponseEntity<String> updateEmployeeByHr(@RequestBody Employee updatedData) {
 

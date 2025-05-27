@@ -25,7 +25,6 @@ public class PasswordResetToken {
     private LocalDateTime expiryDate;
 
     public PasswordResetToken() {
-        // Default 24 hours expiration
         this.expiryDate = LocalDateTime.now().plusHours(24);
         this.token = UUID.randomUUID().toString();
     }

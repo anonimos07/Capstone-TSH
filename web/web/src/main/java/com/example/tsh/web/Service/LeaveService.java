@@ -28,7 +28,7 @@ public class LeaveService {
 
         LeaveRequest request = new LeaveRequest();
         request.setEmployee(employee);
-        request.setAssignedHR(hr); // Set the assigned HR
+        request.setAssignedHR(hr);
         request.setStartDate(startDate);
         request.setEndDate(endDate);
         request.setReason(reason);

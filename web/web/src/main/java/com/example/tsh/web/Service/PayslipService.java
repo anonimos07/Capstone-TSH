@@ -51,24 +51,18 @@ public class PayslipService {
         this.employeeRepository = employeeRepository;
     }
 
-    /**
-     * Generate a payslip for a specific payroll
-     */
     @Transactional
     public Payslip generatePayslip(Long payrollId) {
         LOGGER.info("Generating payslip for payroll ID: " + payrollId);
 
-        // Get the payroll
         Payroll payroll = payrollRepository.findById(payrollId)
                 .orElseThrow(() -> new EntityNotFoundException("Payroll not found with ID: " + payrollId));
 
-        // Get the employee from the payroll
         Employee employee = payroll.getEmployee();
         if (employee == null) {
             throw new EntityNotFoundException("Employee not found in payroll with ID: " + payrollId);
         }
 
-        // Check if payslip already exists
         Optional<Payslip> existingPayslip = payslipRepository.findByPayrollPayrollIdAndEmployeeEmployeeId(
                 payrollId, employee.getEmployeeId());
 
@@ -77,28 +71,21 @@ public class PayslipService {
             return existingPayslip.get();
         }
 
-        // Create new payslip
         Payslip payslip = new Payslip();
         payslip.setPayroll(payroll);
         payslip.setEmployee(employee);
         payslip.setGeneratedDate(LocalDate.now());
         payslip.setStatus("GENERATED");
 
-        // Create filename
         String fileName = createPayslipFileName(employee, payroll);
         payslip.setPayslipFileName(fileName);
 
-        // Generate payslip PDF content
         byte[] pdfContent = generatePayslipPDF(payroll, employee);
         payslip.setFileContent(pdfContent);
 
-        // Save and return
         return payslipRepository.save(payslip);
     }
 
-    /**
-     * Mark payslip as sent to employee
-     */
     @Transactional
     public Payslip markPayslipAsSent(Long payslipId) {
         Payslip payslip = payslipRepository.findById(payslipId)
@@ -110,9 +97,6 @@ public class PayslipService {
         return payslipRepository.save(payslip);
     }
 
-    /**
-     * Mark payslip as downloaded by employee
-     */
     @Transactional
     public Payslip markPayslipAsDownloaded(Long payslipId) {
         Payslip payslip = payslipRepository.findById(payslipId)
@@ -125,9 +109,6 @@ public class PayslipService {
         return payslipRepository.save(payslip);
     }
 
-    /**
-     * Create standardized payslip file name
-     */
     private String createPayslipFileName(Employee employee, Payroll payroll) {
         LocalDate payDate = payroll.getPayrollDate();
         String employeeId = String.valueOf(employee.getEmployeeId());
@@ -139,22 +120,16 @@ public class PayslipService {
         return "Payslip_" + dateStr + "_" + employeeId + "_" + lastName + ".pdf";
     }
 
-    /**
-     * Generate payslip PDF content using iText
-     */
     private byte[] generatePayslipPDF(Payroll payroll, Employee employee) {
         try {
-            // Prepare payslip data
             Map<String, Object> data = preparePayslipData(payroll, employee);
 
-            // Create PDF document
             Document document = new Document();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             PdfWriter.getInstance(document, outputStream);
 
             document.open();
 
-            // Add company header
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
             Paragraph companyName = new Paragraph(data.get("IdealTechStaffing").toString(), headerFont);
             companyName.setAlignment(Element.ALIGN_CENTER);
@@ -169,7 +144,6 @@ public class PayslipService {
             companyContact.setAlignment(Element.ALIGN_CENTER);
             document.add(companyContact);
 
-            // Add payslip title
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
             Paragraph title = new Paragraph("PAYSLIP", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
@@ -177,7 +151,6 @@ public class PayslipService {
             title.setSpacingAfter(15);
             document.add(title);
 
-            // Add employee info section
             PdfPTable employeeTable = new PdfPTable(2);
             employeeTable.setWidthPercentage(100);
 
@@ -190,12 +163,9 @@ public class PayslipService {
             addTableCell(employeeTable, "Position:", normalFont);
             addTableCell(employeeTable, data.get("employeePosition").toString(), normalFont);
 
-//            addTableCell(employeeTable, "Department:", normalFont);
-//            addTableCell(employeeTable, data.get("employeeDepartment").toString(), normalFont);
 
             document.add(employeeTable);
 
-            // Add payroll period info
             PdfPTable periodTable = new PdfPTable(2);
             periodTable.setWidthPercentage(100);
             periodTable.setSpacingBefore(10);
@@ -208,25 +178,17 @@ public class PayslipService {
 
             document.add(periodTable);
 
-            // Section title for earnings
             Font sectionFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
             Paragraph earningsTitle = new Paragraph("EARNINGS", sectionFont);
             earningsTitle.setSpacingBefore(15);
             earningsTitle.setSpacingAfter(5);
             document.add(earningsTitle);
 
-            // Earnings table
             PdfPTable earningsTable = new PdfPTable(2);
             earningsTable.setWidthPercentage(100);
 
             addTableCell(earningsTable, "Base Salary:", normalFont);
             addTableCell(earningsTable, data.get("baseSalary").toString(), normalFont);
-
-//            addTableCell(earningsTable, "Regular Holiday Pay:", normalFont);
-//            addTableCell(earningsTable, data.get("regularHolidayPay").toString(), normalFont);
-//
-//            addTableCell(earningsTable, "Special Holiday Pay:", normalFont);
-//            addTableCell(earningsTable, data.get("specialHolidayPay").toString(), normalFont);
 
             addTableCell(earningsTable, "Overtime Pay (" + data.get("overtimeHours") + " hrs @ " + data.get("overtimeRate") + "):", normalFont);
             addTableCell(earningsTable, data.get("overtimePay").toString(), normalFont);
@@ -237,13 +199,11 @@ public class PayslipService {
 
             document.add(earningsTable);
 
-            // Section title for deductions
             Paragraph deductionsTitle = new Paragraph("DEDUCTIONS", sectionFont);
             deductionsTitle.setSpacingBefore(15);
             deductionsTitle.setSpacingAfter(5);
             document.add(deductionsTitle);
 
-            // Deductions table
             PdfPTable deductionsTable = new PdfPTable(2);
             deductionsTable.setWidthPercentage(100);
 
@@ -256,8 +216,6 @@ public class PayslipService {
             addTableCell(deductionsTable, "Pag-IBIG Contribution:", normalFont);
             addTableCell(deductionsTable, data.get("pagibigContribution").toString(), normalFont);
 
-//            addTableCell(deductionsTable, "Income Tax:", normalFont);
-//            addTableCell(deductionsTable, data.get("incomeTax").toString(), normalFont);
 
             addTableCell(deductionsTable, "Absence Deduction (" + data.get("absenceDays") + " days):", normalFont);
             addTableCell(deductionsTable, data.get("absenceDeduction").toString(), normalFont);
@@ -267,7 +225,6 @@ public class PayslipService {
 
             document.add(deductionsTable);
 
-            // Net income
             PdfPTable summaryTable = new PdfPTable(2);
             summaryTable.setWidthPercentage(100);
             summaryTable.setSpacingBefore(15);
@@ -278,7 +235,6 @@ public class PayslipService {
 
             document.add(summaryTable);
 
-            // Footer
             Paragraph footer = new Paragraph("This is an electronically generated payslip and does not require signature.", normalFont);
             footer.setAlignment(Element.ALIGN_CENTER);
             footer.setSpacingBefore(30);
@@ -294,9 +250,7 @@ public class PayslipService {
 
     }
 
-    /**
-     * Helper method to add cells to PDF table
-     */
+
     private void addTableCell(PdfPTable table, String text, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(5);
@@ -304,29 +258,21 @@ public class PayslipService {
         table.addCell(cell);
     }
 
-    /**
-     * Prepare data for payslip template
-     */
     private Map<String, Object> preparePayslipData(Payroll payroll, Employee employee) {
         Map<String, Object> data = new HashMap<>();
 
-        // Company information
         data.put("companyName", "Your Company Name");
         data.put("companyAddress", "Company Address, City, Country");
         data.put("companyPhone", "+123 456 7890");
         data.put("companyEmail", "hr@yourcompany.com");
 
-        // Employee information
         data.put("employeeId", employee.getEmployeeId());
         data.put("employeeName", employee.getFirstName() + " " + employee.getLastName());
         data.put("employeePosition", employee.getPosition());
 
-
-        // Payroll period
         LocalDate payDate = payroll.getPayrollDate();
         data.put("payrollDate", payDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
 
-        // Determine pay period
         LocalDate startDate, endDate;
         if (payDate.getDayOfMonth() <= 15) {
             startDate = payDate.withDayOfMonth(1);
@@ -339,7 +285,6 @@ public class PayslipService {
         data.put("payPeriodStart", startDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
         data.put("payPeriodEnd", endDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
 
-        // Earnings
         data.put("baseSalary", formatCurrency(payroll.getBaseSalary()));
         data.put("regularHolidayPay", formatCurrency(payroll.getRegularHolidayPay()));
         data.put("specialHolidayPay", formatCurrency(payroll.getSpecialHolidayPay()));
@@ -348,7 +293,6 @@ public class PayslipService {
         data.put("overtimeRate", formatCurrency(payroll.getOvertimeRate()));
         data.put("grossIncome", formatCurrency(payroll.getGrossIncome()));
 
-        // Deductions
         data.put("sssContribution", formatCurrency(payroll.getSssContribution()));
         data.put("philhealthContribution", formatCurrency(payroll.getPhilhealthContribution()));
         data.put("pagibigContribution", formatCurrency(payroll.getPagibigContribution()));
@@ -357,63 +301,42 @@ public class PayslipService {
         data.put("absenceDeduction", formatCurrency(payroll.getAbsenceDeduction()));
         data.put("totalDeductions", formatCurrency(payroll.getTotalDeductions()));
 
-        // Summary
         data.put("netIncome", formatCurrency(payroll.getNetIncome()));
 
         return data;
     }
 
-    /**
-     * Format currency values
-     */
+
     private String formatCurrency(float amount) {
         return String.format("₱ %.2f", amount);
     }
 
-    /**
-     * Get all payslips
-     */
     public List<Payslip> getAllPayslips() {
         return payslipRepository.findAll();
     }
 
-    /**
-     * Get payslip by ID
-     */
     public Payslip getPayslipById(Long id) {
         return payslipRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payslip not found with ID: " + id));
     }
 
-    /**
-     * Get payslips by employee ID
-     */
     @Transactional
     public List<Payslip> getPayslipsByEmployeeId(Long employeeId) {
-        // First check if the employee exists
         if (!employeeRepository.existsById(employeeId)) {
             throw new EntityNotFoundException("Employee not found with ID: " + employeeId);
         }
 
-        // Get all payslips for this employee
         List<Payslip> payslips = payslipRepository.findPayslipsByEmployeeId(employeeId);
 
-        // Log the number of payslips found
         LOGGER.info("Found " + payslips.size() + " payslips for employee ID: " + employeeId);
 
         return payslips;
     }
 
-    /**
-     * Get payslips by payroll ID
-     */
     public List<Payslip> getPayslipsByPayrollId(Long payrollId) {
         return payslipRepository.findByPayrollPayrollId(payrollId);
     }
 
-    /**
-     * Delete payslip
-     */
     @Transactional
     public void deletePayslip(Long id) {
         Payslip payslip = getPayslipById(id);

@@ -27,28 +27,6 @@ public class EmployeeController {
     private final TimeLogService timeLogService;
     private final PayslipService payslipService;
 
-//
-//@PostMapping("/login")
-//public ResponseEntity<Map<String, Object>> login(@RequestBody Employee employee) {
-//    String result = employeeService.verify(employee, Role.EMPLOYEE);
-//
-//    if (result.equals("failed")) {
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", result));
-//    }
-//
-//    if (employee.getRole() != Role.EMPLOYEE) {
-//        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", "Access denied: Not an employee."));
-//    }
-//    Map<String, Object> response = new HashMap<>();
-//    response.put("token", result);               // JWT token
-//    response.put("role", employee.getRole().name());
-//    response.put("username",employee.getUsername());
-//    response.put("employeeId",employee.getEmployeeId());
-//
-//    return ResponseEntity.ok(response);
-//}
-
-
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Employee employee) {
@@ -70,10 +48,10 @@ public class EmployeeController {
         Employee dbEmployee = dbEmployeeOpt.get();
 
         Map<String, Object> response = new HashMap<>();
-        response.put("token", result);  // JWT token
+        response.put("token", result);
         response.put("role", dbEmployee.getRole().name());
         response.put("username", dbEmployee.getUsername());
-        response.put("employeeId", dbEmployee.getEmployeeId()); // Correct ID from DB
+        response.put("employeeId", dbEmployee.getEmployeeId());
 
         return ResponseEntity.ok(response);
     }
@@ -84,7 +62,6 @@ public class EmployeeController {
     @CrossOrigin(origins = "http://localhost:5173")
     public ResponseEntity<Map<String, Serializable>> getCurrentUserProfile(Authentication authentication) {
         try {
-            // Get username from Spring Security context
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("message", "Not authenticated"));
@@ -92,7 +69,6 @@ public class EmployeeController {
 
             String username = authentication.getName();
 
-            // Find employee by username
             Optional<Employee> employeeOptional = employeeRepo.findByUsername(username);
 
             if (employeeOptional.isEmpty()) {
@@ -305,7 +281,7 @@ public class EmployeeController {
 
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             if (!attendanceMap.containsKey(date)
-                    && date.isBefore(today) // only mark absent if the date is before today
+                    && date.isBefore(today)
                     && date.getDayOfWeek() != DayOfWeek.SATURDAY
                     && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
 
@@ -339,7 +315,6 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Verify the requested employee ID matches the logged-in employee
         if (currentEmployee.get().getEmployeeId() != employeeId) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

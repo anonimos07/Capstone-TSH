@@ -26,7 +26,6 @@ public class TimeLogService {
     @Autowired
     private TimeLogRepo timeLogRepository;
 
-    // In TimeLogService.java
     @Autowired
     private HRRepo hrRepository;
 
@@ -48,34 +47,27 @@ public class TimeLogService {
         return timeLogRepository.save(timeLog);
     }
 
-    // Find all time logs
     public List<TimeLog> findAllTimeLogs() {
         return timeLogRepository.findAll();
     }
 
-    // Find time log by ID
     public Optional<TimeLog> findTimeLogById(Long id) {
         return timeLogRepository.findById(id);
     }
 
-    // Find logs by employee
     public List<TimeLog> findTimeLogsByEmployee(Employee employee) {
         return timeLogRepository.findByEmployee(employee);
     }
 
-    // Find today's logs for an employee
     public List<TimeLog> findTodayLogsByEmployee(Employee employee) {
         return timeLogRepository.findTodayLogsByEmployee(employee);
     }
 
-    // Find logs by employee and date
     public List<TimeLog> findLogsByEmployeeAndDate(Employee employee, LocalDateTime date) {
         return timeLogRepository.findByEmployeeAndDate(employee, date);
     }
 
-    // Record time in (create new time log)
     public TimeLog timeIn(Employee employee) {
-        // First check if there's an active log
         TimeLog activeLog = timeLogRepository.findActiveLogByEmployee(employee);
 
         if (activeLog != null) {
@@ -86,14 +78,11 @@ public class TimeLogService {
         LocalDateTime now = LocalDateTime.now();
         String cutoffLabel = CutoffUtil.getCutoffLabel(now.toLocalDate());
 
-        // Create a new time log with the current timestamp
         TimeLog timeLog = new TimeLog(employee, LocalDateTime.now(), null);
         timeLog.setCutoffPeriod(cutoffLabel);
-        // Save the new time log and return it
         return timeLogRepository.save(timeLog);
     }
 
-    // Record time out (update existing time log)
     public TimeLog timeOut(Employee employee) {
         TimeLog activeLog = timeLogRepository.findActiveLogByEmployee(employee);
 
@@ -101,25 +90,19 @@ public class TimeLogService {
             throw new IllegalStateException("No active time-in found for employee");
         }
 
-        // Set the time-out timestamp
         activeLog.setTimeOut(LocalDateTime.now());
 
-        // Save the updated time log and return it
         return timeLogRepository.save(activeLog);
     }
 
-
-    // Save or update a time log
     public TimeLog saveTimeLog(TimeLog timeLog) {
         return timeLogRepository.save(timeLog);
     }
 
-    // Delete a time log
     public void deleteTimeLog(Long id) {
         timeLogRepository.deleteById(id);
     }
 
-    // Get current employee status (timed in or not)
     public TimeLog getCurrentStatus(Employee employee) {
         return timeLogRepository.findActiveLogByEmployee(employee);
     }
@@ -151,8 +134,6 @@ public class TimeLogService {
         return timeLogRepository.findByEmployeeAndMonthAndYear(employee, month, year);
     }
 
-
-    //mao ni akoa gigamit logic para cutoff
     public List<Map<String, Object>> getEmployeeHoursByCutoff(Long employeeId) {
         List<TimeLogSummary> summaries = timeLogRepository.getWorkedMinutesByCutoff(employeeId);
 

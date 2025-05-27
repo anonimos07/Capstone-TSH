@@ -30,5 +30,5 @@ public class PayrollDTO {
     private float grossIncome;
     private float netIncome;
 
-    // Constructors, getters, and setters are provided by Lombok
+
 }

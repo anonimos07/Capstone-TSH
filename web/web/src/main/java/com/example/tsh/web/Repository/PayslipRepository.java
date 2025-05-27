@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface PayslipRepository extends JpaRepository<Payslip, Long> {
 
-    // Added to help debug with explicit query
+
     @Query("SELECT p FROM Payslip p WHERE p.employee.employeeId = :employeeId")
     List<Payslip> findPayslipsByEmployeeId(@Param("employeeId") Long employeeId);
 

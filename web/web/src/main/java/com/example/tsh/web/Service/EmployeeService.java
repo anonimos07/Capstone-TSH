@@ -27,14 +27,7 @@ public class EmployeeService {
     private JwtService jwtService;
 
 
-//    public Employee saveEmployee(Employee employee) {
-//        employee.setPassword(passwordEncoder.encode(employee.getPassword()));
-//        employee.setRole(Role.EMPLOYEE); // Set role explicitly
-//        return employeeRepository.save(employee);
-//    }
-
     public Employee saveEmployee(Employee employee) {
-        // Check if username already exists
         Optional<Employee> existingEmployee = employeeRepository.findByUsername(employee.getUsername());
 
         if (existingEmployee.isPresent()) {
@@ -42,7 +35,7 @@ public class EmployeeService {
         }
 
         employee.setPassword(passwordEncoder.encode(employee.getPassword()));
-        employee.setRole(Role.EMPLOYEE); // Set role explicitly
+        employee.setRole(Role.EMPLOYEE);
         return employeeRepository.save(employee);
     }
 
@@ -59,8 +52,6 @@ public class EmployeeService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Role is already set to EMPLOYEE in your saveEmployee method
-        // You can add additional role checks here if needed
         if (employee.getRole() != Role.EMPLOYEE) {
             throw new RuntimeException("Unauthorized");
         }
@@ -68,7 +59,6 @@ public class EmployeeService {
         return employee;
     }
 
-    // get all employees list, mapped to hr controller
     public List<Employee> getAllEmployee(){
         return employeeRepository.findAll();
     }
@@ -115,12 +105,10 @@ public class EmployeeService {
 
         Map<String, Object> details = new HashMap<>();
         details.put("baseSalary", employee.get().getBaseSalary());
-        // Add calculations for deductions, net pay, etc.
         return details;
     }
 
     public List<Map<String, Object>> getPayslips(Long employeeId) {
-        // Implement payslip history retrieval
         return Collections.emptyList();
     }
 
