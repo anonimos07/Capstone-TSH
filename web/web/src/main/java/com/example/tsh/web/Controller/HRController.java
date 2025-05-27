@@ -42,7 +42,7 @@ public class HRController {
         }
 
         Map<String, String> response = new HashMap<>();
-        response.put("token", result);               // JWT token
+        response.put("token", result);
         response.put("role", hr.getRole().name());
         response.put("username",hr.getUsername());
 
@@ -52,8 +52,12 @@ public class HRController {
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/create-hr")
     public ResponseEntity<String> createHr(@RequestBody HR hr) {
-        hrService.saveHr(hr);
-        return ResponseEntity.ok("HR created successfully by HR");
+        try {
+            hrService.saveHr(hr);
+            return ResponseEntity.ok("HR created successfully by Admin");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @CrossOrigin(origins = "http://localhost:5173")
@@ -65,8 +69,13 @@ public class HRController {
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/create-employee")
     public ResponseEntity<String> createEmployee(@RequestBody Employee employee) {
-        employeeService.saveEmployee(employee);
-        return ResponseEntity.ok("Employee created successfully by HR");
+        try {
+            employeeService.saveEmployee(employee);
+            return ResponseEntity.ok("Employee created successfully by HR");
+        } catch (RuntimeException e) {
+
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/all-employee")
@@ -74,11 +83,11 @@ public class HRController {
         return employeeService.getAllEmployee();
     }
 
-    //get all timelog
+
     @GetMapping("/get-all")
     public ResponseEntity<List<TimeLog>> getAllTimeLogs(@RequestHeader("Authorization") String token) {
         try {
-            // Here you would check if the employee has admin privileges
+
             return ResponseEntity.ok(timeLogService.findAllTimeLogs());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -104,7 +113,7 @@ public class HRController {
 
             HR hr = hrOptional.get();
             return ResponseEntity.ok(Map.of(
-                    "hrId", hr.getHrId(), // Make sure this is included
+                    "hrId", hr.getHrId(),
                     "username", hr.getUsername(),
                     "firstName", hr.getFirstName(),
                     "lastName", hr.getLastName(),
@@ -117,7 +126,7 @@ public class HRController {
         }
     }
 
-    //update employee by profile
+    //updte emp via hr
     @PutMapping("/update-profile-employee")
     public ResponseEntity<String> updateEmployeeByHr(@RequestBody Employee updatedData) {
 
@@ -149,6 +158,7 @@ public class HRController {
         return ResponseEntity.ok(hrService.adjustEmployeeSalary(employeeId, newSalary));
     }
 
+    //overview attendance employee (working hours, avg hours, days of attendance)
     @GetMapping("/attendance-overview")
     public ResponseEntity<Map<String, Object>> getAttendanceOverview() {
         return ResponseEntity.ok(hrService.getAttendanceOverview());
@@ -190,6 +200,7 @@ public class HRController {
         return ResponseEntity.ok(hrService.getAllHr());
     }
 
+    //view attendance employee in calendar
     @GetMapping("/attendance-calendar")
     public ResponseEntity<List<AttendanceRecord>> getAttendanceCalendar(
             @RequestParam(required = false) Long employeeId,

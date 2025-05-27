@@ -114,8 +114,6 @@ public class PayrollController {
     @PostMapping("/generate/bulk")
     public ResponseEntity<List<Payroll>> generatePayrollForAllEmployees(
             @RequestBody Map<String, Object> request) {
-        // Implementation for bulk payroll generation
-        // This would be implemented in the service layer
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 

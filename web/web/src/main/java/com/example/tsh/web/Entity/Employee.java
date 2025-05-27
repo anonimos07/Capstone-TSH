@@ -70,18 +70,17 @@ public class Employee {
         this.absenceDays = 0;
     }
 
-    // Calculate gross income based on base salary, holiday pays, and absence deductions
+
     public float getGrossIncome() {
-        float dailyRate = this.baseSalary / 22; // Assuming 22 working days per month
+        float dailyRate = this.baseSalary / 22;
         float absenceDeduction = this.absenceDays * dailyRate;
         return this.baseSalary + this.regularHolidayPay + this.specialHolidayPay - absenceDeduction;
     }
 
-    // Calculate net income after tax deductions
+
     public float getNetIncome() {
         float gross = getGrossIncome();
-        // Simple tax calculation - replace with your actual tax logic
-        float tax = gross * 0.15f; // Assuming 15% tax
+        float tax = gross * 0.15f;
         return gross - tax;
     }
 

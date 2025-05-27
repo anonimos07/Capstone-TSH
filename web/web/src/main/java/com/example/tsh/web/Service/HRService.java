@@ -38,12 +38,27 @@ public class HRService {
     @Autowired
     EmployeeRepo employeeRepository;
 
+
     public HR saveHr(HR hr) {
+        // Check if username already exists
+        Optional<HR> existingHr = hrRepository.findByUsername(hr.getUsername());
+
+        if (existingHr.isPresent()) {
+            throw new RuntimeException("Username already exists: " + hr.getUsername());
+        }
+
         hr.setPassword(passwordEncoder.encode(hr.getPassword()));
-        hr.setRole(Role.HR);
+        hr.setRole(Role.HR); // Set role explicitly
         return hrRepository.save(hr);
     }
+
     public Employee createEmployee(Employee employee) {
+        Optional<Employee> existingEmployee = employeeRepo.findByUsername(employee.getUsername());
+
+        if (existingEmployee.isPresent()) {
+            throw new RuntimeException("Username already exists: " + employee.getUsername());
+        }
+
         employee.setPassword(passwordEncoder.encode(employee.getPassword()));
         employee.setRole(Role.EMPLOYEE);
         return employeeRepo.save(employee);
@@ -101,7 +116,7 @@ public class HRService {
         overview.put("totalPayroll", totalPayroll);
 
         float totalTax = employees.stream()
-                .map(e -> e.getBaseSalary() * 0.2f) // Assuming 20% tax
+                .map(e -> e.getBaseSalary() * 0.2f)
                 .reduce(0f, Float::sum);
         overview.put("totalTaxDeductions", totalTax);
 
@@ -242,7 +257,6 @@ public class HRService {
         Employee employee = employeeRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found: " + username));
 
-        // HR can update more fields if needed
         employee.setPosition(updatedData.getPosition());
         employee.setBaseSalary(updatedData.getBaseSalary());
         employee.setFirstName(updatedData.getFirstName());

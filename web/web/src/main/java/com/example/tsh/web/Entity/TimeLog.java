@@ -119,27 +119,16 @@ public class TimeLog {
         return timeOut;
     }
 
-//    public void setTimeOut(LocalDateTime timeOut) {
-//        this.timeOut = timeOut;
-//        if (this.timeIn != null && timeOut != null) {
-//            this.durationMinutes = calculateDurationInMinutes(this.timeIn, timeOut);
-//        }
-//    }
-
     public void recalculateOvertimeMutates() {
         if (this.timeIn != null && this.timeOut != null) {
-            // First calculate the duration
             this.durationMinutes = (int) Duration.between(this.timeIn, this.timeOut).toMinutes();
 
-            // Then calculate overtime (anything beyond 8 hours)
-            int standardWorkMinutes = 8 * 60; // 8 hours = 480 minutes
+            int standardWorkMinutes = 8 * 60;
             this.overtimeMinutes = Math.max(0, this.durationMinutes - standardWorkMinutes);
         }
     }
 
-    /**
-     * Replace your setTimeOut method with this enhanced version
-     */
+
     public void setTimeOut(LocalDateTime timeOut) {
         this.timeOut = timeOut;
 

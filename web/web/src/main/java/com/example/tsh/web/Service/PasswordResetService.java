@@ -70,7 +70,6 @@ public class PasswordResetService {
         }
 
         logger.info("No user found with email/username: {}", emailOrUsername);
-        // Neither employee nor HR was found
         return false;
     }
 

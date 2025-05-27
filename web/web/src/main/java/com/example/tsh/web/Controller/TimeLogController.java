@@ -42,7 +42,7 @@ public class TimeLogController {
     private UserDetailsService userDetailsService;
 
     @Autowired
-    private EmployeeRepo employeeRepo; // Or similar service that can find Employee by username
+    private EmployeeRepo employeeRepo;
 
 
 

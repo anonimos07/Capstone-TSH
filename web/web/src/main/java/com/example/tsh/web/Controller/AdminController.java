@@ -27,7 +27,7 @@ public class AdminController {
     private final EmployeeService employeeService;
 
 
-    //get all
+    //get tanan admin
     @GetMapping("/all")
     public List<Admin> getAll(){
         return adminService.getAllAdmins();
@@ -60,12 +60,17 @@ public class AdminController {
         return ResponseEntity.ok("Admin added successfully!");
     }
 
-    //create hr via admn
+
     @PostMapping("/create-hr")
     public ResponseEntity<String> createHr(@RequestBody HR hr) {
-        hrService.saveHr(hr);
-        return ResponseEntity.ok("HR created successfully by admin");
+        try {
+            hrService.saveHr(hr);
+            return ResponseEntity.ok("HR created successfully by Admin");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+
 
     //create employee via admn
     @PostMapping("/create-employee")
@@ -81,19 +86,20 @@ public class AdminController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    //delete
+    //delete adm
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAdmin(@PathVariable Long Id) {
         adminService.deleteAdmin(Id);
         return ResponseEntity.ok("Admin deleted successfully!");
     }
 
-    //get employee
+    //get employee via admin
     @GetMapping("/all-employee")
     public List<Employee> getAllEmployee(){
         return employeeService.getAllEmployee();
     }
 
+    //get hr via admin
     @GetMapping("/all-hr")
     public List<HR> getAllHrs(){
         return hrService.getAllHr();

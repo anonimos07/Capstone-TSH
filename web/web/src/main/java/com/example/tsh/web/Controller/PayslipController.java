@@ -37,9 +37,7 @@ public class PayslipController {
         this.employeeRepo = employeeRepo;
     }
 
-    /**
-     * Generate a payslip from payroll
-     */
+   //gen payslip
     @PostMapping("/generate/{payrollId}")
 
     public ResponseEntity<Payslip> generatePayslip(@PathVariable Long payrollId) {
@@ -48,9 +46,7 @@ public class PayslipController {
         return ResponseEntity.ok(payslip);
     }
 
-    /**
-     * Mark payslip as sent to employee
-     */
+
     @PutMapping("/{payslipId}/send")
     public ResponseEntity<Payslip> sendPayslipToEmployee(@PathVariable Long payslipId) {
         LOGGER.info("Marking payslip ID " + payslipId + " as sent");
@@ -58,17 +54,12 @@ public class PayslipController {
         return ResponseEntity.ok(payslip);
     }
 
-    /**
-     * Download payslip (accessible by employee or HR/admin)
-     */
+    //dl payslip
     @GetMapping("/{payslipId}/download")
     public ResponseEntity<ByteArrayResource> downloadPayslip(@PathVariable Long payslipId) {
         LOGGER.info("Downloading payslip ID: " + payslipId);
         Payslip payslip = payslipService.getPayslipById(payslipId);
 
-        // Mark as downloaded if accessed by employee
-        // This would require checking if current user is the employee associated with this payslip
-        // For simplicity, we'll mark it downloaded whenever accessed
         payslipService.markPayslipAsDownloaded(payslipId);
 
         ByteArrayResource resource = new ByteArrayResource(payslip.getFileContent());
@@ -80,46 +71,35 @@ public class PayslipController {
                 .body(resource);
     }
 
-    /**
-     * Get all payslips (admin/HR only)
-     */
+   //get all payslip para hr
     @GetMapping
-    @PreAuthorize("hasRole('HR') or hasRole('ADMIN')")
     public ResponseEntity<List<Payslip>> getAllPayslips() {
         List<Payslip> payslips = payslipService.getAllPayslips();
         return ResponseEntity.ok(payslips);
     }
 
-    /**
-     * Get payslip by ID
-     */
+    //get payslip Id
     @GetMapping("/{id}")
     public ResponseEntity<Payslip> getPayslipById(@PathVariable Long id) {
         Payslip payslip = payslipService.getPayslipById(id);
         return ResponseEntity.ok(payslip);
     }
 
-    /**
-     * Get payslips by employee ID
-     */
+   //get payslip empId
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<List<Payslip>> getPayslipsByEmployeeId(@PathVariable Long employeeId) {
         List<Payslip> payslips = payslipService.getPayslipsByEmployeeId(employeeId);
         return ResponseEntity.ok(payslips);
     }
 
-    /**
-     * Get payslips by payroll ID
-     */
+
     @GetMapping("/payroll/{payrollId}")
     public ResponseEntity<List<Payslip>> getPayslipsByPayrollId(@PathVariable Long payrollId) {
         List<Payslip> payslips = payslipService.getPayslipsByPayrollId(payrollId);
         return ResponseEntity.ok(payslips);
     }
 
-    /**
-     * Delete payslip (admin only)
-     */
+   //delete payslip
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Boolean>> deletePayslip(@PathVariable Long id) {
         payslipService.deletePayslip(id);
@@ -136,7 +116,7 @@ public class PayslipController {
 
     @GetMapping("/my-payslips")
     public ResponseEntity<List<Payslip>> getLoggedInEmployeePayslips(Authentication authentication) {
-        String username = authentication.getName(); // get logged-in user's username
+        String username = authentication.getName();
 
         Employee employee = employeeRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Employee not found with username: " + username));
