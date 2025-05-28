@@ -131,7 +131,7 @@ public class PayslipService {
             document.open();
 
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
-            Paragraph companyName = new Paragraph(data.get("IdealTechStaffing").toString(), headerFont);
+            Paragraph companyName = new Paragraph(data.get("companyName").toString(), headerFont);
             companyName.setAlignment(Element.ALIGN_CENTER);
             document.add(companyName);
 
@@ -261,10 +261,10 @@ public class PayslipService {
     private Map<String, Object> preparePayslipData(Payroll payroll, Employee employee) {
         Map<String, Object> data = new HashMap<>();
 
-        data.put("companyName", "Your Company Name");
-        data.put("companyAddress", "Company Address, City, Country");
-        data.put("companyPhone", "+123 456 7890");
-        data.put("companyEmail", "hr@yourcompany.com");
+        data.put("companyName", "IDEAL TECH STAFFING PHILIPPINES");
+        data.put("companyAddress", "11/F 1Nito Tower, Archbishop Ave, Lahug, Cebu City 6000 Philippines");
+        data.put("companyPhone", "+639345919392");
+        data.put("companyEmail", "tsh@gmail.com");
 
         data.put("employeeId", employee.getEmployeeId());
         data.put("employeeName", employee.getFirstName() + " " + employee.getLastName());

@@ -251,14 +251,19 @@ export default function TimeLogs() {
   }, []);
 
   const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      log.date?.includes(searchTerm) ||
-      formatTime(log.timeIn)?.includes(searchTerm) ||
-      formatTime(log.timeOut)?.includes(searchTerm) ||
-      (log.totalHours?.toString() || "").includes(searchTerm);
+    // Convert search term to lowercase for case-insensitive search
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    // Check if any field matches the search term
+    const matchesSearch = searchTerm === "" || 
+      (log.date && log.date.toLowerCase().includes(searchTermLower)) ||
+      (log.timeIn && formatTime(log.timeIn).toLowerCase().includes(searchTermLower)) ||
+      (log.timeOut && formatTime(log.timeOut).toLowerCase().includes(searchTermLower)) ||
+      (log.durationMinutes && (log.durationMinutes / 60).toFixed(1).includes(searchTerm));
 
-    const matchesDate = dateFilter === "" || log.date === dateFilter;
+    // Check if date matches the date filter
+    const matchesDate = dateFilter === "" || 
+      (log.date && log.date.includes(dateFilter));
 
     return matchesSearch && matchesDate;
   });
@@ -384,16 +389,6 @@ export default function TimeLogs() {
                     <CardDescription>Your complete attendance history</CardDescription>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                      <Input
-                        type="text"
-                        placeholder="Search records..."
-                        className="pl-8"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
                     <div className="relative">
                       <Calendar className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                       <Input

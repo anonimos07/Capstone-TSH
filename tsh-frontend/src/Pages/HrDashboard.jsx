@@ -978,7 +978,7 @@ function HolidaysCalendar() {
                 <HrOverview
                   title="Payroll"
                   value="Generate Payroll"
-                  description=""
+                  description="Generates payroll for employees by calculating salaries based on attendance, deductions, bonuses, and applicable taxes."
                   icon={PhilippinePeso}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/PayrollPage")}

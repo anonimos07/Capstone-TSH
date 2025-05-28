@@ -555,16 +555,16 @@ function HolidaysCalendar() {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <OverviewCard
                   title="Time In/Out"
-                  value="Track Hours"
-                  description="Record your daily attendance"
+                  value="Track Working Hours"
+                  description="Log your daily check-in and check-out times"
                   icon={Clock}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/TimeTracking")}
                 />
                 <OverviewCard
                   title="Logs"
-                  value="View History"
-                  description="Check your logs"
+                  value="View Log History"
+                  description="Browse through your time tracking records"
                   icon={FileText}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/TimeLogs")}
@@ -578,9 +578,9 @@ function HolidaysCalendar() {
                   onClick={() => (window.location.href = "/EmployeeAttendance")}
                 />
                 <OverviewCard
-                  title="Overtime"
-                  value="Payslips & Tax"
-                  description="View your payslips and tax details"
+                  title="Payslips"
+                  value="Export Payslips"
+                  description="View and export your payslips"
                   icon={DollarSign}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => (window.location.href = "/EmployeePayslip")}

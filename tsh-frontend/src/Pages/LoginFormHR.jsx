@@ -192,7 +192,7 @@ export function LoginHR({ className, ...props }) {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="password"
+                      placeholder="Password"
                       required
                       value={formData.password}
                       onChange={handleChange}

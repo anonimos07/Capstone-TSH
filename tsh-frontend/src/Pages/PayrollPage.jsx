@@ -13,17 +13,17 @@ import {
   FiUser,
   FiSearch,
 } from "react-icons/fi"
-import { HrNav } from "../components/dashboard/HrNav";
-import { HrUser } from "../components/dashboard/HrUser";
+import { HrNav } from "../components/dashboard/HrNav"
+import { HrUser } from "../components/dashboard/HrUser"
 
 const API_URL = "http://localhost:8080/api/payrolls"
 
 const PayrollPage = () => {
   const [hr, setHr] = useState({
-      firstName: "",
-      lastName: "",
-      email: ""
-    });
+    firstName: "",
+    lastName: "",
+    email: "",
+  })
   const [payrolls, setPayrolls] = useState([])
   const [employees, setEmployees] = useState([])
   const [selectedEmployees, setSelectedEmployees] = useState([])
@@ -35,155 +35,88 @@ const PayrollPage = () => {
   const [editMode, setEditMode] = useState(false)
   const [currentPayroll, setCurrentPayroll] = useState(null)
 
-  const fullName = hr ? `${hr.firstName} ${hr.lastName}` : "";
+  const fullName = hr ? `${hr.firstName} ${hr.lastName}` : ""
 
- const generatePayslip = async (payrollId) => {
-  try {
-    setLoading(true);
-    const url = `http://localhost:8080/api/payslips/generate/${payrollId}`;
-    
-    console.log("Attempting to generate payslip with URL:", url);
-    console.log("Payroll ID:", payrollId);
-
-    // Get token from localStorage
-    const token = localStorage.getItem("token");
-    console.log("Auth token:", token ? "Exists" : "Missing");
-
-    if (!token) {
-      throw new Error("Authentication token not found. Please log in again.");
-    }
-    if (token.split('.').length !== 3) {
-      throw new Error("Invalid token format");
-    }
-
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      responseType: 'json'
-    };
-
-    console.log("Request config:", config);
-
-    const response = await axios.post(url, null, config)
-      .catch(async (error) => {
-        console.error("Initial request failed, trying with blob responseType:", error);
-        return await axios.post(url, null, {
-          ...config,
-          responseType: 'blob'
-        });
-      });
-
-    console.log("Response received:", {
-      status: response.status,
-      headers: response.headers,
-      data: response.data
-    });
-
-    // Handle PDF response
-    if (response.headers['content-type']?.includes('application/pdf') || 
-        response.data instanceof Blob) {
-      console.log("PDF response detected");
-      const blob = response.data instanceof Blob ? 
-        response.data : 
-        new Blob([response.data], { type: 'application/pdf' });
-      
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = `payslip-${payrollId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-    } 
-    else if (response.data?.pdfData) {
-      console.log("JSON with PDF data detected");
-      const blob = new Blob([response.data.pdfData], { type: 'application/pdf' });
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = `payslip-${payrollId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-    }
-    else {
-      console.log("JSON response detected");
-      const payslipData = JSON.stringify(response.data, null, 2);
-      const blob = new Blob([payslipData], { type: 'application/json' });
-      const blobUrl = window.URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
-    }
-    
-    setSuccessMessage("Payslip generated successfully!");
-  } catch (error) {
-    console.error("Error details:", {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      response: error.response
-    });
-
-    if (error.response) {
-      if (error.response.status === 403) {
-        console.error("Authentication failed - possible token issues");
-        setError("Access denied. Your session may have expired. Please log in again.");
-        
-        localStorage.removeItem("token");
-      } 
-      else if (error.response.status === 404) {
-        setError(`Payslip endpoint not found (404). Please check the URL.`);
-      }
-      else {
-        setError(`Server error: ${error.response.status} - ${error.response.data?.message || 'Unknown error'}`);
-      }
-    } 
-    else if (error.request) {
-      setError("No response from server. Check your network connection.");
-    } 
-    else {
-      setError(`Request error: ${error.message}`);
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
-  useEffect(() => {
-  const fetchHrData = async () => {
+  const generatePayslip = async (payrollId) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8080/hr/me", {
-        method: "GET",
+      setLoading(true)
+      const url = `http://localhost:8080/api/payslips/generate/${payrollId}`
+
+      // Get token from localStorage
+      const token = localStorage.getItem("token")
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.")
+      }
+
+      const config = {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch HR data");
       }
-      
-      const data = await response.json();
-      setHr({
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        email: data.email || "",
-        ...data,
-      });
-    } catch (error) {
-      console.error("Error fetching HR data:", error);
-    }
-  };
 
-  fetchHrData();
-  fetchEmployees();
-  fetchAllPayrolls();
-}, []);
+      // Make the API call
+      await axios.post(url, null, config)
+
+      // Find the employee name for the success message
+      const payroll = payrolls.find((p) => p.payrollId === payrollId)
+      const employeeName = payroll?.employee ? `${payroll.employee.firstName} ${payroll.employee.lastName}` : "Employee"
+
+      setSuccessMessage(`Payslip generated successfully for ${employeeName}!`)
+    } catch (error) {
+      console.error("Error generating payslip:", error)
+
+      if (error.response) {
+        if (error.response.status === 403) {
+          setError("Access denied. Your session may have expired. Please log in again.")
+          localStorage.removeItem("token")
+        } else if (error.response.status === 404) {
+          setError("Payslip endpoint not found (404). Please check the URL.")
+        } else {
+          setError(`Server error: ${error.response.status} - ${error.response.data?.message || "Unknown error"}`)
+        }
+      } else if (error.request) {
+        setError("No response from server. Check your network connection.")
+      } else {
+        setError(`Request error: ${error.message}`)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const fetchHrData = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await fetch("http://localhost:8080/hr/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch HR data")
+        }
+
+        const data = await response.json()
+        setHr({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          ...data,
+        })
+      } catch (error) {
+        console.error("Error fetching HR data:", error)
+      }
+    }
+
+    fetchHrData()
+    fetchEmployees()
+  }, [])
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token")
@@ -254,50 +187,33 @@ const PayrollPage = () => {
     }
   }
 
-const fetchEmployees = async () => {
-  try {
-    setLoading(true);
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      throw new Error("Authentication token not found. Please log in again.");
-    }
-
-    const response = await fetch("http://localhost:8080/hr/all-employee", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    const raw = await response.text();
-
-    const data = JSON.parse(raw);
-    console.log("Parsed employees data:", data);
-
-    setEmployees(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.error("Fetch employees error:", error);
-    setError("Failed to load employee data. Please check the API response format.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-
-
-  const fetchAllPayrolls = async () => {
+  const fetchEmployees = async () => {
     try {
       setLoading(true)
-      const response = await apiRequest("get", API_URL)
-      setPayrolls(response)
+
+      const token = localStorage.getItem("token")
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.")
+      }
+
+      const response = await fetch("http://localhost:8080/hr/all-employee", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      const raw = await response.text()
+
+      const data = JSON.parse(raw)
+      console.log("Parsed employees data:", data)
+
+      setEmployees(Array.isArray(data) ? data : [])
     } catch (error) {
-      console.error("Fetch all payrolls error:", error)
-      setError("Failed to load payroll data.")
+      console.error("Fetch employees error:", error)
+      setError("Failed to load employee data. Please check the API response format.")
     } finally {
       setLoading(false)
     }
@@ -512,19 +428,18 @@ const fetchEmployees = async () => {
     }
   }
 
-  return (       
+  return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 border-b bg-white">
-            <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
-              <div className="flex items-center gap-8">
-                <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
-                <HrNav userType="hr" />
-              </div>
-              <HrUser userName={fullName} userEmail={hr.email} />
-            </div>
-          </header>
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-8">
+            <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
+            <HrNav userType="hr" />
+          </div>
+          <HrUser userName={fullName} userEmail={hr.email} />
+        </div>
+      </header>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Payroll Management</h1>
@@ -566,7 +481,7 @@ const fetchEmployees = async () => {
         {editMode && currentPayroll && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-              <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center bg-purple-600 text-white rounded-t-lg">
+              <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center bg-[#7c213c] text-white rounded-t-lg">
                 <h3 className="text-lg font-semibold flex items-center">
                   <FiEdit className="mr-2" /> Edit Payroll
                 </h3>
@@ -683,7 +598,7 @@ const fetchEmployees = async () => {
         )}
 
         <div className="bg-white rounded-lg shadow-md mb-8">
-          <div className="px-6 py-4 border-b border-gray-200 bg-blue-600 rounded-t-lg flex items-center">
+          <div className="px-6 py-4 border-b border-gray-200 bg-[#7c213c] rounded-t-lg flex items-center">
             <FiFilter className="mr-2 text-white" />
             <h2 className="text-lg font-semibold text-white">Payroll Filters</h2>
           </div>
@@ -755,7 +670,7 @@ const fetchEmployees = async () => {
                   <button
                     onClick={fetchPayrolls}
                     disabled={loading || selectedEmployees.length === 0}
-                    className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-[#8b2545] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>
@@ -859,7 +774,7 @@ const fetchEmployees = async () => {
 
         {!loading && payrolls.length > 0 && (
           <div className="bg-white rounded-lg shadow-md mb-8">
-            <div className="px-6 py-4 border-b border-gray-200 bg-purple-600 rounded-t-lg flex justify-between items-center">
+            <div className="px-6 py-4 border-b border-gray-200 bg-[#7c213c] rounded-t-lg flex justify-between items-center">
               <div className="flex items-center">
                 <FiDollarSign className="mr-2 text-white" />
                 <h2 className="text-lg font-semibold text-white">Payroll Records</h2>
@@ -998,7 +913,7 @@ const fetchEmployees = async () => {
 
                         <div className="flex justify-between px-4 py-3">
                           <span className="text-gray-600">Absences</span>
-                          <span className="font-medium text-red-600">-{(payroll.absenceDays)}</span>
+                          <span className="font-medium text-red-600">-{payroll.absenceDays}</span>
                         </div>
 
                         <div className="flex justify-between px-4 py-3">
@@ -1019,7 +934,7 @@ const fetchEmployees = async () => {
                   </div>
 
                   <div className="bg-purple-50 rounded-lg overflow-hidden border border-purple-100">
-                    <div className="bg-purple-600 text-white px-4 py-2 font-medium">Summary</div>
+                    <div className="bg-[#7c213c] text-white px-4 py-2 font-medium">Summary</div>
                     <div className="p-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -1031,7 +946,7 @@ const fetchEmployees = async () => {
                         <div className="text-2xl font-bold text-green-600">{formatCurrency(payroll.netIncome)}</div>
                       </div>
                       <div className="mt-4 h-2 w-full bg-purple-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-600 rounded-full" style={{ width: "100%" }}></div>
+                        <div className="h-full bg-[#7c213c] rounded-full" style={{ width: "100%" }}></div>
                       </div>
                     </div>
                   </div>

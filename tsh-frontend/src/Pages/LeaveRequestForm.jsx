@@ -1,38 +1,45 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { CalendarDays, ArrowLeft } from "lucide-react";
-import { MainNav } from "../components/dashboard/MainNav";
-import { UserNav } from "../components/dashboard/UserNav";
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
+import { CalendarDays, ArrowLeft, User, Clock, FileText, AlertCircle, Loader2 } from "lucide-react"
+import { MainNav } from "../components/dashboard/MainNav"
+import { UserNav } from "../components/dashboard/UserNav"
 
 export default function LeaveRequestForm() {
   const [employee, setEmployee] = useState({
     firstName: "",
     lastName: "",
     email: "",
-  });
-  const navigate = useNavigate();
+  })
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     startDate: "",
     endDate: "",
     leaveType: "ANNUAL",
     reason: "",
-    hrId: ""
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [hrList, setHrList] = useState([]);
-  const [loadingHr, setLoadingHr] = useState(true);
+    hrId: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+  const [hrList, setHrList] = useState([])
+  const [loadingHr, setLoadingHr] = useState(true)
 
-  const fullName = employee ? `${employee.firstName} ${employee.lastName}` : "";
+  const fullName = employee ? `${employee.firstName} ${employee.lastName}` : ""
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        
+        const token = localStorage.getItem("token")
+
         if (!token) {
-          throw new Error("Authentication token not found. Please log in again.");
+          throw new Error("Authentication token not found. Please log in again.")
         }
 
         const response = await fetch("http://localhost:8080/employee/me", {
@@ -41,103 +48,119 @@ export default function LeaveRequestForm() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        });
+        })
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to load employee data");
+          const errorData = await response.json()
+          throw new Error(errorData.message || "Failed to load employee data")
         }
 
-        const data = await response.json();
+        const data = await response.json()
         setEmployee({
           firstName: data.firstName || "",
           lastName: data.lastName || "",
           email: data.email || "",
-        });
+        })
       } catch (error) {
-        console.error("Error fetching employee data:", error);
-        setError(error.message);
+        console.error("Error fetching employee data:", error)
+        setError(error.message)
       }
-    };
+    }
 
     const fetchHrList = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token")
         if (!token) {
-          throw new Error("Authentication token not found");
+          throw new Error("Authentication token not found")
         }
 
         const response = await fetch("http://localhost:8080/employee/available-hr", {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
 
         if (!response.ok) {
-          throw new Error("Failed to fetch HR list");
+          throw new Error("Failed to fetch HR list")
         }
-        
-        const data = await response.json();
-        setHrList(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoadingHr(false);
-      }
-    };
 
-    fetchEmployeeData();
-    fetchHrList();
-  }, []);
+        const data = await response.json()
+        setHrList(data)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoadingHr(false)
+      }
+    }
+
+    fetchEmployeeData()
+    fetchHrList()
+  }, [])
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }));
-  };
+      [name]: value,
+    }))
+  }
+
+  const handleSelectChange = (name, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
       if (!token) {
-        throw new Error("Authentication token not found");
+        throw new Error("Authentication token not found")
       }
 
       const response = await fetch("http://localhost:8080/employee/leave-request", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
-      });
+        body: JSON.stringify(formData),
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit leave request");
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to submit leave request")
       }
 
-      const result = await response.json();
-      alert("Leave request submitted successfully!");
-      navigate("/EmployeeDashboard");
+      const result = await response.json()
+      alert("Leave request submitted successfully!")
+      navigate("/EmployeeDashboard")
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
+
+  const leaveTypeOptions = [
+    { value: "ANNUAL", label: "Annual Leave" },
+    { value: "SICK", label: "Sick Leave" },
+    { value: "MATERNITY", label: "Maternity Leave" },
+    { value: "PATERNITY", label: "Paternity Leave" },
+    { value: "UNPAID", label: "Unpaid Leave" },
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-40 border-b bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
           <div className="flex items-center gap-8">
             <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
@@ -147,133 +170,189 @@ export default function LeaveRequestForm() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
-          </Button>
-          <h2 className="text-2xl font-bold">Leave Request</h2>
-        </div>
-
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Leave Request Form</h1>
-            <CalendarDays className="h-8 w-8 text-primary" />
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-2">
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assign to HR
-              </label>
-              {loadingHr ? (
-                <p className="text-sm text-gray-500">Loading HR list...</p>
-              ) : (
-                <select
-                  name="hrId"
-                  value={formData.hrId}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  required
-                >
-                  <option value="">Select HR</option>
-                  {hrList.map(hr => (
-                    <option key={hr.hrId} value={hr.hrId}>
-                      {hr.firstName} {hr.lastName} ({hr.position})
-                    </option>
-                  ))}
-                </select>
-              )}
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <CalendarDays className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Leave Type
-              </label>
-              <select
-                name="leaveType"
-                value={formData.leaveType}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                required
-              >
-                <option value="ANNUAL">Annual Leave</option>
-                <option value="SICK">Sick Leave</option>
-                <option value="MATERNITY">Maternity Leave</option>
-                <option value="PATERNITY">Paternity Leave</option>
-                <option value="UNPAID">Unpaid Leave</option>
-              </select>
+              <h1 className="text-3xl font-bold tracking-tight">Leave Request</h1>
+              <p className="text-muted-foreground">Submit a new leave request for approval</p>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                required
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                required
-                min={formData.startDate || new Date().toISOString().split('T')[0]}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reason
-              </label>
-              <textarea
-                name="reason"
-                value={formData.reason}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                required
-                placeholder="Please provide a reason for your leave request"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate("/EmployeeDashboard")}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Request"}
-              </Button>
-            </div>
-          </form>
+          </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Form Card */}
+        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
+          <CardHeader className="pb-6">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <FileText className="h-5 w-5" />
+              Request Details
+            </CardTitle>
+            <CardDescription>Please fill out all required fields to submit your leave request</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* HR Assignment Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Assignment</h3>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hrId" className="text-sm font-medium">
+                    Assign to HR Representative *
+                  </Label>
+                  {loadingHr ? (
+                    <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/50">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Loading HR representatives...</span>
+                    </div>
+                  ) : (
+                    <Select value={formData.hrId} onValueChange={(value) => handleSelectChange("hrId", value)} required>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select an HR representative" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hrList.map((hr) => (
+                          <SelectItem key={hr.hrId} value={hr.hrId}>
+                            {hr.firstName} {hr.lastName} ({hr.position})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Leave Details Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Leave Details</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="leaveType" className="text-sm font-medium">
+                      Leave Type *
+                    </Label>
+                    <Select
+                      value={formData.leaveType}
+                      onValueChange={(value) => handleSelectChange("leaveType", value)}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {leaveTypeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate" className="text-sm font-medium">
+                      Start Date *
+                    </Label>
+                    <Input
+                      type="date"
+                      id="startDate"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      required
+                      min={new Date().toISOString().split("T")[0]}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="endDate" className="text-sm font-medium">
+                      End Date *
+                    </Label>
+                    <Input
+                      type="date"
+                      id="endDate"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      required
+                      min={formData.startDate || new Date().toISOString().split("T")[0]}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reason" className="text-sm font-medium">
+                    Reason for Leave *
+                  </Label>
+                  <Textarea
+                    id="reason"
+                    name="reason"
+                    value={formData.reason}
+                    onChange={handleChange}
+                    rows={4}
+                    required
+                    placeholder="Please provide a detailed reason for your leave request..."
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Provide a clear and detailed explanation for your leave request
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Form Actions */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/EmployeeDashboard")}
+                  disabled={isSubmitting}
+                  className="sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="sm:w-auto">
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting Request...
+                    </>
+                  ) : (
+                    "Submit Leave Request"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
-  );
+  )
 }

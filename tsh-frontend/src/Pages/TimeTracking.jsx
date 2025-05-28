@@ -1,134 +1,85 @@
 import { useState, useEffect } from "react"
-import { Clock, ArrowRight } from "lucide-react"
+import { Clock, ArrowRight, Play, Square, Calendar, Timer, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react"
 import { MainNav } from "../components/dashboard/MainNav"
 import { UserNav } from "../components/dashboard/UserNav"
-import { PageHeader } from "../components/dashboard/PageHeader"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
 import LoadingSpinner from "../components/ui/LoadingSpinner"
 
-const API_BASE_URL = 'http://localhost:8080/api/time-logs';
+const API_BASE_URL = "http://localhost:8080/api/time-logs"
 
 const getToken = () => {
-  return localStorage.getItem('token');
-};
-const userData = {
-  username: localStorage.getItem("username") || ""
-};
+  return localStorage.getItem("token")
+}
 
-const callApi = async (endpoint, method = 'GET', body = null) => {
-  const token = getToken();
-  
+const userData = {
+  username: localStorage.getItem("username") || "",
+}
+
+const callApi = async (endpoint, method = "GET", body = null) => {
+  const token = getToken()
+
   if (!token) {
-    throw new Error('Not authenticated');
+    throw new Error("Not authenticated")
   }
-  
+
   const options = {
     method,
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    }
-  };
-  
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  }
+
   if (body) {
-    options.body = JSON.stringify(body);
+    options.body = JSON.stringify(body)
   }
-  
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-  
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, options)
+
   if (!response.ok) {
-    const text = await response.text();
-    console.error('API error response:', response.status, text);
-    throw new Error(`API request failed: ${response.status}`);
+    const text = await response.text()
+    console.error("API error response:", response.status, text)
+    throw new Error(`API request failed: ${response.status}`)
   }
-  
+
   try {
-    const text = await response.text();
-    return JSON.parse(text);
+    const text = await response.text()
+    return JSON.parse(text)
   } catch (e) {
-    if (endpoint === '/time-in') {
-      const status = await getCurrentStatus();
-      const logs = await getTodayLogs();
-      return { success: true };
+    if (endpoint === "/time-in") {
+      const status = await getCurrentStatus()
+      const logs = await getTodayLogs()
+      return { success: true }
     }
-    
-    if (endpoint === '/time-out') {
-      const status = await getCurrentStatus();
-      const logs = await getTodayLogs();
-      return { success: true };
+
+    if (endpoint === "/time-out") {
+      const status = await getCurrentStatus()
+      const logs = await getTodayLogs()
+      return { success: true }
     }
-    
-    return { success: true };
+
+    return { success: true }
   }
-};
+}
 
 async function getCurrentStatus() {
-  return callApi('/status');
+  return callApi("/status")
 }
 
 async function getTodayLogs() {
-  return callApi('/today');
+  return callApi("/today")
 }
 
 async function timeIn() {
-  return callApi('/time-in', 'POST');
+  return callApi("/time-in", "POST")
 }
 
 async function timeOut() {
-  return callApi('/time-out', 'POST');
-}
-
-function Card({ children, className }) {
-  return <div className={`rounded-lg border bg-white shadow-sm ${className || ""}`}>{children}</div>
-}
-
-function CardHeader({ children, className }) {
-  return <div className={`p-6 pb-3 ${className || ""}`}>{children}</div>
-}
-
-function CardTitle({ children, className }) {
-  return <h3 className={`text-lg font-semibold ${className || ""}`}>{children}</h3>
-}
-
-function CardDescription({ children }) {
-  return <p className="text-sm text-gray-500">{children}</p>
-}
-
-function CardContent({ children }) {
-  return <div className="p-6 pt-0">{children}</div>
-}
-
-function Button({ children, variant, size, className, onClick, disabled }) {
-  const baseStyles =
-    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50"
-
-  const variantStyles = {
-    default: "bg-primary text-white hover:bg-primary/90",
-    outline: "border border-gray-300 bg-transparent hover:bg-gray-50",
-    ghost: "bg-transparent hover:bg-gray-50",
-    success: "bg-green-600 text-white hover:bg-green-700",
-    danger: "bg-red-600 text-white hover:bg-red-700",
-  }
-
-  const sizeStyles = {
-    default: "h-10 px-4 py-2",
-    sm: "h-8 px-3 text-xs",
-    lg: "h-12 px-6 text-lg",
-  }
-
-  return (
-    <button
-      className={`
-        ${baseStyles} 
-        ${variantStyles[variant || "default"]} 
-        ${sizeStyles[size || "default"]} 
-        ${className || ""}
-      `}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  )
+  return callApi("/time-out", "POST")
 }
 
 export default function TimeTracking() {
@@ -149,116 +100,126 @@ export default function TimeTracking() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    
+    const token = localStorage.getItem("token")
+
     if (!token) {
-      setIsAuthenticated(false);
-      setError('Not authenticated. Please log in.');
-      return;
+      setIsAuthenticated(false)
+      setError("Not authenticated. Please log in.")
+      return
     }
-    
-    const userStr = localStorage.getItem("user");
-    const userData = userStr ? JSON.parse(userStr) : null;
-    
+
+    const userStr = localStorage.getItem("user")
+    const userData = userStr ? JSON.parse(userStr) : null
+
     if (!userData) {
-      setIsAuthenticated(false);
-      setError('User data not found. Please log in again.');
-      return;
+      setIsAuthenticated(false)
+      setError("User data not found. Please log in again.")
+      return
     }
-    
+
     setEmployee({
       username: userData.username,
       firstName: userData.firstName,
       lastName: userData.lastName,
       email: userData.email,
-      role: userData.role
-    });
-    
-    setIsAuthenticated(true);
-  }, []);
+      role: userData.role,
+    })
+
+    setIsAuthenticated(true)
+  }, [])
 
   const loadData = async () => {
-    if (!isAuthenticated) return;
-    
-    try {
-      setLoading(true);
-      
-      const status = await getCurrentStatus();
-      setTimeStatus(status);
-      
-      const logs = await getTodayLogs();
-      console.log("Today's logs:", logs);
-      setTimeRecords(logs);
-      
-      setError(null);
+    if (!isAuthenticated) return
 
-      const normalizedLogs = Array.isArray(logs) ? logs.map(log => ({
-        id: log.timeLogId,
-        timeIn: log.timeIn,
-        timeOut: log.timeOut,
-      })) : [];
-      
-      console.log("Today's logs (normalized):", normalizedLogs);
-      setTimeRecords(normalizedLogs);
+    try {
+      setLoading(true)
+
+      const status = await getCurrentStatus()
+      setTimeStatus(status)
+
+      const logs = await getTodayLogs()
+      console.log("Today's logs:", logs)
+      setTimeRecords(logs)
+
+      setError(null)
+
+      const normalizedLogs = Array.isArray(logs)
+        ? logs.map((log) => ({
+            id: log.timeLogId,
+            timeIn: log.timeIn,
+            timeOut: log.timeOut,
+          }))
+        : []
+
+      console.log("Today's logs (normalized):", normalizedLogs)
+      setTimeRecords(normalizedLogs)
     } catch (err) {
-      setError('Failed to load data. Please try again.');
-      console.error('Error loading data:', err);
+      setError("Failed to load data. Please try again.")
+      console.error("Error loading data:", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadData();
-      
+      loadData()
+
       const intervalId = setInterval(() => {
-        loadData();
-      }, 300000);
-      
-      return () => clearInterval(intervalId);
+        loadData()
+      }, 300000)
+
+      return () => clearInterval(intervalId)
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated])
 
   const handleTimeIn = async () => {
     try {
-      setLoading(true);
-      await timeIn();
-      
-      await loadData();
-      setError(null);
+      setLoading(true)
+      await timeIn()
+
+      await loadData()
+      setError(null)
     } catch (error) {
-      console.error('Time in error:', error);
-      setError('Failed to time in. Please try again.');
+      console.error("Time in error:", error)
+      setError("Failed to time in. Please try again.")
       try {
-        await loadData();
-      } catch (e) {
-      }
+        await loadData()
+      } catch (e) {}
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-  
+  }
+
   const handleTimeOut = async () => {
     try {
-      setLoading(true);
-      await timeOut();
-      
-      await loadData();
-      setError(null);
+      setLoading(true)
+      await timeOut()
+
+      await loadData()
+      setError(null)
     } catch (error) {
-      console.error('Time out error:', error);
-      setError('Failed to time out. Please try again.');
+      console.error("Time out error:", error)
+      setError("Failed to time out. Please try again.")
       try {
-        await loadData();
-      } catch (e) {
-      }
+        await loadData()
+      } catch (e) {}
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const formatTime = (isoString) => {
     if (!isoString) return "---"
@@ -282,19 +243,28 @@ export default function TimeTracking() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center">
-        <div className="rounded-lg border bg-white p-8 shadow-sm">
-          <h1 className="mb-4 text-xl font-bold">Authentication Required</h1>
-          <p className="mb-6">Please log in to access time tracking features.</p>
-          <Button onClick={() => window.location.href = "/"}>Go to Login</Button>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Authentication Required
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-6">Please log in to access time tracking features.</p>
+            <Button onClick={() => (window.location.href = "/")} className="w-full">
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b bg-white">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+      <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 py-4">
           <div className="flex items-center gap-8">
             <h1 className="text-xl font-bold tracking-tight text-primary">TechStaffHub</h1>
@@ -303,97 +273,142 @@ export default function TimeTracking() {
           <UserNav userName={fullName} userEmail={employee.email} />
         </div>
       </header>
+
       <main className="flex-1">
-        <div className="container mx-auto px-4 py-6">
-          <PageHeader heading="Time In/Out" subheading="Track your working hours">
-            <div className="flex items-center gap-2">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          {/* Page Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Timer className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Time Tracking</h1>
+                <p className="text-muted-foreground">Track your working hours and manage attendance</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-4">
               <Button variant="outline" onClick={() => (window.location.href = "/TimeLogs")}>
-                View Logs
+                <Calendar className="mr-2 h-4 w-4" />
+                View All Logs
               </Button>
             </div>
-          </PageHeader>
+          </div>
 
+          {/* Error Alert */}
           {error && (
-            <div className="mb-6 rounded-md bg-red-50 p-4 text-red-700">
-              {error}
-            </div>
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
-          <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <Card>
+          <div className="grid gap-8 lg:grid-cols-2">
+            {/* Time Tracking Card */}
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>Time Tracking</CardTitle>
-                <CardDescription>Record your daily attendance</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Time Clock
+                </CardTitle>
+                <CardDescription>Record your daily attendance with precision</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center space-y-6">
-                  <div className="text-center">
-                    <div className="text-4xl font-bold text-gray-800">
-                      {new Date().toLocaleDateString([], {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+              <CardContent className="space-y-6">
+                {/* Current Date and Time Display */}
+                <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border">
+                  <div className="text-2xl font-bold text-foreground mb-1">
+                    {currentTime.toLocaleDateString([], {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+                  <div className="text-4xl font-mono font-bold text-primary">
+                    {currentTime.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    size="lg"
+                    onClick={handleTimeIn}
+                    disabled={timeStatus.isTimedIn || loading}
+                    className="h-16 bg-green-600 hover:bg-green-700 text-white font-semibold"
+                  >
+                    <Play className="mr-2 h-5 w-5" />
+                    Time In
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={handleTimeOut}
+                    disabled={!timeStatus.isTimedIn || loading}
+                    className="h-16 bg-red-600 hover:bg-red-700 text-white font-semibold"
+                  >
+                    <Square className="mr-2 h-5 w-5" />
+                    Time Out
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* Current Status */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          timeStatus.isTimedIn ? "bg-green-500 animate-pulse" : "bg-gray-300"
+                        }`}
+                      />
+                      <span className="font-medium">
+                        {timeStatus.isTimedIn ? "Currently Clocked In" : "Currently Clocked Out"}
+                      </span>
                     </div>
-                    <div className="mt-2 text-2xl text-gray-600">
-                      {new Date().toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
+                    {timeStatus.isTimedIn && (
+                      <Badge variant="secondary" className="ml-auto">
+                        Active
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground mb-1">Time In</div>
+                      <div className="font-mono font-semibold">{formatTime(timeStatus.timeIn)}</div>
+                    </div>
+                    <div className="text-center flex items-center justify-center">
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-muted-foreground mb-1">Time Out</div>
+                      <div className="font-mono font-semibold">{formatTime(timeStatus.timeOut)}</div>
                     </div>
                   </div>
 
-                  <div className="flex w-full gap-4">
-                    <Button
-                      variant="success"
-                      size="lg"
-                      className="flex-1"
-                      onClick={handleTimeIn}
-                      disabled={timeStatus.isTimedIn || loading}
-                    >
-                      <Clock className="mr-2 h-5 w-5" />
-                      Time In
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="lg"
-                      className="flex-1"
-                      onClick={handleTimeOut}
-                      disabled={!timeStatus.isTimedIn || loading}
-                    >
-                      <Clock className="mr-2 h-5 w-5" />
-                      Time Out
-                    </Button>
-                  </div>
-
-                  <div className="w-full rounded-lg border p-4 bg-gray-50">
-                    <div className="text-center text-sm font-medium text-gray-500 mb-2">Current Status</div>
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="text-center">
-                        <div className="text-xs text-gray-500">Time In</div>
-                        <div className="font-bold">{formatTime(timeStatus.timeIn)}</div>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-gray-400" />
-                      <div className="text-center">
-                        <div className="text-xs text-gray-500">Time Out</div>
-                        <div className="font-bold">{formatTime(timeStatus.timeOut)}</div>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <div className="text-xs text-gray-500">Duration</div>
-                      <div className="font-bold">{calculateDuration(timeStatus.timeIn, timeStatus.timeOut)}</div>
+                  <div className="text-center p-3 bg-primary/5 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">Session Duration</div>
+                    <div className="text-lg font-bold text-primary">
+                      {calculateDuration(timeStatus.timeIn, timeStatus.timeOut)}
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Today's Records Card */}
+            <Card className="bg-white/80 backdrop-blur border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>Today's Records</CardTitle>
-                <CardDescription>Your time records for today</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Today's Records
+                </CardTitle>
+                <CardDescription>Your time entries for {currentTime.toLocaleDateString()}</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -401,28 +416,43 @@ export default function TimeTracking() {
                     <LoadingSpinner size="8" text="Loading records..." />
                   </div>
                 ) : timeRecords.length === 0 ? (
-                  <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
-                    <p className="text-center text-gray-500">No time records for today</p>
+                  <div className="flex h-40 items-center justify-center rounded-lg border-2 border-dashed border-muted">
+                    <div className="text-center">
+                      <Clock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-muted-foreground">No time records for today</p>
+                      <p className="text-sm text-muted-foreground">Clock in to start tracking your time</p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {timeRecords.map((record, index) => (
-                      <div key={record.id || `record-${index}`} className="rounded-lg border p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">Session {index + 1}</div>
+                      <div
+                        key={record.id || `record-${index}`}
+                        className="p-4 rounded-lg border bg-gradient-to-r from-white to-slate-50 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <span className="font-medium">Session {index + 1}</span>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {record.timeOut ? "Completed" : "In Progress"}
+                          </Badge>
                         </div>
-                        <div className="mt-2 grid grid-cols-3 gap-2">
-                          <div>
-                            <div className="text-xs text-gray-500">Time In</div>
-                            <div>{formatTime(record.timeIn)}</div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center p-2 bg-green-50 rounded">
+                            <div className="text-xs text-green-600 font-medium mb-1">Time In</div>
+                            <div className="font-mono text-sm">{formatTime(record.timeIn)}</div>
                           </div>
-                          <div>
-                            <div className="text-xs text-gray-500">Time Out</div>
-                            <div>{formatTime(record.timeOut)}</div>
+                          <div className="text-center p-2 bg-red-50 rounded">
+                            <div className="text-xs text-red-600 font-medium mb-1">Time Out</div>
+                            <div className="font-mono text-sm">{formatTime(record.timeOut)}</div>
                           </div>
-                          <div>
-                            <div className="text-xs text-gray-500">Duration</div>
-                            <div>{calculateDuration(record.timeIn, record.timeOut)}</div>
+                          <div className="text-center p-2 bg-blue-50 rounded">
+                            <div className="text-xs text-blue-600 font-medium mb-1">Duration</div>
+                            <div className="font-mono text-sm font-semibold">
+                              {calculateDuration(record.timeIn, record.timeOut)}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -434,12 +464,15 @@ export default function TimeTracking() {
           </div>
         </div>
       </main>
-      <footer className="border-t py-4">
-        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} TechStaffHub. All rights reserved.
-          </p>
-          <p className="text-center text-sm text-gray-500">Developed by TechStaffHub</p>
+
+      <footer className="border-t bg-white/80 backdrop-blur">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} TechStaffHub. All rights reserved.
+            </p>
+            <p className="text-sm text-muted-foreground">Developed by TechStaffHub</p>
+          </div>
         </div>
       </footer>
     </div>
