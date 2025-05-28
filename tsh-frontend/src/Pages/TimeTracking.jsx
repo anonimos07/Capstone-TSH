@@ -84,11 +84,10 @@ async function timeOut() {
 
 export default function TimeTracking() {
   const [employee, setEmployee] = useState({
-    username: userData.username,
     firstName: "",
     lastName: "",
     email: "",
-  })
+  });
 
   const [timeStatus, setTimeStatus] = useState({
     isTimedIn: false,
@@ -101,6 +100,7 @@ export default function TimeTracking() {
   const [error, setError] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [isLoading, setIsLoading] = useState(true);
 
   // Update current time every second
   useEffect(() => {
@@ -112,32 +112,37 @@ export default function TimeTracking() {
   }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
+    const fetchEmployeeData = async () => {
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+          throw new Error("Authentication token not found. Please log in again.");
+        }
 
-    if (!token) {
-      setIsAuthenticated(false)
-      setError("Not authenticated. Please log in.")
-      return
-    }
+        const response = await fetch("http://localhost:8080/employee/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-    const userStr = localStorage.getItem("user")
-    const userData = userStr ? JSON.parse(userStr) : null
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to load employee data");
+        }
 
-    if (!userData) {
-      setIsAuthenticated(false)
-      setError("User data not found. Please log in again.")
-      return
-    }
-
-    setEmployee({
-      username: userData.username,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      role: userData.role,
-    })
+        const data = await response.json();
+        setEmployee({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          ...data,
+        });
+    };
 
     setIsAuthenticated(true)
+    fetchEmployeeData();
   }, [])
 
   const loadData = async () => {
@@ -239,7 +244,7 @@ export default function TimeTracking() {
     return `${diffHrs}h ${diffMins}m`
   }
 
-  const fullName = `${employee.firstName} ${employee.lastName}`
+  const fullName = `${employee.firstName} ${employee.lastName}`;
 
   if (!isAuthenticated) {
     return (
